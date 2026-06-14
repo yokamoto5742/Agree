@@ -1,0 +1,36 @@
+root = true
+
+[*]
+charset = utf-8-bom
+indent_style = space
+indent_size = 4
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.{cs}]
+# Roslyn アナライザーのコード品質・スタイル規則を警告として有効化
+dotnet_analyzer_diagnostic.category-Style.severity = warning
+dotnet_analyzer_diagnostic.category-CodeQuality.severity = warning
+
+# using の整理
+dotnet_sort_system_directives_first = true
+dotnet_separate_import_directive_groups = false
+csharp_using_directive_placement = outside_namespace:warning
+
+# var の使用は型が明白な場合のみ
+csharp_style_var_when_type_is_apparent = true:suggestion
+csharp_style_var_for_built_in_types = false:suggestion
+
+# 波括弧は必須
+csharp_prefer_braces = true:warning
+
+# 不要な using / 未使用変数を検出
+dotnet_diagnostic.IDE0005.severity = warning
+dotnet_diagnostic.CS0219.severity = warning
+
+[*.{csproj,resx,config,xml}]
+indent_size = 2
+
+[*.{json,yml,yaml}]
+indent_size = 2
+charset = utf-8
