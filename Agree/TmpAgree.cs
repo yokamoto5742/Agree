@@ -142,6 +142,16 @@ public class TmpAgree : Form
 		tmpComboList.Add(eye);
 		tmpComboList.Add(sheetName);
 		tmpBoxList.Add(anes);
+		if (Program.OfflineMode)
+		{
+			applyTmpButton.Enabled = false;
+			newTmpButton.Enabled = false;
+			editTmpButton.Enabled = false;
+			regTmpButton.Enabled = false;
+			delTmpButton.Enabled = false;
+			temp_parent.Enabled = false;
+			return;
+		}
 		oraConn = DBConn.GetOpenDBConn();
 		oraCmd.Connection = oraConn;
 		oraConn.Open();

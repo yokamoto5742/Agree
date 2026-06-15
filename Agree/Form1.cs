@@ -672,22 +672,22 @@ public class Form1 : Form
 	public Form1()
 	{
 		InitializeComponent();
+		oraConn = DBConn.GetOpenDBConn();
+		oraCmd.Connection = oraConn;
 		try
 		{
-			oraConn = DBConn.GetOpenDBConn();
+			foreach (string key in Dict.DeptDict.Keys)
+			{
+				if (!key.Equals("0"))
+				{
+					dept.Items.Add(key + " " + Dict.DeptDict[key].ShortName);
+				}
+			}
 		}
 		catch (Exception ex)
 		{
-			MessageBox.Show("データベースに接続できません。\n" + ex.Message, "接続エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
-			throw;
-		}
-		oraCmd.Connection = oraConn;
-		foreach (string key in Dict.DeptDict.Keys)
-		{
-			if (!key.Equals("0"))
-			{
-				dept.Items.Add(key + " " + Dict.DeptDict[key].ShortName);
-			}
+			Program.OfflineMode = true;
+			MessageBox.Show("データベースに接続できません。オフラインモード（画面確認用）で起動します。\n" + ex.Message, "オフラインモード", MessageBoxButtons.OK, MessageBoxIcon.Warning);
 		}
 		agreeBoxList.Clear();
 		agreeBoxList.Add(dr_id);
@@ -786,11 +786,14 @@ public class Form1 : Form
 			{
 				dr_id.Text = int.Parse(patCont[9]).ToString();
 				dr_name.Text = patCont[10];
-				if (short.Parse(patCont[13]) > 0 && short.Parse(patCont[13]) < 20 && patCont[14].Length > 0)
+				if (!Program.OfflineMode)
 				{
-					dept.Text = short.Parse(patCont[13]) + " " + Dict.DeptDict[short.Parse(patCont[13]).ToString()].ShortName;
+					if (short.Parse(patCont[13]) > 0 && short.Parse(patCont[13]) < 20 && patCont[14].Length > 0)
+					{
+						dept.Text = short.Parse(patCont[13]) + " " + Dict.DeptDict[short.Parse(patCont[13]).ToString()].ShortName;
+					}
+					getStaffRoom();
 				}
-				getStaffRoom();
 			}
 		}
 		streamReader.Dispose();
@@ -798,6 +801,10 @@ public class Form1 : Form
 
 	private void showList()
 	{
+		if (Program.OfflineMode)
+		{
+			return;
+		}
 		if (pt_id.Text.Length > 0)
 		{
 			clearPlan();
@@ -875,6 +882,10 @@ public class Form1 : Form
 
 	private void showPlan(int rowIndex)
 	{
+		if (Program.OfflineMode)
+		{
+			return;
+		}
 		try
 		{
 			if (rowIndex >= 0)
@@ -996,6 +1007,11 @@ public class Form1 : Form
 
 	private int regPlan()
 	{
+		if (Program.OfflineMode)
+		{
+			MessageBox.Show("オフラインモードのため登録できません");
+			return -1;
+		}
 		if (pt_id.Text.Length == 0)
 		{
 			MessageBox.Show("患者番号を入力してください");
@@ -1029,6 +1045,11 @@ public class Form1 : Form
 
 	private int delPlan()
 	{
+		if (Program.OfflineMode)
+		{
+			MessageBox.Show("オフラインモードのため削除できません");
+			return -1;
+		}
 		if (MessageBox.Show("削除しますか？", "削除", MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation, MessageBoxDefaultButton.Button2) == DialogResult.Yes)
 		{
 			if (Agree_id.Text.Length > 0)
@@ -1066,6 +1087,10 @@ public class Form1 : Form
 
 	private void staff1_id_Leave(object sender, EventArgs e)
 	{
+		if (Program.OfflineMode)
+		{
+			return;
+		}
 		if (dr_id.Text.Length > 0)
 		{
 			if (Dict.StaffDict.ContainsKey(dr_id.Text.Trim()))
@@ -1178,6 +1203,10 @@ public class Form1 : Form
 
 	public void applyTemplate(int temp_id)
 	{
+		if (Program.OfflineMode)
+		{
+			return;
+		}
 		oraConn.Open();
 		oraCmd.CommandText = "select * from AGREE_TEMPLATE where TEMP_ID = " + temp_id;
 		oraReader = oraCmd.ExecuteReader();
@@ -1299,6 +1328,10 @@ public class Form1 : Form
 
 	public void getStaffRoom()
 	{
+		if (Program.OfflineMode)
+		{
+			return;
+		}
 		oraConn.Open();
 		oraCmd.CommandText = "select CONT from AGREE_STAFF where STAFF = " + dr_id.Text.Trim();
 		oraReader = oraCmd.ExecuteReader();

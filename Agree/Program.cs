@@ -7,6 +7,8 @@ namespace Agree;
 
 internal static class Program
 {
+	public static bool OfflineMode;
+
 	[STAThread]
 	private static void Main()
 	{

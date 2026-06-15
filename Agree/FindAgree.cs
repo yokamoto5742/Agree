@@ -213,11 +213,19 @@ public class FindAgree : Form
 		oraCmd.Connection = oraConn;
 		dateTo.Enabled = false;
 		dr_ok1.Checked = true;
+		if (Program.OfflineMode)
+		{
+			return;
+		}
 		showList();
 	}
 
 	private void showList()
 	{
+		if (Program.OfflineMode)
+		{
+			return;
+		}
 		string text = "Select AGREE.AGREE_ID, AGREE.SAVE_DATE, AGREE.PATIENT_ID, Trim(M_PATIENT.P_NAME), AGREE.DEPT, Trim(M_DEPT.S_NAME), AGREE.DR, Trim(M_USR.NAME), case when AGREE.DR_OK = 1 then '○' else '-' end as 医師完了 from AGREE inner join M_PATIENT" + Env.DB_LINK + " on M_PATIENT.P_ID = AGREE.PATIENT_ID inner join M_DEPT" + Env.DB_LINK + " on AGREE.DEPT = M_DEPT.CODE inner join M_USR" + Env.DB_LINK + " on AGREE.DR = M_USR.CODE where DELETE_FLAG = 0 ";
 		string text2 = text;
 		text = text2 + " and SAVE_DATE >= " + dateFrom.Value.ToString("yyyyMMdd") + " and SAVE_DATE <= " + dateTo.Value.ToString("yyyyMMdd");
@@ -269,6 +277,10 @@ public class FindAgree : Form
 
 	private void selectButton_Click(object sender, EventArgs e)
 	{
+		if (AgreementList.SelectedRows.Count == 0)
+		{
+			return;
+		}
 		f1.showPlan(AgreementList.SelectedRows[0].Cells[0].Value.ToString(), AgreementList.SelectedRows[0].Cells[2].Value.ToString());
 		Dispose();
 	}

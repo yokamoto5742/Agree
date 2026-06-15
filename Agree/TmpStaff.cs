@@ -46,6 +46,11 @@ public class TmpStaff : Form
 		InitializeComponent();
 		oraConn = DBConn.GetOpenDBConn();
 		oraCmd.Connection = oraConn;
+		if (Program.OfflineMode)
+		{
+			saveButton.Enabled = false;
+			return;
+		}
 		initList();
 	}
 
@@ -137,6 +142,10 @@ public class TmpStaff : Form
 
 	private void staff_id_Leave(object sender, EventArgs e)
 	{
+		if (Program.OfflineMode)
+		{
+			return;
+		}
 		bool flag = false;
 		if (staff_id.Text.Length <= 0)
 		{
