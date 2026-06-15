@@ -672,7 +672,15 @@ public class Form1 : Form
 	public Form1()
 	{
 		InitializeComponent();
-		oraConn = DBConn.GetOpenDBConn();
+		try
+		{
+			oraConn = DBConn.GetOpenDBConn();
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show("データベースに接続できません。\n" + ex.Message, "接続エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
+			throw;
+		}
 		oraCmd.Connection = oraConn;
 		foreach (string key in Dict.DeptDict.Keys)
 		{

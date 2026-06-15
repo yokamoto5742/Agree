@@ -24,7 +24,14 @@ internal static class Program
 			{
 				if (process.Id != currentProcess.Id)
 				{
-					process.CloseMainWindow();
+					try
+					{
+						process.Kill();
+						process.WaitForExit(3000);
+					}
+					catch
+					{
+					}
 				}
 			}
 		}
