@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  32bit の OraOLEDB.Oracle プロバイダをロードするため、テストホストを x86 に固定する。
+  .NET Framework テストでは PE の PlatformTarget だけでは host が x86 にならないため、
+  この RunConfiguration/TargetPlatform で明示する。csproj から既定参照される。
+-->
+<RunSettings>
+  <RunConfiguration>
+    <TargetPlatform>x86</TargetPlatform>
+  </RunConfiguration>
+</RunSettings>

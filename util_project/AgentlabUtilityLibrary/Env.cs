@@ -23,6 +23,8 @@ public static class Env
 
 	private static string open_pwd = "";
 
+	private static string provider = "";
+
 	public static string LEGACY_HOME
 	{
 		get
@@ -131,6 +133,22 @@ public static class Env
 		}
 	}
 
+	public static string PROVIDER
+	{
+		get
+		{
+			if (provider == null || provider.Length == 0)
+			{
+				init();
+			}
+			if (provider == null || provider.Length == 0)
+			{
+				provider = "MSDAORA.1";
+			}
+			return provider;
+		}
+	}
+
 	private static void init()
 	{
 		string path = Directory.GetCurrentDirectory() + "\\AgentlabUtilityLibrary.ini";
@@ -219,6 +237,10 @@ public static class Env
 					{
 						open_pwd = Enc.Decrypt(array[1]);
 					}
+					else if (array[0].Equals("PROVIDER"))
+					{
+						provider = array[1];
+					}
 				}
 			}
 			streamReader.Close();
@@ -234,6 +256,7 @@ public static class Env
 			open_db = "WGS_ODBC_ORCL";
 			open_user = "macs";
 			open_pwd = "system";
+			provider = "MSDAORA.1";
 		}
 	}
 }

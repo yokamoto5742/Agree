@@ -3,8 +3,6 @@ using System.ComponentModel;
 using System.Data.OleDb;
 using System.Drawing;
 using System.Windows.Forms;
-using InnoUketsukeLib.Entity;
-using InnoUketsukeLib.Utility;
 
 namespace AgentlabUtilityLibrary;
 
@@ -35,7 +33,9 @@ public class LoginPrompt : Form
 
 	private void login()
 	{
-		AppInit.g_AppInit.Init();
+		// 認証本体は外部DLL InnoUketsukeLib(AppInit / M_USR) に依存していた。
+		// Agreeアプリはこのログイン経路を使用しないため、ローカルデバッグ用
+		// 再ビルドでは当該2行を無効化している（本番では元DLLを使用する）。
 		if (idBox.Text.Length == 0)
 		{
 			MessageBox.Show("IDが入力されていません");
@@ -46,7 +46,7 @@ public class LoginPrompt : Form
 		dBConn.Open();
 		int result = 0;
 		int.TryParse(idBox.Text, out result);
-		suc = M_USR.g_Usr1.GetData(result, pwdBox.Text);
+		suc = false;
 		dBConn.Close();
 		if (suc)
 		{

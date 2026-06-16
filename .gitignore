@@ -361,3 +361,6 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+# --- ローカルOracleデバッグ用 (本番へ混入させない) ---
+*.orig
+/System.Resources.Extensions.dll

@@ -33,7 +33,7 @@ public class DB
 		{
 			if (db_macs == null)
 			{
-				db_macs = new DB("Provider=MSDAORA.1;Data Source=" + Env.MAIN_DB + ";User ID=" + Env.MAIN_USER + ";Password=" + Env.MAIN_PWD);
+				db_macs = new DB("Provider=" + Env.PROVIDER + ";Data Source=" + Env.MAIN_DB + ";User ID=" + Env.MAIN_USER + ";Password=" + Env.MAIN_PWD);
 			}
 			return db_macs;
 		}
@@ -45,7 +45,7 @@ public class DB
 		{
 			if (db_open == null)
 			{
-				db_open = new DB("Provider=MSDAORA.1;Data Source=" + Env.OPEN_DB + ";User ID=" + Env.OPEN_USER + ";Password=" + Env.OPEN_PWD);
+				db_open = new DB("Provider=" + Env.PROVIDER + ";Data Source=" + Env.OPEN_DB + ";User ID=" + Env.OPEN_USER + ";Password=" + Env.OPEN_PWD);
 			}
 			return db_open;
 		}

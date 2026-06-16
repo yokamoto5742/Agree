@@ -3,8 +3,13 @@
     <AssemblyName>AgentlabUtilityLibrary</AssemblyName>
     <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
     <UseWindowsForms>True</UseWindowsForms>
-    <TargetFramework>net40</TargetFramework>
+    <!-- 元DLLは net40。消費側 Agree が net48 のため、再ビルドは net48 で揃える
+         (net40 API は net48 の部分集合で実行時互換)。これにより新SDKの
+         リソースパイプライン(非文字列resx)も解決できる。 -->
+    <TargetFramework>net48</TargetFramework>
     <PlatformTarget>x86</PlatformTarget>
+    <!-- 非文字列リソース(アイコン等)を含む .resx をビルドするために必要。 -->
+    <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
   </PropertyGroup>
   <PropertyGroup>
     <LangVersion>12.0</LangVersion>
@@ -16,6 +21,9 @@
   <ItemGroup />
   <ItemGroup>
     <Reference Include="System.Data" />
-    <Reference Include="InnoUketsukeLib" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- GenerateResourceUsePreserializedResources=true の実行時依存。 -->
+    <PackageReference Include="System.Resources.Extensions" Version="8.0.0" />
   </ItemGroup>
 </Project>

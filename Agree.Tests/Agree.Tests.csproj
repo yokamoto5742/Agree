@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    ローカルOracle Free (OraOLEDB.Oracle) に対する結合テスト。
+    32bit の OraOLEDB プロバイダをロードするため x86 でビルド/実行する。
+    System.Data.OleDb は .NET Framework 同梱のため PackageReference 不要。
+  -->
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <PlatformTarget>x86</PlatformTarget>
+    <IsPackable>false</IsPackable>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <!-- テストホストを x86 に固定（32bit OraOLEDB をロードするため）。 -->
+    <RunSettingsFilePath>$(MSBuildProjectDirectory)\x86.runsettings</RunSettingsFilePath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+    <PackageReference Include="NUnit" Version="3.14.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />
+  </ItemGroup>
+
+</Project>

@@ -53,11 +53,11 @@ public class DBConn
 		{
 			Init();
 		}
-		return new OleDbConnection("Provider=MSDAORA.1;Data Source=" + dbName + ";User ID=" + dbUser + ";Password=" + dbPwd);
+		return new OleDbConnection("Provider=" + Env.PROVIDER + ";Data Source=" + dbName + ";User ID=" + dbUser + ";Password=" + dbPwd);
 	}
 
 	public static OleDbConnection GetOpenDBConn()
 	{
-		return new OleDbConnection("Provider=MSDAORA.1;Data Source=" + openDbName + ";User ID=" + openDbUser + ";Password=" + openDbPwd);
+		return new OleDbConnection("Provider=" + Env.PROVIDER + ";Data Source=" + openDbName + ";User ID=" + openDbUser + ";Password=" + openDbPwd);
 	}
 }
