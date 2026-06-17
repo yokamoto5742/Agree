@@ -6,4 +6,5 @@
   <Project Path="Agree.csproj" Id="fd677797-ad3e-40b6-bb52-76d508ba7ab8">
     <Platform Solution="*|x86" Project="x86" />
   </Project>
+  <Project Path="Agree.Tests/Agree.Tests.csproj" />
 </Solution>

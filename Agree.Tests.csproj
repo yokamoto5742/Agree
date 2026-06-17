@@ -14,14 +14,6 @@
     <!-- テストホストを x86 に固定（32bit OraOLEDB をロードするため）。 -->
     <RunSettingsFilePath>$(MSBuildProjectDirectory)\x86.runsettings</RunSettingsFilePath>
   </PropertyGroup>
-  <ItemGroup>
-    <None Remove="AgentlabUtilityLibrary.ini" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="AgentlabUtilityLibrary.ini">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
