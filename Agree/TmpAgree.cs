@@ -196,7 +196,15 @@ public class TmpAgree : Form
 				}
 				else if (oraReader["TEMP_ID"].ToString() != oraReader["TEMP_PARENT"].ToString())
 				{
-					tmpAgreeTree.Nodes[oraReader["TEMP_PARENT"].ToString()].Nodes.Add(oraReader["TEMP_ID"].ToString(), oraReader["TEMP_NAME"].ToString());
+					string parentKey = oraReader["TEMP_PARENT"].ToString();
+					if (tmpAgreeTree.Nodes.ContainsKey(parentKey))
+					{
+						tmpAgreeTree.Nodes[parentKey].Nodes.Add(oraReader["TEMP_ID"].ToString(), oraReader["TEMP_NAME"].ToString());
+					}
+					else
+					{
+						tmpAgreeTree.Nodes.Add(oraReader["TEMP_ID"].ToString(), oraReader["TEMP_NAME"].ToString());
+					}
 					TmpNode tmpNode2 = new TmpNode
 					{
 						temp_id = int.Parse(oraReader["TEMP_ID"].ToString()),
@@ -204,9 +212,12 @@ public class TmpAgree : Form
 						temp_parent = int.Parse(oraReader["TEMP_PARENT"].ToString()),
 						temp_name = oraReader["TEMP_NAME"].ToString()
 					};
-					tmpNodeList.Add(tmpNode2);
-					nodeTable.Add(tmpNode2.temp_id, tmpNode2);
-					nodeNameTable.Add(tmpNode2.temp_id, tmpNode2.temp_name);
+					if (!nodeTable.ContainsKey(tmpNode2.temp_id))
+					{
+						tmpNodeList.Add(tmpNode2);
+						nodeTable.Add(tmpNode2.temp_id, tmpNode2);
+						nodeNameTable.Add(tmpNode2.temp_id, tmpNode2.temp_name);
+					}
 				}
 			}
 		}
