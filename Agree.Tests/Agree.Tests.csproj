@@ -16,6 +16,7 @@
   </PropertyGroup>
   <ItemGroup>
     <None Remove="AgentlabUtilityLibrary.ini" />
+    <None Remove="x86.runsettings" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="AgentlabUtilityLibrary.ini">
