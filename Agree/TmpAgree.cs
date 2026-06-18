@@ -286,13 +286,28 @@ public class TmpAgree : Form
 			MessageBox.Show("テンプレート名を入力してください");
 			return;
 		}
-		oraConn.Open();
 		string text = "";
-		string text2 = parentTable[temp_parent.Text].ToString();
+		object parentValue = parentTable[temp_parent.Text.Trim()];
+		if (parentValue == null)
+		{
+			MessageBox.Show("分類をリストから選んでください");
+			return;
+		}
+		string text2 = parentValue.ToString();
 		text = ((temp_id.Text.Length <= 0) ? ("insert into AGREE_TEMPLATE (TEMP_ID, TEMP_LEVEL, TEMP_PARENT, TEMP_NAME, EYE , DIAG, ANES ,OPE, EXPLANATION, ITEM1, ITEM2, ITEM3, ITEM4,SHEET_NAME, DELETE_FLAG) values (AGREE_TEMPLATE_SEQ.nextval, 1, " + text2 + ", '" + temp_name.Text + "', '" + eye.Text + "', '" + diag.Text + "', '" + anes.Text + "', '" + ope.Text + "', '" + explanation.Text + "', '" + item1.Text + "', '" + item2.Text + "', '" + item3.Text + "', '" + item4.Text + "', '" + sheetName.Text + "', 0)") : ("update AGREE_TEMPLATE set TEMP_NAME = '" + temp_name.Text + "', TEMP_PARENT = " + text2 + ", EYE = '" + eye.Text + "', DIAG = '" + diag.Text + "', ANES = '" + anes.Text + "', OPE = '" + ope.Text + "', EXPLANATION = '" + explanation.Text + "', ITEM1 = '" + item1.Text + "', ITEM2 = '" + item2.Text + "', ITEM3 = '" + item3.Text + "', ITEM4 = '" + item4.Text + "', SHEET_NAME = '" + sheetName.Text + "' where TEMP_ID = " + temp_id.Text));
-		oraCmd.CommandText = text;
-		oraCmd.ExecuteNonQuery();
-		oraConn.Close();
+		try
+		{
+			oraConn.Open();
+			oraCmd.CommandText = text;
+			oraCmd.ExecuteNonQuery();
+		}
+		finally
+		{
+			if (oraConn.State != System.Data.ConnectionState.Closed)
+			{
+				oraConn.Close();
+			}
+		}
 		foreach (TextBox tmpBox in tmpBoxList)
 		{
 			tmpBox.Text = "";

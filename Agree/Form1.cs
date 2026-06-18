@@ -265,7 +265,7 @@ public class Form1 : Form
 		this.label2.TabIndex = 15;
 		this.label2.Text = "同意書一覧";
 		this.delAgreeButton.BackColor = System.Drawing.Color.FromArgb(224, 224, 224);
-		this.delAgreeButton.Location = new System.Drawing.Point(340, 798);
+		this.delAgreeButton.Location = new System.Drawing.Point(340, 705);
 		this.delAgreeButton.Name = "delAgreeButton";
 		this.delAgreeButton.Size = new System.Drawing.Size(75, 25);
 		this.delAgreeButton.TabIndex = 5;
@@ -338,15 +338,15 @@ public class Form1 : Form
 		this.explanation.Multiline = true;
 		this.explanation.Name = "explanation";
 		this.explanation.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-		this.explanation.Size = new System.Drawing.Size(464, 203);
+		this.explanation.Size = new System.Drawing.Size(464, 110);
 		this.explanation.TabIndex = 8;
 		this.label10.AutoSize = true;
-		this.label10.Location = new System.Drawing.Point(7, 388);
+		this.label10.Location = new System.Drawing.Point(7, 295);
 		this.label10.Name = "label10";
 		this.label10.Size = new System.Drawing.Size(29, 12);
 		this.label10.TabIndex = 6;
 		this.label10.Text = "症状";
-		this.item1.Location = new System.Drawing.Point(88, 388);
+		this.item1.Location = new System.Drawing.Point(88, 295);
 		this.item1.MaxLength = 200;
 		this.item1.Multiline = true;
 		this.item1.Name = "item1";
@@ -354,12 +354,12 @@ public class Form1 : Form
 		this.item1.Size = new System.Drawing.Size(464, 32);
 		this.item1.TabIndex = 9;
 		this.label12.AutoSize = true;
-		this.label12.Location = new System.Drawing.Point(8, 426);
+		this.label12.Location = new System.Drawing.Point(8, 333);
 		this.label12.Name = "label12";
 		this.label12.Size = new System.Drawing.Size(53, 12);
 		this.label12.TabIndex = 3;
 		this.label12.Text = "治療計画";
-		this.item2.Location = new System.Drawing.Point(87, 426);
+		this.item2.Location = new System.Drawing.Point(87, 333);
 		this.item2.MaxLength = 200;
 		this.item2.Multiline = true;
 		this.item2.Name = "item2";
@@ -367,12 +367,12 @@ public class Form1 : Form
 		this.item2.Size = new System.Drawing.Size(464, 29);
 		this.item2.TabIndex = 10;
 		this.label15.AutoSize = true;
-		this.label15.Location = new System.Drawing.Point(8, 465);
+		this.label15.Location = new System.Drawing.Point(8, 372);
 		this.label15.Name = "label15";
 		this.label15.Size = new System.Drawing.Size(53, 12);
 		this.label15.TabIndex = 7;
 		this.label15.Text = "検査内容";
-		this.item3.Location = new System.Drawing.Point(88, 461);
+		this.item3.Location = new System.Drawing.Point(88, 368);
 		this.item3.MaxLength = 200;
 		this.item3.Multiline = true;
 		this.item3.Name = "item3";
@@ -383,7 +383,7 @@ public class Form1 : Form
 		this.staff1_ok.Checked = true;
 		this.staff1_ok.CheckState = System.Windows.Forms.CheckState.Checked;
 		this.staff1_ok.Enabled = false;
-		this.staff1_ok.Location = new System.Drawing.Point(87, 553);
+		this.staff1_ok.Location = new System.Drawing.Point(87, 460);
 		this.staff1_ok.Name = "staff1_ok";
 		this.staff1_ok.Size = new System.Drawing.Size(15, 14);
 		this.staff1_ok.TabIndex = 13;
@@ -396,7 +396,7 @@ public class Form1 : Form
 		this.agreePlanListLabel.TabIndex = 15;
 		this.agreePlanListLabel.Text = "患者番号を入力して Enter を押すと既存の同意書が表示されます";
 		this.regAgreeButton.BackColor = System.Drawing.Color.FromArgb(224, 224, 224);
-		this.regAgreeButton.Location = new System.Drawing.Point(259, 798);
+		this.regAgreeButton.Location = new System.Drawing.Point(259, 705);
 		this.regAgreeButton.Name = "regAgreeButton";
 		this.regAgreeButton.Size = new System.Drawing.Size(75, 25);
 		this.regAgreeButton.TabIndex = 4;
@@ -404,7 +404,7 @@ public class Form1 : Form
 		this.regAgreeButton.UseVisualStyleBackColor = false;
 		this.regAgreeButton.Click += new System.EventHandler(regPlanButton_Click);
 		this.closeButton.BackColor = System.Drawing.Color.FromArgb(224, 224, 224);
-		this.closeButton.Location = new System.Drawing.Point(502, 798);
+		this.closeButton.Location = new System.Drawing.Point(502, 705);
 		this.closeButton.Name = "closeButton";
 		this.closeButton.Size = new System.Drawing.Size(75, 25);
 		this.closeButton.TabIndex = 7;
@@ -412,7 +412,7 @@ public class Form1 : Form
 		this.closeButton.UseVisualStyleBackColor = false;
 		this.closeButton.Click += new System.EventHandler(closeButton_Click);
 		this.printAgreeButton.BackColor = System.Drawing.Color.FromArgb(224, 224, 224);
-		this.printAgreeButton.Location = new System.Drawing.Point(421, 798);
+		this.printAgreeButton.Location = new System.Drawing.Point(421, 705);
 		this.printAgreeButton.Name = "printAgreeButton";
 		this.printAgreeButton.Size = new System.Drawing.Size(75, 25);
 		this.printAgreeButton.TabIndex = 6;
@@ -528,7 +528,7 @@ public class Form1 : Form
 		this.panel1.Controls.Add(this.label4);
 		this.panel1.Location = new System.Drawing.Point(15, 213);
 		this.panel1.Name = "panel1";
-		this.panel1.Size = new System.Drawing.Size(575, 579);
+		this.panel1.Size = new System.Drawing.Size(575, 486);
 		this.panel1.TabIndex = 3;
 		this.label11.AutoSize = true;
 		this.label11.Location = new System.Drawing.Point(8, 132);
@@ -579,7 +579,7 @@ public class Form1 : Form
 		this.sheetName.Size = new System.Drawing.Size(160, 20);
 		this.sheetName.TabIndex = 33;
 		this.label14.AutoSize = true;
-		this.label14.Location = new System.Drawing.Point(7, 511);
+		this.label14.Location = new System.Drawing.Point(7, 418);
 		this.label14.Name = "label14";
 		this.label14.RightToLeft = System.Windows.Forms.RightToLeft.No;
 		this.label14.Size = new System.Drawing.Size(53, 12);
@@ -592,7 +592,7 @@ public class Form1 : Form
 		this.eye.Name = "eye";
 		this.eye.Size = new System.Drawing.Size(109, 20);
 		this.eye.TabIndex = 4;
-		this.item4.Location = new System.Drawing.Point(87, 508);
+		this.item4.Location = new System.Drawing.Point(87, 415);
 		this.item4.MaxLength = 500;
 		this.item4.Multiline = true;
 		this.item4.Name = "item4";
@@ -600,7 +600,7 @@ public class Form1 : Form
 		this.item4.Size = new System.Drawing.Size(465, 39);
 		this.item4.TabIndex = 12;
 		this.label24.AutoSize = true;
-		this.label24.Location = new System.Drawing.Point(8, 555);
+		this.label24.Location = new System.Drawing.Point(8, 462);
 		this.label24.Name = "label24";
 		this.label24.Size = new System.Drawing.Size(53, 12);
 		this.label24.TabIndex = 9;
@@ -641,7 +641,7 @@ public class Form1 : Form
 		base.AutoScaleDimensions = new System.Drawing.SizeF(6f, 12f);
 		base.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 		this.BackColor = System.Drawing.Color.FromArgb(224, 224, 224);
-		base.ClientSize = new System.Drawing.Size(604, 835);
+		base.ClientSize = new System.Drawing.Size(604, 742);
 		base.Controls.Add(this.pt_sex);
 		base.Controls.Add(this.pt_kana);
 		base.Controls.Add(this.findAgreeButton);
