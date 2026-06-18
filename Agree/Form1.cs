@@ -62,7 +62,7 @@ public class Form1 : Form
 
 	private TextBox item3;
 
-	private CheckBox staff1_ok;
+	private bool staff1_ok = true;
 
 	private Label agreePlanListLabel;
 
@@ -97,8 +97,6 @@ public class Form1 : Form
 	private Panel panel1;
 
 	private Label label22;
-
-	private Label label24;
 
 	private Button tmpStaffButton;
 
@@ -182,7 +180,6 @@ public class Form1 : Form
 		this.item2 = new System.Windows.Forms.TextBox();
 		this.label15 = new System.Windows.Forms.Label();
 		this.item3 = new System.Windows.Forms.TextBox();
-		this.staff1_ok = new System.Windows.Forms.CheckBox();
 		this.agreePlanListLabel = new System.Windows.Forms.Label();
 		this.regAgreeButton = new System.Windows.Forms.Button();
 		this.closeButton = new System.Windows.Forms.Button();
@@ -209,7 +206,6 @@ public class Form1 : Form
 		this.label14 = new System.Windows.Forms.Label();
 		this.eye = new System.Windows.Forms.ComboBox();
 		this.item4 = new System.Windows.Forms.TextBox();
-		this.label24 = new System.Windows.Forms.Label();
 		this.label22 = new System.Windows.Forms.Label();
 		this.tmpStaffButton = new System.Windows.Forms.Button();
 		this.findAgreeButton = new System.Windows.Forms.Button();
@@ -379,16 +375,6 @@ public class Form1 : Form
 		this.item3.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
 		this.item3.Size = new System.Drawing.Size(464, 41);
 		this.item3.TabIndex = 11;
-		this.staff1_ok.AutoSize = true;
-		this.staff1_ok.Checked = true;
-		this.staff1_ok.CheckState = System.Windows.Forms.CheckState.Checked;
-		this.staff1_ok.Enabled = false;
-		this.staff1_ok.Location = new System.Drawing.Point(87, 460);
-		this.staff1_ok.Name = "staff1_ok";
-		this.staff1_ok.Size = new System.Drawing.Size(15, 14);
-		this.staff1_ok.TabIndex = 13;
-		this.staff1_ok.UseVisualStyleBackColor = true;
-		this.staff1_ok.Click += new System.EventHandler(staff1_ok_Click);
 		this.agreePlanListLabel.AutoSize = true;
 		this.agreePlanListLabel.Location = new System.Drawing.Point(130, 67);
 		this.agreePlanListLabel.Name = "agreePlanListLabel";
@@ -499,7 +485,6 @@ public class Form1 : Form
 		this.panel1.Controls.Add(this.label14);
 		this.panel1.Controls.Add(this.eye);
 		this.panel1.Controls.Add(this.item4);
-		this.panel1.Controls.Add(this.label24);
 		this.panel1.Controls.Add(this.label22);
 		this.panel1.Controls.Add(this.label3);
 		this.panel1.Controls.Add(this.save_date);
@@ -508,7 +493,6 @@ public class Form1 : Form
 		this.panel1.Controls.Add(this.label19);
 		this.panel1.Controls.Add(this.dept);
 		this.panel1.Controls.Add(this.dr_name);
-		this.panel1.Controls.Add(this.staff1_ok);
 		this.panel1.Controls.Add(this.label15);
 		this.panel1.Controls.Add(this.item3);
 		this.panel1.Controls.Add(this.label12);
@@ -599,12 +583,6 @@ public class Form1 : Form
 		this.item4.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
 		this.item4.Size = new System.Drawing.Size(465, 39);
 		this.item4.TabIndex = 12;
-		this.label24.AutoSize = true;
-		this.label24.Location = new System.Drawing.Point(8, 462);
-		this.label24.Name = "label24";
-		this.label24.Size = new System.Drawing.Size(53, 12);
-		this.label24.TabIndex = 9;
-		this.label24.Text = "作成完了";
 		this.label22.AutoSize = true;
 		this.label22.Font = new System.Drawing.Font("MS UI Gothic", 10f, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, 128);
 		this.label22.Location = new System.Drawing.Point(9, 8);
@@ -726,7 +704,7 @@ public class Form1 : Form
 		item3.Text = "";
 		item4.Text = "";
 		explanation.Text = "";
-		staff1_ok.Checked = true;
+		staff1_ok = true;
 		eye.Text = "";
 		printAgreeButton.Enabled = false;
 		sheetName.Text = "";
@@ -861,9 +839,7 @@ public class Form1 : Form
 			AgreeList.Columns[16].Visible = false;
 			AgreeList.Columns[17].Visible = false;
 			AgreeList.Columns[18].Visible = false;
-			AgreeList.Columns[19].HeaderText = "完了";
-			AgreeList.Columns[19].Width = 40;
-			AgreeList.Columns[19].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+			AgreeList.Columns[19].Visible = false;
 			AgreeList.Columns[20].Visible = false;
 			clearPlan();
 			printAgreeButton.Enabled = false;
@@ -923,11 +899,11 @@ public class Form1 : Form
 				item4.Text = AgreeList.Rows[rowIndex].Cells[15].Value.ToString().Trim();
 				if (AgreeList.Rows[rowIndex].Cells[16].Value.ToString().Trim() == "1")
 				{
-					staff1_ok.Checked = true;
+					staff1_ok = true;
 				}
 				else
 				{
-					staff1_ok.Checked = false;
+					staff1_ok = false;
 				}
 				printAgreeButton.Enabled = true;
 				tempPlanId = int.Parse(Agree_id.Text);
@@ -1032,13 +1008,13 @@ public class Form1 : Form
 		string text = "";
 		string text2 = "";
 		string text3 = save_date.Value.ToString("yyyyMMdd");
-		text2 = ((!staff1_ok.Checked) ? "0" : "1");
+		text2 = ((!staff1_ok) ? "0" : "1");
 		text = ((Agree_id.Text.Length <= 0) ? ("insert into AGREE (AGREE_ID, PATIENT_ID, SAVE_DATE, DEPT, DR, STAFF, EYE, DIAG, ANES, OPE, EXPLANATION, ITEM1, ITEM2, ITEM3, ITEM4, SHEET_NAME, DR_OK,  DELETE_FLAG, SAVE_TIME )  values ( AGREE_SEQ.nextval, " + pt_id.Text + " , " + text3 + " , " + dept.Text.Split(' ')[0] + " , " + dr_id.Text + " , '" + staff.Text + "' , '" + eye.Text + "', '" + diag.Text + "', '" + anes.Text + "', '" + ope.Text + "', '" + explanation.Text + "', '" + item1.Text + "', '" + item2.Text + "', '" + item3.Text + "', '" + item4.Text + "', '" + sheetName.Text + "'," + text2 + ",0," + DateTime.Now.ToString("HHmmss") + ")") : ("update AGREE set SAVE_DATE = " + text3 + ", DEPT = " + dept.Text.Split(' ')[0].Trim() + ", DR = " + dr_id.Text.Trim() + ", STAFF = '" + staff.Text + "', EYE = '" + eye.Text + "', DIAG = '" + diag.Text + "', ANES = '" + anes.Text + "', OPE = '" + ope.Text + "', EXPLANATION = '" + explanation.Text + "', ITEM1 = '" + item1.Text + "', ITEM2 = '" + item2.Text + "', ITEM3 = '" + item3.Text + "', ITEM4 = '" + item4.Text + "', SHEET_NAME = '" + sheetName.Text + "', DR_OK = " + text2 + ", SAVE_TIME = " + DateTime.Now.ToString("HHmmss") + " where AGREE_ID = " + Agree_id.Text));
 		oraConn.Open();
 		oraCmd.CommandText = text;
 		oraCmd.ExecuteNonQuery();
 		oraConn.Close();
-		if (staff1_ok.Checked)
+		if (staff1_ok)
 		{
 			return 0;
 		}
@@ -1350,15 +1326,6 @@ public class Form1 : Form
 	{
 		TmpStaff tmpStaff = new TmpStaff();
 		tmpStaff.Show();
-	}
-
-	private void staff1_ok_Click(object sender, EventArgs e)
-	{
-		if (dr_id.Text.Length == 0)
-		{
-			MessageBox.Show("主治医IDを入力してください");
-			staff1_ok.Checked = false;
-		}
 	}
 
 	private void findPlanButton_Click(object sender, EventArgs e)
