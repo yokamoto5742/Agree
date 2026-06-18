@@ -173,42 +173,54 @@ public class TmpAgree : Form
 		tmpNodeList.Clear();
 		nodeTable.Clear();
 		nodeNameTable.Clear();
-		oraConn.Open();
-		oraCmd.CommandText = "Select TEMP_ID, TEMP_LEVEL, TEMP_NAME, TEMP_PARENT from AGREE_TEMPLATE where DELETE_FLAG != 1 order by DISP_ORDER , TEMP_ID";
-		oraReader = oraCmd.ExecuteReader();
-		while (oraReader.Read())
+		try
 		{
-			if (oraReader["TEMP_LEVEL"].ToString() == "0")
+			oraConn.Open();
+			oraCmd.CommandText = "Select TEMP_ID, TEMP_LEVEL, TEMP_NAME, TEMP_PARENT from AGREE_TEMPLATE where DELETE_FLAG != 1 order by DISP_ORDER , TEMP_ID";
+			oraReader = oraCmd.ExecuteReader();
+			while (oraReader.Read())
 			{
-				tmpAgreeTree.Nodes.Add(oraReader["TEMP_ID"].ToString(), oraReader["TEMP_NAME"].ToString());
-				TmpNode tmpNode = new TmpNode
+				if (oraReader["TEMP_LEVEL"].ToString() == "0")
 				{
-					temp_id = int.Parse(oraReader["TEMP_ID"].ToString()),
-					temp_level = int.Parse(oraReader["TEMP_LEVEL"].ToString()),
-					temp_parent = int.Parse(oraReader["TEMP_PARENT"].ToString()),
-					temp_name = oraReader["TEMP_NAME"].ToString()
-				};
-				tmpNodeList.Add(tmpNode);
-				nodeTable.Add(tmpNode.temp_id, tmpNode);
-				nodeNameTable.Add(tmpNode.temp_id, tmpNode.temp_name);
-			}
-			else if (oraReader["TEMP_ID"].ToString() != oraReader["TEMP_PARENT"].ToString())
-			{
-				tmpAgreeTree.Nodes[oraReader["TEMP_PARENT"].ToString()].Nodes.Add(oraReader["TEMP_ID"].ToString(), oraReader["TEMP_NAME"].ToString());
-				TmpNode tmpNode2 = new TmpNode
+					tmpAgreeTree.Nodes.Add(oraReader["TEMP_ID"].ToString(), oraReader["TEMP_NAME"].ToString());
+					TmpNode tmpNode = new TmpNode
+					{
+						temp_id = int.Parse(oraReader["TEMP_ID"].ToString()),
+						temp_level = int.Parse(oraReader["TEMP_LEVEL"].ToString()),
+						temp_parent = int.Parse(oraReader["TEMP_PARENT"].ToString()),
+						temp_name = oraReader["TEMP_NAME"].ToString()
+					};
+					tmpNodeList.Add(tmpNode);
+					nodeTable.Add(tmpNode.temp_id, tmpNode);
+					nodeNameTable.Add(tmpNode.temp_id, tmpNode.temp_name);
+				}
+				else if (oraReader["TEMP_ID"].ToString() != oraReader["TEMP_PARENT"].ToString())
 				{
-					temp_id = int.Parse(oraReader["TEMP_ID"].ToString()),
-					temp_level = int.Parse(oraReader["TEMP_LEVEL"].ToString()),
-					temp_parent = int.Parse(oraReader["TEMP_PARENT"].ToString()),
-					temp_name = oraReader["TEMP_NAME"].ToString()
-				};
-				tmpNodeList.Add(tmpNode2);
-				nodeTable.Add(tmpNode2.temp_id, tmpNode2);
-				nodeNameTable.Add(tmpNode2.temp_id, tmpNode2.temp_name);
+					tmpAgreeTree.Nodes[oraReader["TEMP_PARENT"].ToString()].Nodes.Add(oraReader["TEMP_ID"].ToString(), oraReader["TEMP_NAME"].ToString());
+					TmpNode tmpNode2 = new TmpNode
+					{
+						temp_id = int.Parse(oraReader["TEMP_ID"].ToString()),
+						temp_level = int.Parse(oraReader["TEMP_LEVEL"].ToString()),
+						temp_parent = int.Parse(oraReader["TEMP_PARENT"].ToString()),
+						temp_name = oraReader["TEMP_NAME"].ToString()
+					};
+					tmpNodeList.Add(tmpNode2);
+					nodeTable.Add(tmpNode2.temp_id, tmpNode2);
+					nodeNameTable.Add(tmpNode2.temp_id, tmpNode2.temp_name);
+				}
 			}
 		}
-		oraReader.Close();
-		oraConn.Close();
+		finally
+		{
+			if (oraReader != null && !oraReader.IsClosed)
+			{
+				oraReader.Close();
+			}
+			if (oraConn.State != System.Data.ConnectionState.Closed)
+			{
+				oraConn.Close();
+			}
+		}
 		applyTmpButton.Enabled = false;
 		newTmpButton.Enabled = false;
 		editTmpButton.Enabled = false;
@@ -227,30 +239,42 @@ public class TmpAgree : Form
 
 	private void showTemplate(int temp_id)
 	{
-		oraConn.Open();
-		oraCmd.CommandText = "Select TEMP_ID, TEMP_LEVEL, TEMP_PARENT, TEMP_NAME,EYE , DIAG, ANES ,OPE, EXPLANATION, ITEM1, ITEM2, ITEM3, ITEM4 , SHEET_NAME from AGREE_TEMPLATE where TEMP_ID = " + temp_id;
-		oraReader = oraCmd.ExecuteReader();
-		if (oraReader.Read())
+		try
 		{
-			this.temp_id.Text = oraReader["TEMP_ID"].ToString();
-			temp_name.Text = oraReader["TEMP_NAME"].ToString();
-			if (oraReader["TEMP_LEVEL"].ToString() == "1")
+			oraConn.Open();
+			oraCmd.CommandText = "Select TEMP_ID, TEMP_LEVEL, TEMP_PARENT, TEMP_NAME,EYE , DIAG, ANES ,OPE, EXPLANATION, ITEM1, ITEM2, ITEM3, ITEM4 , SHEET_NAME from AGREE_TEMPLATE where TEMP_ID = " + temp_id;
+			oraReader = oraCmd.ExecuteReader();
+			if (oraReader.Read())
 			{
-				temp_parent.Text = nodeNameTable[int.Parse(oraReader["TEMP_PARENT"].ToString())].ToString();
+				this.temp_id.Text = oraReader["TEMP_ID"].ToString();
+				temp_name.Text = oraReader["TEMP_NAME"].ToString();
+				if (oraReader["TEMP_LEVEL"].ToString() == "1")
+				{
+					temp_parent.Text = nodeNameTable[int.Parse(oraReader["TEMP_PARENT"].ToString())].ToString();
+				}
+				eye.Text = oraReader["EYE"].ToString();
+				sheetName.Text = oraReader["SHEET_NAME"].ToString();
+				diag.Text = oraReader["DIAG"].ToString();
+				anes.Text = oraReader["ANES"].ToString();
+				ope.Text = oraReader["OPE"].ToString();
+				explanation.Text = oraReader["EXPLANATION"].ToString();
+				item1.Text = oraReader["ITEM1"].ToString();
+				item2.Text = oraReader["ITEM2"].ToString();
+				item3.Text = oraReader["ITEM3"].ToString();
+				item4.Text = oraReader["ITEM4"].ToString();
 			}
-			eye.Text = oraReader["EYE"].ToString();
-			sheetName.Text = oraReader["SHEET_NAME"].ToString();
-			diag.Text = oraReader["DIAG"].ToString();
-			anes.Text = oraReader["ANES"].ToString();
-			ope.Text = oraReader["OPE"].ToString();
-			explanation.Text = oraReader["EXPLANATION"].ToString();
-			item1.Text = oraReader["ITEM1"].ToString();
-			item2.Text = oraReader["ITEM2"].ToString();
-			item3.Text = oraReader["ITEM3"].ToString();
-			item4.Text = oraReader["ITEM4"].ToString();
 		}
-		oraReader.Close();
-		oraConn.Close();
+		finally
+		{
+			if (oraReader != null && !oraReader.IsClosed)
+			{
+				oraReader.Close();
+			}
+			if (oraConn.State != System.Data.ConnectionState.Closed)
+			{
+				oraConn.Close();
+			}
+		}
 	}
 
 	private void showTemplate(TreeNode tnode)
@@ -333,10 +357,19 @@ public class TmpAgree : Form
 		}
 		if (temp_id.Text.Length > 0)
 		{
-			oraConn.Open();
-			oraCmd.CommandText = "update AGREE_TEMPLATE set DELETE_FLAG = 1 where TEMP_ID = " + temp_id.Text;
-			oraCmd.ExecuteNonQuery();
-			oraConn.Close();
+			try
+			{
+				oraConn.Open();
+				oraCmd.CommandText = "update AGREE_TEMPLATE set DELETE_FLAG = 1 where TEMP_ID = " + temp_id.Text;
+				oraCmd.ExecuteNonQuery();
+			}
+			finally
+			{
+				if (oraConn.State != System.Data.ConnectionState.Closed)
+				{
+					oraConn.Close();
+				}
+			}
 		}
 		foreach (TextBox tmpBox in tmpBoxList)
 		{
