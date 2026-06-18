@@ -743,9 +743,10 @@ public class Form1 : Form
 		string text;
 		if ((text = streamReader.ReadLine()) != null)
 		{
-			for (int i = 0; i < 50; i++)
+			string[] fields = text.Split(',');
+			for (int i = 0; i < fields.Length && i < 50; i++)
 			{
-				patCont[i] = text.Split(',')[i];
+				patCont[i] = fields[i];
 			}
 			clearPlan();
 			pt_id.Text = int.Parse(patCont[2]).ToString();
@@ -778,9 +779,10 @@ public class Form1 : Form
 		string text;
 		if ((text = streamReader.ReadLine()) != null)
 		{
-			for (int i = 0; i < 50; i++)
+			string[] fields = text.Split(',');
+			for (int i = 0; i < fields.Length && i < 50; i++)
 			{
-				patCont[i] = text.Split(',')[i];
+				patCont[i] = fields[i];
 			}
 			if (patCont[27] == "1")
 			{
@@ -1155,9 +1157,10 @@ public class Form1 : Form
 			string text2;
 			if ((text2 = streamReader.ReadLine()) != null)
 			{
-				for (int i = 0; i < 50; i++)
+				string[] fields = text2.Split(',');
+				for (int i = 0; i < fields.Length && i < 50; i++)
 				{
-					patCont[i] = text2.Split(',')[i];
+					patCont[i] = fields[i];
 				}
 				text = patCont[9];
 				value = patCont[10];
