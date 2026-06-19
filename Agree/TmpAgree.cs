@@ -176,7 +176,7 @@ public class TmpAgree : Form
 		try
 		{
 			oraConn.Open();
-			oraCmd.CommandText = "Select TEMP_ID, TEMP_LEVEL, TEMP_NAME, TEMP_PARENT from AGREE_TEMPLATE where DELETE_FLAG != 1 order by DISP_ORDER , TEMP_ID";
+			oraCmd.CommandText = "Select TEMP_ID, TEMP_LEVEL, TEMP_NAME, TEMP_PARENT from AGREE_TEMPLATE where DELETE_FLAG != 1 order by TEMP_LEVEL , DISP_ORDER , TEMP_ID";
 			oraReader = oraCmd.ExecuteReader();
 			while (oraReader.Read())
 			{
