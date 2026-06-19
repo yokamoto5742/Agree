@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -617,9 +617,9 @@ public class Form1 : Form
 		this.pt_sex.Size = new System.Drawing.Size(26, 19);
 		this.pt_sex.TabIndex = 61;
 		base.AutoScaleDimensions = new System.Drawing.SizeF(6f, 12f);
-		base.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-		this.BackColor = System.Drawing.Color.FromArgb(224, 224, 224);
-		base.ClientSize = new System.Drawing.Size(604, 742);
+        base.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
+        this.BackColor = System.Drawing.Color.FromArgb(224, 224, 224);
+		base.ClientSize = new System.Drawing.Size(604, 835);
 		base.Controls.Add(this.pt_sex);
 		base.Controls.Add(this.pt_kana);
 		base.Controls.Add(this.findAgreeButton);

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -796,7 +796,7 @@ public class TmpAgree : Form
 		this.label6.TabIndex = 76;
 		this.label6.Text = "シート";
 		this.sheetName.FormattingEnabled = true;
-		this.sheetName.Items.AddRange(new object[5] { "日帰り", "入院", "短期滞在", "短期_白内障単独入院", "検査同意書" });
+		this.sheetName.Items.AddRange(new object[5] { "日帰り", "入院", "短期滞在", "注射", "検査同意書" });
 		this.sheetName.Location = new System.Drawing.Point(332, 3);
 		this.sheetName.MaxLength = 100;
 		this.sheetName.Name = "sheetName";
