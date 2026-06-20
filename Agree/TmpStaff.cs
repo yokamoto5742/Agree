@@ -23,21 +23,19 @@ public class TmpStaff : Form
 
 	private Button saveButton;
 
+	private Button deleteButton;
+
 	private TextBox staff_id;
 
 	private TextBox staff_name;
 
 	private TextBox cont;
 
-	private TextBox room;
-
 	private TextBox id;
 
 	private Label label1;
 
 	private Label label2;
-
-	private Label label3;
 
 	private Button closeButton;
 
@@ -49,6 +47,7 @@ public class TmpStaff : Form
 		if (Program.OfflineMode)
 		{
 			saveButton.Enabled = false;
+			deleteButton.Enabled = false;
 			return;
 		}
 		initList();
@@ -66,7 +65,7 @@ public class TmpStaff : Form
 		staffGridView.Columns[0].Visible = false;
 		staffGridView.Columns[1].HeaderText = "ID";
 		staffGridView.Columns[1].Width = 40;
-		staffGridView.Columns[2].HeaderText = "スタッフ";
+		staffGridView.Columns[2].HeaderText = "入力者";
 		staffGridView.Columns[2].Width = 80;
 		staffGridView.Columns[3].HeaderText = "担当者";
 		staffGridView.Columns[3].Width = 160;
@@ -99,7 +98,6 @@ public class TmpStaff : Form
 			staff_name.Text = "";
 		}
 		cont.Text = "";
-		room.Text = "";
 	}
 
 	private void saveButton_Click(object sender, EventArgs e)
@@ -123,8 +121,28 @@ public class TmpStaff : Form
 		}
 		else
 		{
-			MessageBox.Show("主治医のIDを入力してください");
+			MessageBox.Show("入力者のIDを入力してください");
 		}
+	}
+
+	private void deleteButton_Click(object sender, EventArgs e)
+	{
+		if (id.Text.Length <= 0)
+		{
+			MessageBox.Show("削除する行を一覧から選択してください");
+			return;
+		}
+		if (MessageBox.Show(staff_name.Text + " を削除しますか？", "削除確認", MessageBoxButtons.YesNo) != DialogResult.Yes)
+		{
+			return;
+		}
+		oraConn.Open();
+		oraCmd.CommandText = "delete from AGREE_STAFF where ID = " + id.Text.Trim();
+		oraCmd.ExecuteNonQuery();
+		oraConn.Close();
+		initList();
+		clearStaff(clearId: true, clearStaffId: true);
+		MessageBox.Show("削除完了しました");
 	}
 
 	private void staffGridView_RowEnter(object sender, DataGridViewCellEventArgs e)
@@ -199,14 +217,13 @@ public class TmpStaff : Form
 		System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Agree.TmpStaff));
 		this.staffGridView = new System.Windows.Forms.DataGridView();
 		this.saveButton = new System.Windows.Forms.Button();
+		this.deleteButton = new System.Windows.Forms.Button();
 		this.staff_id = new System.Windows.Forms.TextBox();
 		this.staff_name = new System.Windows.Forms.TextBox();
 		this.cont = new System.Windows.Forms.TextBox();
-		this.room = new System.Windows.Forms.TextBox();
 		this.id = new System.Windows.Forms.TextBox();
 		this.label1 = new System.Windows.Forms.Label();
 		this.label2 = new System.Windows.Forms.Label();
-		this.label3 = new System.Windows.Forms.Label();
 		this.closeButton = new System.Windows.Forms.Button();
 		((System.ComponentModel.ISupportInitialize)this.staffGridView).BeginInit();
 		base.SuspendLayout();
@@ -230,6 +247,13 @@ public class TmpStaff : Form
 		this.saveButton.Text = "保存";
 		this.saveButton.UseVisualStyleBackColor = true;
 		this.saveButton.Click += new System.EventHandler(saveButton_Click);
+		this.deleteButton.Location = new System.Drawing.Point(15, 471);
+		this.deleteButton.Name = "deleteButton";
+		this.deleteButton.Size = new System.Drawing.Size(73, 24);
+		this.deleteButton.TabIndex = 5;
+		this.deleteButton.Text = "削除";
+		this.deleteButton.UseVisualStyleBackColor = true;
+		this.deleteButton.Click += new System.EventHandler(deleteButton_Click);
 		this.staff_id.ImeMode = System.Windows.Forms.ImeMode.Disable;
 		this.staff_id.Location = new System.Drawing.Point(84, 395);
 		this.staff_id.MaxLength = 5;
@@ -248,11 +272,6 @@ public class TmpStaff : Form
 		this.cont.Name = "cont";
 		this.cont.Size = new System.Drawing.Size(333, 19);
 		this.cont.TabIndex = 4;
-		this.room.Location = new System.Drawing.Point(84, 445);
-		this.room.MaxLength = 20;
-		this.room.Name = "room";
-		this.room.Size = new System.Drawing.Size(156, 19);
-		this.room.TabIndex = 5;
 		this.id.Location = new System.Drawing.Point(363, 395);
 		this.id.Name = "id";
 		this.id.ReadOnly = true;
@@ -264,19 +283,13 @@ public class TmpStaff : Form
 		this.label1.Name = "label1";
 		this.label1.Size = new System.Drawing.Size(41, 12);
 		this.label1.TabIndex = 7;
-		this.label1.Text = "主治医";
+		this.label1.Text = "入力者";
 		this.label2.AutoSize = true;
 		this.label2.Location = new System.Drawing.Point(15, 423);
 		this.label2.Name = "label2";
 		this.label2.Size = new System.Drawing.Size(63, 12);
 		this.label2.TabIndex = 8;
 		this.label2.Text = "他の担当者";
-		this.label3.AutoSize = true;
-		this.label3.Location = new System.Drawing.Point(15, 448);
-		this.label3.Name = "label3";
-		this.label3.Size = new System.Drawing.Size(53, 12);
-		this.label3.TabIndex = 9;
-		this.label3.Text = "病棟病室";
 		this.closeButton.Location = new System.Drawing.Point(343, 471);
 		this.closeButton.Name = "closeButton";
 		this.closeButton.Size = new System.Drawing.Size(74, 24);
@@ -288,19 +301,18 @@ public class TmpStaff : Form
 		base.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 		base.ClientSize = new System.Drawing.Size(429, 502);
 		base.Controls.Add(this.closeButton);
-		base.Controls.Add(this.label3);
 		base.Controls.Add(this.label2);
 		base.Controls.Add(this.label1);
 		base.Controls.Add(this.id);
-		base.Controls.Add(this.room);
 		base.Controls.Add(this.cont);
 		base.Controls.Add(this.staff_name);
 		base.Controls.Add(this.staff_id);
 		base.Controls.Add(this.saveButton);
+		base.Controls.Add(this.deleteButton);
 		base.Controls.Add(this.staffGridView);
 		base.Icon = (System.Drawing.Icon)resources.GetObject("$this.Icon");
 		base.Name = "TmpStaff";
-		this.Text = "主治医以外の担当者";
+		this.Text = "担当者テンプレート";
 		base.Load += new System.EventHandler(TmpStaff_Load);
 		((System.ComponentModel.ISupportInitialize)this.staffGridView).EndInit();
 		base.ResumeLayout(false);
