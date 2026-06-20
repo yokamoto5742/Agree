@@ -24,6 +24,10 @@ public class Form1 : Form
 
 	private DataGridView AgreeList;
 
+	private ContextMenuStrip agreeListMenu;
+
+	private ToolStripMenuItem copyNewMenuItem;
+
 	private Label label2;
 
 	private Button delAgreeButton;
@@ -161,6 +165,9 @@ public class Form1 : Form
 		this.label1 = new System.Windows.Forms.Label();
 		this.pt_name = new System.Windows.Forms.TextBox();
 		this.AgreeList = new System.Windows.Forms.DataGridView();
+		this.components = new System.ComponentModel.Container();
+		this.agreeListMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
+		this.copyNewMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 		this.label2 = new System.Windows.Forms.Label();
 		this.delAgreeButton = new System.Windows.Forms.Button();
 		this.label4 = new System.Windows.Forms.Label();
@@ -254,6 +261,13 @@ public class Form1 : Form
 		this.AgreeList.Size = new System.Drawing.Size(575, 122);
 		this.AgreeList.TabIndex = 2;
 		this.AgreeList.RowEnter += new System.Windows.Forms.DataGridViewCellEventHandler(agreePlanList_RowEnter);
+		this.AgreeList.CellMouseDown += new System.Windows.Forms.DataGridViewCellMouseEventHandler(AgreeList_CellMouseDown);
+		this.AgreeList.ContextMenuStrip = this.agreeListMenu;
+		this.agreeListMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[1] { this.copyNewMenuItem });
+		this.agreeListMenu.Name = "agreeListMenu";
+		this.copyNewMenuItem.Name = "copyNewMenuItem";
+		this.copyNewMenuItem.Text = "コピーして新規作成";
+		this.copyNewMenuItem.Click += new System.EventHandler(copyNewMenuItem_Click);
 		this.label2.AutoSize = true;
 		this.label2.Location = new System.Drawing.Point(18, 66);
 		this.label2.Name = "label2";
@@ -947,6 +961,41 @@ public class Form1 : Form
 	private void agreePlanList_RowEnter(object sender, DataGridViewCellEventArgs e)
 	{
 		showPlan(e.RowIndex);
+	}
+
+	private void AgreeList_CellMouseDown(object sender, DataGridViewCellMouseEventArgs e)
+	{
+		if (e.Button == MouseButtons.Right && e.RowIndex >= 0)
+		{
+			AgreeList.ClearSelection();
+			AgreeList.Rows[e.RowIndex].Selected = true;
+			AgreeList.CurrentCell = AgreeList.Rows[e.RowIndex].Cells[1];
+		}
+	}
+
+	private void copyNewMenuItem_Click(object sender, EventArgs e)
+	{
+		if (Program.OfflineMode)
+		{
+			return;
+		}
+		if (AgreeList.SelectedRows.Count == 0)
+		{
+			return;
+		}
+		copyAsNew(AgreeList.SelectedRows[0].Index);
+	}
+
+	private void copyAsNew(int rowIndex)
+	{
+		showPlan(rowIndex);
+		Agree_id.Text = "";
+		tempPlanId = 0;
+		staff1_ok = true;
+		dr_id.Text = "";
+		dr_name.Text = "";
+		save_date.Value = DateTime.Today;
+		agreePlanListLabel.Text = "内容をコピーしました。入力者と作成日を確認して登録してください。";
 	}
 
 	private void closeButton_Click(object sender, EventArgs e)
