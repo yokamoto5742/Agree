@@ -96,6 +96,10 @@ public class TmpAgree : Form
 
 	private Button downButton;
 
+	private Button addParentButton;
+
+	private bool editingParent;
+
 	private ComboBox temp_parent;
 
 	private Label label5;
@@ -155,22 +159,42 @@ public class TmpAgree : Form
 			delTmpButton.Enabled = false;
 			upButton.Enabled = false;
 			downButton.Enabled = false;
+			addParentButton.Enabled = false;
 			temp_parent.Enabled = false;
 			return;
 		}
 		oraConn = DBConn.GetOpenDBConn();
 		oraCmd.Connection = oraConn;
-		oraConn.Open();
-		oraCmd.CommandText = "Select TEMP_ID, TEMP_NAME from AGREE_TEMPLATE where TEMP_LEVEL = 0 order by DISP_ORDER";
-		oraReader = oraCmd.ExecuteReader();
-		while (oraReader.Read())
-		{
-			temp_parent.Items.Add(oraReader["TEMP_NAME"].ToString());
-			parentTable.Add(oraReader["TEMP_NAME"].ToString().Trim(), oraReader["TEMP_ID"].ToString());
-		}
-		oraReader.Close();
-		oraConn.Close();
+		loadParents();
 		initTree();
+	}
+
+	private void loadParents()
+	{
+		temp_parent.Items.Clear();
+		parentTable.Clear();
+		try
+		{
+			oraConn.Open();
+			oraCmd.CommandText = "Select TEMP_ID, TEMP_NAME from AGREE_TEMPLATE where TEMP_LEVEL = 0 and DELETE_FLAG != 1 order by DISP_ORDER";
+			oraReader = oraCmd.ExecuteReader();
+			while (oraReader.Read())
+			{
+				temp_parent.Items.Add(oraReader["TEMP_NAME"].ToString());
+				parentTable.Add(oraReader["TEMP_NAME"].ToString().Trim(), oraReader["TEMP_ID"].ToString());
+			}
+		}
+		finally
+		{
+			if (oraReader != null && !oraReader.IsClosed)
+			{
+				oraReader.Close();
+			}
+			if (oraConn.State != System.Data.ConnectionState.Closed)
+			{
+				oraConn.Close();
+			}
+		}
 	}
 
 	private void initTree()
@@ -238,6 +262,9 @@ public class TmpAgree : Form
 				oraConn.Close();
 			}
 		}
+		editingParent = false;
+		panel2.Enabled = true;
+		addParentButton.Enabled = true;
 		applyTmpButton.Enabled = false;
 		newTmpButton.Enabled = false;
 		editTmpButton.Enabled = false;
@@ -309,6 +336,8 @@ public class TmpAgree : Form
 				tmpCombo.Text = "";
 				tmpCombo.BackColor = Color.LightGray;
 			}
+			this.temp_id.Text = tnode.Name;
+			temp_name.Text = tnode.Text;
 			temp_parent.Text = "";
 			temp_parent.BackColor = Color.LightGray;
 			temp_parent.Enabled = false;
@@ -324,18 +353,31 @@ public class TmpAgree : Form
 	{
 		if (temp_name.Text.Length == 0)
 		{
-			MessageBox.Show("テンプレート名を入力してください");
+			MessageBox.Show(editingParent ? "分類名を入力してください" : "テンプレート名を入力してください");
 			return;
 		}
-		string text = "";
-		object parentValue = parentTable[temp_parent.Text.Trim()];
-		if (parentValue == null)
+		string text;
+		if (editingParent)
 		{
-			MessageBox.Show("分類をリストから選んでください");
-			return;
+			object duplicateParent = parentTable[temp_name.Text.Trim()];
+			if (duplicateParent != null && (temp_id.Text.Length == 0 || duplicateParent.ToString() != temp_id.Text))
+			{
+				MessageBox.Show("同じ名前の分類が既に存在します");
+				return;
+			}
+			text = ((temp_id.Text.Length <= 0) ? ("insert into AGREE_TEMPLATE (TEMP_ID, TEMP_LEVEL, TEMP_PARENT, TEMP_NAME, DELETE_FLAG) values (AGREE_TEMPLATE_SEQ.nextval, 0, 0, '" + temp_name.Text + "', 0)") : ("update AGREE_TEMPLATE set TEMP_NAME = '" + temp_name.Text + "' where TEMP_ID = " + temp_id.Text));
 		}
-		string text2 = parentValue.ToString();
-		text = ((temp_id.Text.Length <= 0) ? ("insert into AGREE_TEMPLATE (TEMP_ID, TEMP_LEVEL, TEMP_PARENT, TEMP_NAME, EYE , DIAG, ANES ,OPE, EXPLANATION, ITEM1, ITEM2, ITEM3, ITEM4,SHEET_NAME, DELETE_FLAG) values (AGREE_TEMPLATE_SEQ.nextval, 1, " + text2 + ", '" + temp_name.Text + "', '" + eye.Text + "', '" + diag.Text + "', '" + anes.Text + "', '" + ope.Text + "', '" + explanation.Text + "', '" + item1.Text + "', '" + item2.Text + "', '" + item3.Text + "', '" + item4.Text + "', '" + sheetName.Text + "', 0)") : ("update AGREE_TEMPLATE set TEMP_NAME = '" + temp_name.Text + "', TEMP_PARENT = " + text2 + ", EYE = '" + eye.Text + "', DIAG = '" + diag.Text + "', ANES = '" + anes.Text + "', OPE = '" + ope.Text + "', EXPLANATION = '" + explanation.Text + "', ITEM1 = '" + item1.Text + "', ITEM2 = '" + item2.Text + "', ITEM3 = '" + item3.Text + "', ITEM4 = '" + item4.Text + "', SHEET_NAME = '" + sheetName.Text + "' where TEMP_ID = " + temp_id.Text));
+		else
+		{
+			object parentValue = parentTable[temp_parent.Text.Trim()];
+			if (parentValue == null)
+			{
+				MessageBox.Show("分類をリストから選んでください");
+				return;
+			}
+			string text2 = parentValue.ToString();
+			text = ((temp_id.Text.Length <= 0) ? ("insert into AGREE_TEMPLATE (TEMP_ID, TEMP_LEVEL, TEMP_PARENT, TEMP_NAME, EYE , DIAG, ANES ,OPE, EXPLANATION, ITEM1, ITEM2, ITEM3, ITEM4,SHEET_NAME, DELETE_FLAG) values (AGREE_TEMPLATE_SEQ.nextval, 1, " + text2 + ", '" + temp_name.Text + "', '" + eye.Text + "', '" + diag.Text + "', '" + anes.Text + "', '" + ope.Text + "', '" + explanation.Text + "', '" + item1.Text + "', '" + item2.Text + "', '" + item3.Text + "', '" + item4.Text + "', '" + sheetName.Text + "', 0)") : ("update AGREE_TEMPLATE set TEMP_NAME = '" + temp_name.Text + "', TEMP_PARENT = " + text2 + ", EYE = '" + eye.Text + "', DIAG = '" + diag.Text + "', ANES = '" + anes.Text + "', OPE = '" + ope.Text + "', EXPLANATION = '" + explanation.Text + "', ITEM1 = '" + item1.Text + "', ITEM2 = '" + item2.Text + "', ITEM3 = '" + item3.Text + "', ITEM4 = '" + item4.Text + "', SHEET_NAME = '" + sheetName.Text + "' where TEMP_ID = " + temp_id.Text));
+		}
 		try
 		{
 			oraConn.Open();
@@ -362,12 +404,21 @@ public class TmpAgree : Form
 		temp_parent.Text = "";
 		temp_parent.BackColor = Color.LightGray;
 		temp_parent.Enabled = false;
+		if (editingParent)
+		{
+			loadParents();
+		}
 		MessageBox.Show("登録しました");
 		initTree();
 	}
 
 	private void delPlanTemplate()
 	{
+		if (editingParent && temp_id.Text.Length > 0 && countChildTemplates(temp_id.Text) > 0)
+		{
+			MessageBox.Show("子テンプレートが登録されているため削除できません。\n先に子テンプレートを削除してください。");
+			return;
+		}
 		if (MessageBox.Show("削除しますか？", "削除", MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation, MessageBoxDefaultButton.Button2) != DialogResult.Yes)
 		{
 			return;
@@ -401,8 +452,29 @@ public class TmpAgree : Form
 		temp_parent.Text = "";
 		temp_parent.BackColor = Color.LightGray;
 		temp_parent.Enabled = false;
+		if (editingParent)
+		{
+			loadParents();
+		}
 		MessageBox.Show("削除しました");
 		initTree();
+	}
+
+	private int countChildTemplates(string parentId)
+	{
+		try
+		{
+			oraConn.Open();
+			oraCmd.CommandText = "Select count(*) from AGREE_TEMPLATE where TEMP_PARENT = " + parentId + " and TEMP_LEVEL = 1 and DELETE_FLAG != 1";
+			return Convert.ToInt32(oraCmd.ExecuteScalar());
+		}
+		finally
+		{
+			if (oraConn.State != System.Data.ConnectionState.Closed)
+			{
+				oraConn.Close();
+			}
+		}
 	}
 
 	private void applyTmpButton_Click(object sender, EventArgs e)
@@ -449,11 +521,14 @@ public class TmpAgree : Form
 		{
 			return;
 		}
+		editingParent = false;
+		panel2.Enabled = true;
+		addParentButton.Enabled = true;
 		if (e.Node.Level == 0)
 		{
 			applyTmpButton.Enabled = false;
 			newTmpButton.Enabled = true;
-			editTmpButton.Enabled = false;
+			editTmpButton.Enabled = true;
 			regTmpButton.Enabled = false;
 			delTmpButton.Enabled = false;
 		}
@@ -484,6 +559,8 @@ public class TmpAgree : Form
 		{
 			return;
 		}
+		editingParent = false;
+		panel2.Enabled = true;
 		foreach (TextBox tmpBox in tmpBoxList)
 		{
 			tmpBox.Text = "";
@@ -497,6 +574,7 @@ public class TmpAgree : Form
 		temp_parent.Text = tmpAgreeTree.SelectedNode.Text;
 		temp_parent.BackColor = Color.White;
 		temp_parent.Enabled = true;
+		addParentButton.Enabled = false;
 		applyTmpButton.Enabled = false;
 		newTmpButton.Enabled = false;
 		editTmpButton.Enabled = false;
@@ -506,21 +584,71 @@ public class TmpAgree : Form
 
 	private void editTmpButton_Click(object sender, EventArgs e)
 	{
-		foreach (TextBox tmpBox in tmpBoxList)
+		TreeNode selectedNode = tmpAgreeTree.SelectedNode;
+		editingParent = selectedNode != null && selectedNode.Level == 0;
+		if (editingParent)
 		{
-			tmpBox.BackColor = Color.White;
+			foreach (TextBox tmpBox in tmpBoxList)
+			{
+				tmpBox.BackColor = Color.LightGray;
+			}
+			foreach (ComboBox tmpCombo in tmpComboList)
+			{
+				tmpCombo.BackColor = Color.LightGray;
+			}
+			temp_name.BackColor = Color.White;
+			temp_parent.Text = "";
+			temp_parent.BackColor = Color.LightGray;
+			temp_parent.Enabled = false;
+			panel2.Enabled = false;
 		}
-		foreach (ComboBox tmpCombo in tmpComboList)
+		else
 		{
-			tmpCombo.BackColor = Color.White;
+			foreach (TextBox tmpBox in tmpBoxList)
+			{
+				tmpBox.BackColor = Color.White;
+			}
+			foreach (ComboBox tmpCombo in tmpComboList)
+			{
+				tmpCombo.BackColor = Color.White;
+			}
+			temp_parent.BackColor = Color.White;
+			temp_parent.Enabled = true;
+			panel2.Enabled = true;
 		}
-		temp_parent.BackColor = Color.White;
-		temp_parent.Enabled = true;
+		addParentButton.Enabled = false;
 		applyTmpButton.Enabled = false;
 		newTmpButton.Enabled = false;
 		editTmpButton.Enabled = false;
 		regTmpButton.Enabled = true;
 		delTmpButton.Enabled = true;
+	}
+
+	private void addParentButton_Click(object sender, EventArgs e)
+	{
+		editingParent = true;
+		foreach (TextBox tmpBox in tmpBoxList)
+		{
+			tmpBox.Text = "";
+			tmpBox.BackColor = Color.LightGray;
+		}
+		foreach (ComboBox tmpCombo in tmpComboList)
+		{
+			tmpCombo.Text = "";
+			tmpCombo.BackColor = Color.LightGray;
+		}
+		temp_name.BackColor = Color.White;
+		temp_parent.Text = "";
+		temp_parent.BackColor = Color.LightGray;
+		temp_parent.Enabled = false;
+		panel2.Enabled = false;
+		addParentButton.Enabled = false;
+		applyTmpButton.Enabled = false;
+		newTmpButton.Enabled = false;
+		editTmpButton.Enabled = false;
+		regTmpButton.Enabled = true;
+		delTmpButton.Enabled = false;
+		temp_name.Focus();
 	}
 
 	private void upButton_Click(object sender, EventArgs e)
@@ -639,6 +767,7 @@ public class TmpAgree : Form
 		this.editTmpButton = new System.Windows.Forms.Button();
 		this.upButton = new System.Windows.Forms.Button();
 		this.downButton = new System.Windows.Forms.Button();
+		this.addParentButton = new System.Windows.Forms.Button();
 		this.temp_parent = new System.Windows.Forms.ComboBox();
 		this.label5 = new System.Windows.Forms.Label();
 		this.panel2 = new System.Windows.Forms.Panel();
@@ -819,6 +948,13 @@ public class TmpAgree : Form
 		this.downButton.Text = "下へ";
 		this.downButton.UseVisualStyleBackColor = true;
 		this.downButton.Click += new System.EventHandler(downButton_Click);
+		this.addParentButton.Location = new System.Drawing.Point(565, 504);
+		this.addParentButton.Name = "addParentButton";
+		this.addParentButton.Size = new System.Drawing.Size(84, 26);
+		this.addParentButton.TabIndex = 82;
+		this.addParentButton.Text = "分類追加";
+		this.addParentButton.UseVisualStyleBackColor = true;
+		this.addParentButton.Click += new System.EventHandler(addParentButton_Click);
 		this.temp_parent.FormattingEnabled = true;
 		this.temp_parent.Location = new System.Drawing.Point(346, 35);
 		this.temp_parent.Name = "temp_parent";
@@ -916,6 +1052,7 @@ public class TmpAgree : Form
 		base.Controls.Add(this.editTmpButton);
 		base.Controls.Add(this.upButton);
 		base.Controls.Add(this.downButton);
+		base.Controls.Add(this.addParentButton);
 		base.Controls.Add(this.newTmpButton);
 		base.Controls.Add(this.label4);
 		base.Controls.Add(this.temp_id);
