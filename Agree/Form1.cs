@@ -707,6 +707,45 @@ public class Form1 : Form
 		clearPlan();
 		readPatCsv();
 		printAgreeButton.Enabled = false;
+		applySettingButtonVisibility();
+	}
+
+	private void applySettingButtonVisibility()
+	{
+		// 専用の外部設定ファイル AgreeSettings.ini から設定ボタンの表示・非表示を読み込む。
+		// ファイルが無い・読めない・値が不正な場合は安全のため非表示にする。
+		settingButton.Visible = false;
+		try
+		{
+			string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "AgreeSettings.ini");
+			if (!File.Exists(configPath))
+			{
+				return;
+			}
+
+			string[] lines = File.ReadAllLines(configPath, Encoding.Default);
+			foreach (string line in lines)
+			{
+				if (string.IsNullOrWhiteSpace(line) || line.StartsWith(";"))
+				{
+					continue;
+				}
+
+				if (line.Contains("SHOW_SETTING_BUTTON"))
+				{
+					string[] parts = line.Split('=');
+					if (parts.Length == 2)
+					{
+						settingButton.Visible = (parts[1].Trim() == "1");
+					}
+					break;
+				}
+			}
+		}
+		catch (IOException)
+		{
+			settingButton.Visible = false;
+		}
 	}
 
 	private void clearPlan()
