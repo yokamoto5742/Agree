@@ -375,6 +375,7 @@ public class Form1 : Form
 		this.label15.Size = new System.Drawing.Size(53, 12);
 		this.label15.TabIndex = 7;
 		this.label15.Text = "検査内容";
+		this.label15.Visible = false;
 		this.item3.Location = new System.Drawing.Point(88, 368);
 		this.item3.MaxLength = 200;
 		this.item3.Multiline = true;
@@ -382,6 +383,7 @@ public class Form1 : Form
 		this.item3.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
 		this.item3.Size = new System.Drawing.Size(464, 41);
 		this.item3.TabIndex = 11;
+		this.item3.Visible = false;
 		this.agreePlanListLabel.AutoSize = true;
 		this.agreePlanListLabel.Location = new System.Drawing.Point(130, 67);
 		this.agreePlanListLabel.Name = "agreePlanListLabel";

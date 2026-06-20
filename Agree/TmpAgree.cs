@@ -742,6 +742,7 @@ public class TmpAgree : Form
 		this.label15.Size = new System.Drawing.Size(53, 12);
 		this.label15.TabIndex = 46;
 		this.label15.Text = "検査内容";
+		this.label15.Visible = false;
 		this.item3.Location = new System.Drawing.Point(91, 291);
 		this.item3.MaxLength = 200;
 		this.item3.Multiline = true;
@@ -749,6 +750,7 @@ public class TmpAgree : Form
 		this.item3.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
 		this.item3.Size = new System.Drawing.Size(400, 44);
 		this.item3.TabIndex = 45;
+		this.item3.Visible = false;
 		this.label13.AutoSize = true;
 		this.label13.Location = new System.Drawing.Point(11, 245);
 		this.label13.Name = "label13";

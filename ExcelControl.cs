@@ -53,6 +53,16 @@ internal class ExcelControl
 		return result;
 	}
 
+	private string resolveSheetName(string sheetName)
+	{
+		// 入院・日帰り は通常のエイリアス。該当シートが無い場合は通常シートを開く。
+		if (sheetName == "入院" || sheetName == "日帰り")
+		{
+			return "通常";
+		}
+		return sheetName;
+	}
+
 	private void setValue(Dictionary<string, string> valueToCell)
 	{
 		foreach (string key in valueToCell.Keys)
@@ -80,7 +90,7 @@ internal class ExcelControl
 		exWorksheet.Cells[23, 2] = (object)(((dynamic)range.Value2).ToString().PadLeft(9, '0') + ((dynamic)range4.Value2).ToString() + ((dynamic)range5.Value2).ToString().PadLeft(3, '0') + ((dynamic)range2.Value2).ToString().PadLeft(5, '0') + ((dynamic)range6.Value2).ToString() + ((dynamic)range7.Value2).ToString());
 		string filename = Environment.GetEnvironmentVariable("TEMP") + "\\" + ((dynamic)range.Value2).ToString() + "_" + DateTime.Now.ToString("yyyyMMdd") + DateTime.Now.ToString("HHmmss") + "_" + "眼科同意書";
 		exWorkbook.SaveAs(filename, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value, XlSaveAsAccessMode.xlExclusive, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value);
-		exWorksheet = (_Worksheet)(dynamic)exWorkbook.Sheets[sheetName];
+		exWorksheet = (_Worksheet)(dynamic)exWorkbook.Sheets[resolveSheetName(sheetName)];
 		exWorksheet.Select(true);
 		Marshal.ReleaseComObject(range);
 		Marshal.ReleaseComObject(range2);
