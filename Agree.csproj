@@ -134,7 +134,10 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
-  <ItemGroup>
+  <!-- Excel等のCOM参照: Visual Studio / フル版MSBuild（.NET Framework版）でのみ使用する。
+       ResolveComReferenceタスクは.NET Core版MSBuild(dotnet CLI)では非対応のため、
+       MSBuildRuntimeTypeで分岐し、CLIビルドでは下のNuGet版Excel PIAを使う。 -->
+  <ItemGroup Condition=" '$(MSBuildRuntimeType)' != 'Core' ">
     <COMReference Include="Microsoft.Office.Core">
       <Guid>{2DF8D04C-5BFA-101B-BDE5-00AA0044DE52}</Guid>
       <VersionMajor>2</VersionMajor>
@@ -162,6 +165,21 @@
       <Isolated>False</Isolated>
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </COMReference>
+  </ItemGroup>
+  <!-- CLI(dotnet build)でのビルド検証用の設定。
+       EmbedInteropTypes=Trueなので実行時にこのDLLは不要（VSビルドの成果物には影響しない）。
+       .NET Core版MSBuildではWinFormsのresx(非文字列リソース)生成にSystem.Resources.Extensionsが必要。 -->
+  <PropertyGroup Condition=" '$(MSBuildRuntimeType)' == 'Core' ">
+    <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
+  </PropertyGroup>
+  <ItemGroup Condition=" '$(MSBuildRuntimeType)' == 'Core' ">
+    <Reference Include="Microsoft.Office.Interop.Excel">
+      <HintPath>Microsoft.Office.Interop.Excel.dll</HintPath>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="System.Resources.Extensions">
+      <HintPath>System.Resources.Extensions.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Content Include="app.ico" />

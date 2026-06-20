@@ -16,6 +16,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## ビルドと実行
 
 - Visual Studioで `Agree.csproj` を開き、F5で実行する（通常の開発手順）
+- **CLIでのビルド検証**: `dotnet build Agree.slnx`（または VS Code の build タスク）。
+  COM参照は `$(MSBuildRuntimeType)` で分岐し、フル版MSBuild(VS)は登録済みExcelの
+  `COMReference`、.NET Core版MSBuild(`dotnet`)はリポジトリ同梱の Excel PIA
+  (`Microsoft.Office.Interop.Excel.dll`, `EmbedInteropTypes`)を使う。
+  resx生成用に `System.Resources.Extensions.dll` も同梱。いずれもCLIビルド時のみ参照され、
+  VSの成果物には影響しない。
 
 ## 外部依存（重要）
 

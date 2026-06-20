@@ -361,6 +361,5 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
-# --- ¥í¡¼¥«¥ëOracle¥Ç¥Ð¥Ã¥°ÍÑ (ËÜÈÖ¤Øº®Æþ¤µ¤»¤Ê¤¤) ---
+# --- ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Oracleï¿½Ç¥Ð¥Ã¥ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½Ö¤Øºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¤ï¿½) ---
 *.orig
-/System.Resources.Extensions.dll

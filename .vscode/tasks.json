@@ -1,0 +1,35 @@
+{
+  // VS Code から dotnet CLI でビルド検証するためのタスク。
+  // 主プロジェクトの COM 参照は MSBuildRuntimeType で分岐しており、
+  // dotnet(.NET Core版MSBuild) では NuGet 由来の Excel PIA を使ってビルドする。
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build (dotnet)",
+      "detail": "ソリューション全体をビルド検証する",
+      "type": "process",
+      "command": "dotnet",
+      "args": ["build", "Agree.slnx", "-c", "Debug"],
+      "group": { "kind": "build", "isDefault": true },
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "build app (dotnet)",
+      "detail": "本体 Agree.csproj のみビルド検証する",
+      "type": "process",
+      "command": "dotnet",
+      "args": ["build", "Agree.csproj", "-c", "Debug"],
+      "group": "build",
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "test (dotnet)",
+      "detail": "単体テストを実行する",
+      "type": "process",
+      "command": "dotnet",
+      "args": ["test", "Agree.Tests/Agree.Tests.csproj"],
+      "group": { "kind": "test", "isDefault": true },
+      "problemMatcher": "$msCompile"
+    }
+  ]
+}
