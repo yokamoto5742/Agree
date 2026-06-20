@@ -9,6 +9,7 @@ using System.IO;
 using System.Text;
 using System.Windows.Forms;
 using AgentlabUtilityLibrary;
+using Microsoft.VisualBasic.FileIO;
 
 namespace Agree;
 
@@ -105,6 +106,12 @@ public class Form1 : Form
 	private Button tmpStaffButton;
 
 	private Button findAgreeButton;
+
+	private Button settingButton;
+
+	private Button exportButton;
+
+	private Button importButton;
 
 	private TextBox item4;
 
@@ -216,6 +223,9 @@ public class Form1 : Form
 		this.label22 = new System.Windows.Forms.Label();
 		this.tmpStaffButton = new System.Windows.Forms.Button();
 		this.findAgreeButton = new System.Windows.Forms.Button();
+		this.settingButton = new System.Windows.Forms.Button();
+		this.exportButton = new System.Windows.Forms.Button();
+		this.importButton = new System.Windows.Forms.Button();
 		this.pt_kana = new System.Windows.Forms.TextBox();
 		this.pt_sex = new System.Windows.Forms.TextBox();
 		((System.ComponentModel.ISupportInitialize)this.AgreeList).BeginInit();
@@ -618,6 +628,31 @@ public class Form1 : Form
 		this.findAgreeButton.Text = "同意書検索";
 		this.findAgreeButton.UseVisualStyleBackColor = true;
 		this.findAgreeButton.Click += new System.EventHandler(findPlanButton_Click);
+		this.settingButton.Location = new System.Drawing.Point(518, 36);
+		this.settingButton.Name = "settingButton";
+		this.settingButton.Size = new System.Drawing.Size(70, 25);
+		this.settingButton.TabIndex = 14;
+		this.settingButton.Text = "設定";
+		this.settingButton.UseVisualStyleBackColor = true;
+		this.settingButton.Click += new System.EventHandler(settingButton_Click);
+		this.exportButton.BackColor = System.Drawing.Color.FromArgb(224, 224, 224);
+		this.exportButton.Location = new System.Drawing.Point(478, 62);
+		this.exportButton.Name = "exportButton";
+		this.exportButton.Size = new System.Drawing.Size(110, 25);
+		this.exportButton.TabIndex = 15;
+		this.exportButton.Text = "CSVエクスポート";
+		this.exportButton.UseVisualStyleBackColor = false;
+		this.exportButton.Visible = false;
+		this.exportButton.Click += new System.EventHandler(exportButton_Click);
+		this.importButton.BackColor = System.Drawing.Color.FromArgb(224, 224, 224);
+		this.importButton.Location = new System.Drawing.Point(478, 88);
+		this.importButton.Name = "importButton";
+		this.importButton.Size = new System.Drawing.Size(110, 25);
+		this.importButton.TabIndex = 16;
+		this.importButton.Text = "CSVインポート";
+		this.importButton.UseVisualStyleBackColor = false;
+		this.importButton.Visible = false;
+		this.importButton.Click += new System.EventHandler(importButton_Click);
 		this.pt_kana.BackColor = System.Drawing.SystemColors.ScrollBar;
 		this.pt_kana.Location = new System.Drawing.Point(270, 11);
 		this.pt_kana.Name = "pt_kana";
@@ -636,6 +671,9 @@ public class Form1 : Form
 		base.ClientSize = new System.Drawing.Size(604, 835);
 		base.Controls.Add(this.pt_sex);
 		base.Controls.Add(this.pt_kana);
+		base.Controls.Add(this.exportButton);
+		base.Controls.Add(this.importButton);
+		base.Controls.Add(this.settingButton);
 		base.Controls.Add(this.findAgreeButton);
 		base.Controls.Add(this.tmpStaffButton);
 		base.Controls.Add(this.panel1);
@@ -1395,5 +1433,309 @@ public class Form1 : Form
 	{
 		FindAgree findAgree = new FindAgree(this);
 		findAgree.Show();
+	}
+
+	private void settingButton_Click(object sender, EventArgs e)
+	{
+		bool show = !exportButton.Visible;
+		exportButton.Visible = show;
+		importButton.Visible = show;
+		if (show)
+		{
+			exportButton.BringToFront();
+			importButton.BringToFront();
+		}
+	}
+
+	private void exportButton_Click(object sender, EventArgs e)
+	{
+		exportButton.Visible = false;
+		importButton.Visible = false;
+		if (Program.OfflineMode)
+		{
+			MessageBox.Show("オフラインモードのため、データを出力できません。", "エラー", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+			return;
+		}
+		using (FolderBrowserDialog fbd = new FolderBrowserDialog())
+		{
+			fbd.Description = "バックアップCSVを保存するフォルダを選択してください";
+			if (fbd.ShowDialog() == DialogResult.OK)
+			{
+				try
+				{
+					string folder = fbd.SelectedPath;
+					ExportTableToCsv("AGREE", Path.Combine(folder, "AGREE.csv"));
+					ExportTableToCsv("AGREE_TEMPLATE", Path.Combine(folder, "AGREE_TEMPLATE.csv"));
+					ExportTableToCsv("AGREE_STAFF", Path.Combine(folder, "AGREE_STAFF.csv"));
+					MessageBox.Show("3つのテーブルの出力が完了しました。\n保存先: " + folder, "完了", MessageBoxButtons.OK, MessageBoxIcon.Information);
+				}
+				catch (Exception ex)
+				{
+					MessageBox.Show("データ出力中にエラーが発生しました:\n" + ex.Message, "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				}
+			}
+		}
+	}
+
+	private void importButton_Click(object sender, EventArgs e)
+	{
+		exportButton.Visible = false;
+		importButton.Visible = false;
+		if (Program.OfflineMode)
+		{
+			MessageBox.Show("オフラインモードのため、データを取り込めません。", "エラー", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+			return;
+		}
+		if (MessageBox.Show("CSVデータを取り込みますか？\n同じIDのデータは上書き（マージ）されます。", "確認", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
+		{
+			return;
+		}
+		using (FolderBrowserDialog fbd = new FolderBrowserDialog())
+		{
+			fbd.Description = "取り込むCSVファイルがあるフォルダを選択してください";
+			if (fbd.ShowDialog() == DialogResult.OK)
+			{
+				try
+				{
+					string folder = fbd.SelectedPath;
+					StringBuilder report = new StringBuilder();
+					ImportTable(folder, "AGREE.csv", "AGREE", "AGREE_ID", "AGREE_SEQ", report);
+					ImportTable(folder, "AGREE_TEMPLATE.csv", "AGREE_TEMPLATE", "TEMP_ID", "AGREE_TEMPLATE_SEQ", report);
+					ImportTable(folder, "AGREE_STAFF.csv", "AGREE_STAFF", "ID", "AGREE_STAFF_SEQ", report);
+					MessageBox.Show("データの取り込みが完了しました。\n" + report.ToString(), "完了", MessageBoxButtons.OK, MessageBoxIcon.Information);
+					showList();
+				}
+				catch (Exception ex)
+				{
+					MessageBox.Show("データ取り込み中にエラーが発生しました:\n" + ex.Message, "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				}
+			}
+		}
+	}
+
+	private void ExportTableToCsv(string tableName, string filePath)
+	{
+		oraConn.Open();
+		try
+		{
+			using (OleDbCommand cmd = new OleDbCommand("select * from " + tableName, oraConn))
+			using (OleDbDataReader reader = cmd.ExecuteReader())
+			using (StreamWriter sw = new StreamWriter(filePath, append: false, Encoding.Default))
+			{
+				int fieldCount = reader.FieldCount;
+				for (int i = 0; i < fieldCount; i++)
+				{
+					sw.Write(CsvEscape(reader.GetName(i)));
+					if (i < fieldCount - 1)
+					{
+						sw.Write(",");
+					}
+				}
+				sw.WriteLine();
+				while (reader.Read())
+				{
+					for (int i = 0; i < fieldCount; i++)
+					{
+						sw.Write(CsvEscape(reader[i].ToString()));
+						if (i < fieldCount - 1)
+						{
+							sw.Write(",");
+						}
+					}
+					sw.WriteLine();
+				}
+			}
+		}
+		finally
+		{
+			if (oraConn.State != ConnectionState.Closed)
+			{
+				oraConn.Close();
+			}
+		}
+	}
+
+	private string CsvEscape(string value)
+	{
+		if (value == null)
+		{
+			value = "";
+		}
+		if (value.Contains(",") || value.Contains("\"") || value.Contains("\n") || value.Contains("\r"))
+		{
+			value = "\"" + value.Replace("\"", "\"\"") + "\"";
+		}
+		return value;
+	}
+
+	private void ImportTable(string folder, string fileName, string tableName, string keyColumn, string seqName, StringBuilder report)
+	{
+		string path = Path.Combine(folder, fileName);
+		if (!File.Exists(path))
+		{
+			report.AppendLine(fileName + " : スキップ（ファイルがありません）");
+			return;
+		}
+		int count = MergeCsvToTable(tableName, keyColumn, path);
+		ResyncSequence(seqName, tableName, keyColumn);
+		report.AppendLine(fileName + " : " + count + "件 取り込みました");
+	}
+
+	private int MergeCsvToTable(string tableName, string keyColumn, string filePath)
+	{
+		int count = 0;
+		oraConn.Open();
+		OleDbTransaction tx = oraConn.BeginTransaction();
+		try
+		{
+			using (TextFieldParser parser = new TextFieldParser(filePath, Encoding.Default))
+			{
+				parser.TextFieldType = FieldType.Delimited;
+				parser.SetDelimiters(",");
+				parser.HasFieldsEnclosedInQuotes = true;
+				if (parser.EndOfData)
+				{
+					tx.Commit();
+					return 0;
+				}
+				string[] columns = parser.ReadFields();
+				for (int i = 0; i < columns.Length; i++)
+				{
+					columns[i] = columns[i].Trim();
+				}
+				int keyIndex = Array.FindIndex(columns, (string c) => c.Equals(keyColumn, StringComparison.OrdinalIgnoreCase));
+				if (keyIndex < 0)
+				{
+					throw new Exception(tableName + " のCSVに " + keyColumn + " 列がありません。");
+				}
+				while (!parser.EndOfData)
+				{
+					string[] values = parser.ReadFields();
+					if (values == null)
+					{
+						continue;
+					}
+					MergeRow(tableName, keyColumn, columns, values, keyIndex, tx);
+					count++;
+				}
+			}
+			tx.Commit();
+		}
+		catch
+		{
+			tx.Rollback();
+			throw;
+		}
+		finally
+		{
+			if (oraConn.State != ConnectionState.Closed)
+			{
+				oraConn.Close();
+			}
+		}
+		return count;
+	}
+
+	private void MergeRow(string tableName, string keyColumn, string[] columns, string[] values, int keyIndex, OleDbTransaction tx)
+	{
+		string keyValue = SqlValue(values[keyIndex]);
+		int exists;
+		using (OleDbCommand chk = new OleDbCommand("select count(*) from " + tableName + " where " + keyColumn + " = " + keyValue, oraConn, tx))
+		{
+			exists = Convert.ToInt32(chk.ExecuteScalar());
+		}
+		StringBuilder sql = new StringBuilder();
+		if (exists > 0)
+		{
+			sql.Append("update " + tableName + " set ");
+			bool first = true;
+			for (int i = 0; i < columns.Length; i++)
+			{
+				if (i == keyIndex)
+				{
+					continue;
+				}
+				if (!first)
+				{
+					sql.Append(", ");
+				}
+				sql.Append(columns[i] + " = " + SqlValue(values[i]));
+				first = false;
+			}
+			sql.Append(" where " + keyColumn + " = " + keyValue);
+		}
+		else
+		{
+			sql.Append("insert into " + tableName + " (");
+			sql.Append(string.Join(", ", columns));
+			sql.Append(") values (");
+			for (int i = 0; i < values.Length; i++)
+			{
+				if (i > 0)
+				{
+					sql.Append(", ");
+				}
+				sql.Append(SqlValue(values[i]));
+			}
+			sql.Append(")");
+		}
+		using (OleDbCommand cmd = new OleDbCommand(sql.ToString(), oraConn, tx))
+		{
+			cmd.ExecuteNonQuery();
+		}
+	}
+
+	private string SqlValue(string value)
+	{
+		if (string.IsNullOrEmpty(value))
+		{
+			return "NULL";
+		}
+		return "'" + value.Replace("'", "''") + "'";
+	}
+
+	private void ResyncSequence(string seqName, string tableName, string keyColumn)
+	{
+		oraConn.Open();
+		try
+		{
+			long maxId;
+			using (OleDbCommand cmd = new OleDbCommand("select nvl(max(" + keyColumn + "), 0) from " + tableName, oraConn))
+			{
+				maxId = Convert.ToInt64(cmd.ExecuteScalar());
+			}
+			long current;
+			using (OleDbCommand cmd = new OleDbCommand("select " + seqName + ".nextval from dual", oraConn))
+			{
+				current = Convert.ToInt64(cmd.ExecuteScalar());
+			}
+			// 次に発行される値を maxId+1 にしたい。現在の nextval は current を返したので、
+			// 次の値は current+1。既に十分大きければ何もしない（シーケンスは後退させない）。
+			long gap = maxId + 1 - (current + 1);
+			if (gap > 0)
+			{
+				ExecuteDdl("alter sequence " + seqName + " increment by " + gap);
+				using (OleDbCommand cmd = new OleDbCommand("select " + seqName + ".nextval from dual", oraConn))
+				{
+					cmd.ExecuteScalar();
+				}
+				ExecuteDdl("alter sequence " + seqName + " increment by 1");
+			}
+		}
+		finally
+		{
+			if (oraConn.State != ConnectionState.Closed)
+			{
+				oraConn.Close();
+			}
+		}
+	}
+
+	private void ExecuteDdl(string sql)
+	{
+		using (OleDbCommand cmd = new OleDbCommand(sql, oraConn))
+		{
+			cmd.ExecuteNonQuery();
+		}
 	}
 }

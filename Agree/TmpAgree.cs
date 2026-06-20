@@ -92,6 +92,10 @@ public class TmpAgree : Form
 
 	private Button editTmpButton;
 
+	private Button upButton;
+
+	private Button downButton;
+
 	private ComboBox temp_parent;
 
 	private Label label5;
@@ -149,6 +153,8 @@ public class TmpAgree : Form
 			editTmpButton.Enabled = false;
 			regTmpButton.Enabled = false;
 			delTmpButton.Enabled = false;
+			upButton.Enabled = false;
+			downButton.Enabled = false;
 			temp_parent.Enabled = false;
 			return;
 		}
@@ -517,6 +523,62 @@ public class TmpAgree : Form
 		delTmpButton.Enabled = true;
 	}
 
+	private void upButton_Click(object sender, EventArgs e)
+	{
+		moveNode(-1);
+	}
+
+	private void downButton_Click(object sender, EventArgs e)
+	{
+		moveNode(1);
+	}
+
+	private void moveNode(int direction)
+	{
+		TreeNode selectedNode = tmpAgreeTree.SelectedNode;
+		if (selectedNode == null)
+		{
+			return;
+		}
+		TreeNodeCollection siblings = ((selectedNode.Parent == null) ? tmpAgreeTree.Nodes : selectedNode.Parent.Nodes);
+		int target = selectedNode.Index + direction;
+		if (target < 0 || target >= siblings.Count)
+		{
+			return;
+		}
+		List<string> ids = new List<string>();
+		foreach (TreeNode sibling in siblings)
+		{
+			ids.Add(sibling.Name);
+		}
+		string movingId = ids[selectedNode.Index];
+		ids.RemoveAt(selectedNode.Index);
+		ids.Insert(target, movingId);
+		try
+		{
+			oraConn.Open();
+			for (int i = 0; i < ids.Count; i++)
+			{
+				oraCmd.CommandText = "update AGREE_TEMPLATE set DISP_ORDER = " + i + " where TEMP_ID = " + ids[i];
+				oraCmd.ExecuteNonQuery();
+			}
+		}
+		finally
+		{
+			if (oraConn.State != System.Data.ConnectionState.Closed)
+			{
+				oraConn.Close();
+			}
+		}
+		initTree();
+		TreeNode[] movedNodes = tmpAgreeTree.Nodes.Find(movingId, searchAllChildren: true);
+		if (movedNodes.Length > 0)
+		{
+			tmpAgreeTree.SelectedNode = movedNodes[0];
+			movedNodes[0].EnsureVisible();
+		}
+	}
+
 	private int getTempIdFromNode(TreeNode tnode)
 	{
 		int result = -1;
@@ -575,6 +637,8 @@ public class TmpAgree : Form
 		this.label4 = new System.Windows.Forms.Label();
 		this.newTmpButton = new System.Windows.Forms.Button();
 		this.editTmpButton = new System.Windows.Forms.Button();
+		this.upButton = new System.Windows.Forms.Button();
+		this.downButton = new System.Windows.Forms.Button();
 		this.temp_parent = new System.Windows.Forms.ComboBox();
 		this.label5 = new System.Windows.Forms.Label();
 		this.panel2 = new System.Windows.Forms.Panel();
@@ -741,6 +805,20 @@ public class TmpAgree : Form
 		this.editTmpButton.Text = "編集";
 		this.editTmpButton.UseVisualStyleBackColor = true;
 		this.editTmpButton.Click += new System.EventHandler(editTmpButton_Click);
+		this.upButton.Location = new System.Drawing.Point(250, 504);
+		this.upButton.Name = "upButton";
+		this.upButton.Size = new System.Drawing.Size(69, 26);
+		this.upButton.TabIndex = 80;
+		this.upButton.Text = "上へ";
+		this.upButton.UseVisualStyleBackColor = true;
+		this.upButton.Click += new System.EventHandler(upButton_Click);
+		this.downButton.Location = new System.Drawing.Point(326, 504);
+		this.downButton.Name = "downButton";
+		this.downButton.Size = new System.Drawing.Size(69, 26);
+		this.downButton.TabIndex = 81;
+		this.downButton.Text = "下へ";
+		this.downButton.UseVisualStyleBackColor = true;
+		this.downButton.Click += new System.EventHandler(downButton_Click);
 		this.temp_parent.FormattingEnabled = true;
 		this.temp_parent.Location = new System.Drawing.Point(346, 35);
 		this.temp_parent.Name = "temp_parent";
@@ -836,6 +914,8 @@ public class TmpAgree : Form
 		base.Controls.Add(this.label5);
 		base.Controls.Add(this.temp_parent);
 		base.Controls.Add(this.editTmpButton);
+		base.Controls.Add(this.upButton);
+		base.Controls.Add(this.downButton);
 		base.Controls.Add(this.newTmpButton);
 		base.Controls.Add(this.label4);
 		base.Controls.Add(this.temp_id);
