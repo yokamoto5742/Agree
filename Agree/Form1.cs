@@ -266,7 +266,7 @@ public class Form1 : Form
 		this.agreeListMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[1] { this.copyNewMenuItem });
 		this.agreeListMenu.Name = "agreeListMenu";
 		this.copyNewMenuItem.Name = "copyNewMenuItem";
-		this.copyNewMenuItem.Text = "コピーして新規作成";
+		this.copyNewMenuItem.Text = "コピーして作成";
 		this.copyNewMenuItem.Click += new System.EventHandler(copyNewMenuItem_Click);
 		this.label2.AutoSize = true;
 		this.label2.Location = new System.Drawing.Point(18, 66);
@@ -992,10 +992,22 @@ public class Form1 : Form
 		Agree_id.Text = "";
 		tempPlanId = 0;
 		staff1_ok = true;
-		dr_id.Text = "";
-		dr_name.Text = "";
+		if (int.TryParse(patCont[9], out int drCode))
+		{
+			dr_id.Text = drCode.ToString();
+			dr_name.Text = patCont[10];
+		}
+		else
+		{
+			dr_id.Text = "";
+			dr_name.Text = "";
+		}
 		save_date.Value = DateTime.Today;
-		agreePlanListLabel.Text = "内容をコピーしました。入力者と作成日を確認して登録してください。";
+		if (regPlan() != -1)
+		{
+			showList();
+			MessageBox.Show("コピーして作成しました");
+		}
 	}
 
 	private void closeButton_Click(object sender, EventArgs e)
