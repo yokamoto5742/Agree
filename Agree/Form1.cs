@@ -768,7 +768,7 @@ public class Form1 : Form
 				dr_name.Text = patCont[10];
 				if (!Program.OfflineMode)
 				{
-					if (short.Parse(patCont[13]) > 0 && short.Parse(patCont[13]) < 20 && patCont[14].Length > 0)
+					if (short.Parse(patCont[13]) > 0 && short.Parse(patCont[13]) < 20 && patCont[14].Length > 0 && Dict.DeptDict.ContainsKey(short.Parse(patCont[13]).ToString()))
 					{
 						dept.Text = short.Parse(patCont[13]) + " " + Dict.DeptDict[short.Parse(patCont[13]).ToString()].ShortName;
 					}
