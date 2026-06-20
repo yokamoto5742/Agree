@@ -126,14 +126,7 @@ public class TmpAgree : Form
 	{
 		InitializeComponent();
 		f1 = F1;
-		if (applyButtonVisible)
-		{
-			applyTmpButton.Visible = true;
-		}
-		else
-		{
-			applyTmpButton.Visible = false;
-		}
+		applyTmpButton.Visible = applyButtonVisible;
 	}
 
 	private void TmpPlan_Load(object sender, EventArgs e)
@@ -167,6 +160,30 @@ public class TmpAgree : Form
 		oraCmd.Connection = oraConn;
 		loadParents();
 		initTree();
+	}
+
+	/// <summary>
+	/// 入力欄（テキスト欄・コンボ）の背景色をまとめて設定する。
+	/// clearText が true のときは内容も空にする。
+	/// </summary>
+	private void setTmpFields(Color backColor, bool clearText)
+	{
+		foreach (TextBox tmpBox in tmpBoxList)
+		{
+			if (clearText)
+			{
+				tmpBox.Text = "";
+			}
+			tmpBox.BackColor = backColor;
+		}
+		foreach (ComboBox tmpCombo in tmpComboList)
+		{
+			if (clearText)
+			{
+				tmpCombo.Text = "";
+			}
+			tmpCombo.BackColor = backColor;
+		}
 	}
 
 	private void loadParents()
@@ -270,14 +287,7 @@ public class TmpAgree : Form
 		editTmpButton.Enabled = false;
 		regTmpButton.Enabled = false;
 		delTmpButton.Enabled = false;
-		foreach (TextBox tmpBox in tmpBoxList)
-		{
-			tmpBox.BackColor = Color.LightGray;
-		}
-		foreach (ComboBox tmpCombo in tmpComboList)
-		{
-			tmpCombo.BackColor = Color.LightGray;
-		}
+		setTmpFields(Color.LightGray, clearText: false);
 		temp_parent.Enabled = false;
 	}
 
@@ -326,16 +336,7 @@ public class TmpAgree : Form
 		if (tnode.Level == 0)
 		{
 			applyTmpButton.Enabled = false;
-			foreach (TextBox tmpBox in tmpBoxList)
-			{
-				tmpBox.Text = "";
-				tmpBox.BackColor = Color.LightGray;
-			}
-			foreach (ComboBox tmpCombo in tmpComboList)
-			{
-				tmpCombo.Text = "";
-				tmpCombo.BackColor = Color.LightGray;
-			}
+			setTmpFields(Color.LightGray, clearText: true);
 			this.temp_id.Text = tnode.Name;
 			temp_name.Text = tnode.Text;
 			temp_parent.Text = "";
@@ -391,16 +392,7 @@ public class TmpAgree : Form
 				oraConn.Close();
 			}
 		}
-		foreach (TextBox tmpBox in tmpBoxList)
-		{
-			tmpBox.Text = "";
-			tmpBox.BackColor = Color.LightGray;
-		}
-		foreach (ComboBox tmpCombo in tmpComboList)
-		{
-			tmpCombo.Text = "";
-			tmpCombo.BackColor = Color.LightGray;
-		}
+		setTmpFields(Color.LightGray, clearText: true);
 		temp_parent.Text = "";
 		temp_parent.BackColor = Color.LightGray;
 		temp_parent.Enabled = false;
@@ -439,16 +431,7 @@ public class TmpAgree : Form
 				}
 			}
 		}
-		foreach (TextBox tmpBox in tmpBoxList)
-		{
-			tmpBox.Text = "";
-			tmpBox.BackColor = Color.LightGray;
-		}
-		foreach (ComboBox tmpCombo in tmpComboList)
-		{
-			tmpCombo.Text = "";
-			tmpCombo.BackColor = Color.LightGray;
-		}
+		setTmpFields(Color.LightGray, clearText: true);
 		temp_parent.Text = "";
 		temp_parent.BackColor = Color.LightGray;
 		temp_parent.Enabled = false;
@@ -500,24 +483,24 @@ public class TmpAgree : Form
 
 	private void tmpPlanTree_NodeMouseClick(object sender, TreeNodeMouseClickEventArgs e)
 	{
-		bool flag = true;
+		bool proceed = true;
 		if (regTmpButton.Enabled)
 		{
 			switch (MessageBox.Show("編集中のテンプレートがあります。保存しますか？", "テンプレート編集中", MessageBoxButtons.YesNoCancel))
 			{
 			case DialogResult.Yes:
 				regPlanTemplate();
-				flag = true;
+				proceed = true;
 				break;
 			case DialogResult.No:
-				flag = true;
+				proceed = true;
 				break;
 			default:
-				flag = false;
+				proceed = false;
 				break;
 			}
 		}
-		if (!flag)
+		if (!proceed)
 		{
 			return;
 		}
@@ -540,14 +523,7 @@ public class TmpAgree : Form
 			regTmpButton.Enabled = false;
 			delTmpButton.Enabled = false;
 		}
-		foreach (TextBox tmpBox in tmpBoxList)
-		{
-			tmpBox.BackColor = Color.LightGray;
-		}
-		foreach (ComboBox tmpCombo in tmpComboList)
-		{
-			tmpCombo.BackColor = Color.LightGray;
-		}
+		setTmpFields(Color.LightGray, clearText: false);
 		temp_parent.BackColor = Color.LightGray;
 		temp_parent.Enabled = false;
 		showTemplate(e.Node);
@@ -561,16 +537,7 @@ public class TmpAgree : Form
 		}
 		editingParent = false;
 		panel2.Enabled = true;
-		foreach (TextBox tmpBox in tmpBoxList)
-		{
-			tmpBox.Text = "";
-			tmpBox.BackColor = Color.White;
-		}
-		foreach (ComboBox tmpCombo in tmpComboList)
-		{
-			tmpCombo.Text = "";
-			tmpCombo.BackColor = Color.White;
-		}
+		setTmpFields(Color.White, clearText: true);
 		temp_parent.Text = tmpAgreeTree.SelectedNode.Text;
 		temp_parent.BackColor = Color.White;
 		temp_parent.Enabled = true;
@@ -588,14 +555,7 @@ public class TmpAgree : Form
 		editingParent = selectedNode != null && selectedNode.Level == 0;
 		if (editingParent)
 		{
-			foreach (TextBox tmpBox in tmpBoxList)
-			{
-				tmpBox.BackColor = Color.LightGray;
-			}
-			foreach (ComboBox tmpCombo in tmpComboList)
-			{
-				tmpCombo.BackColor = Color.LightGray;
-			}
+			setTmpFields(Color.LightGray, clearText: false);
 			temp_name.BackColor = Color.White;
 			temp_parent.Text = "";
 			temp_parent.BackColor = Color.LightGray;
@@ -604,14 +564,7 @@ public class TmpAgree : Form
 		}
 		else
 		{
-			foreach (TextBox tmpBox in tmpBoxList)
-			{
-				tmpBox.BackColor = Color.White;
-			}
-			foreach (ComboBox tmpCombo in tmpComboList)
-			{
-				tmpCombo.BackColor = Color.White;
-			}
+			setTmpFields(Color.White, clearText: false);
 			temp_parent.BackColor = Color.White;
 			temp_parent.Enabled = true;
 			panel2.Enabled = true;
@@ -627,16 +580,7 @@ public class TmpAgree : Form
 	private void addParentButton_Click(object sender, EventArgs e)
 	{
 		editingParent = true;
-		foreach (TextBox tmpBox in tmpBoxList)
-		{
-			tmpBox.Text = "";
-			tmpBox.BackColor = Color.LightGray;
-		}
-		foreach (ComboBox tmpCombo in tmpComboList)
-		{
-			tmpCombo.Text = "";
-			tmpCombo.BackColor = Color.LightGray;
-		}
+		setTmpFields(Color.LightGray, clearText: true);
 		temp_name.BackColor = Color.White;
 		temp_parent.Text = "";
 		temp_parent.BackColor = Color.LightGray;

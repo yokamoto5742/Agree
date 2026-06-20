@@ -8,10 +8,6 @@ using Microsoft.Office.Interop.Excel;
 
 internal class ExcelControl
 {
-	private string fileName = "";
-
-	private string sheetName = "";
-
 	private Dictionary<string, string> valueList = new Dictionary<string, string>();
 
 	private Application exApp;
@@ -19,22 +15,6 @@ internal class ExcelControl
 	private _Workbook exWorkbook;
 
 	private _Worksheet exWorksheet;
-
-	public string FileName
-	{
-		set
-		{
-			fileName = value;
-		}
-	}
-
-	public string SheetName
-	{
-		set
-		{
-			sheetName = value;
-		}
-	}
 
 	public Dictionary<string, string> ValueList
 	{
@@ -49,11 +29,6 @@ internal class ExcelControl
 		Marshal.ReleaseComObject(exWorksheet);
 		Marshal.ReleaseComObject(exWorkbook);
 		Marshal.ReleaseComObject(exApp);
-	}
-
-	public void Save(string fileName)
-	{
-		exWorkbook.SaveAs(fileName, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value, XlSaveAsAccessMode.xlExclusive, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value);
 	}
 
 	public string Open(string fileName, string sheetName)
@@ -114,10 +89,5 @@ internal class ExcelControl
 		Marshal.ReleaseComObject(range5);
 		Marshal.ReleaseComObject(range6);
 		Marshal.ReleaseComObject(range7);
-	}
-
-	public void RunVBA(string methodName)
-	{
-		exApp.Run(methodName, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value);
 	}
 }

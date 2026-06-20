@@ -4,7 +4,6 @@ using System.ComponentModel;
 using System.Data;
 using System.Data.OleDb;
 using System.Drawing;
-using System.Drawing.Printing;
 using System.IO;
 using System.Text;
 using System.Windows.Forms;
@@ -83,10 +82,6 @@ public class Form1 : Form
 
 	private Label label19;
 
-	private PrintDocument printDocument1;
-
-	private PrintPreviewDialog printPreviewDialog1;
-
 	private Button tmpAgreeButton;
 
 	private DateTimePicker save_date;
@@ -138,16 +133,6 @@ public class Form1 : Form
 	private TextBox anes;
 
 	private string[] patCont = new string[50];
-
-	private int tempPlanId;
-
-	private int printPage;
-
-	private bool printOK;
-
-	private List<double> agreeDateList = new List<double>();
-
-	private List<TextBox> agreeBoxList = new List<TextBox>();
 
 	private OleDbConnection oraConn;
 
@@ -201,8 +186,6 @@ public class Form1 : Form
 		this.dr_name = new System.Windows.Forms.TextBox();
 		this.dept = new System.Windows.Forms.ComboBox();
 		this.label19 = new System.Windows.Forms.Label();
-		this.printDocument1 = new System.Drawing.Printing.PrintDocument();
-		this.printPreviewDialog1 = new System.Windows.Forms.PrintPreviewDialog();
 		this.tmpAgreeButton = new System.Windows.Forms.Button();
 		this.save_date = new System.Windows.Forms.DateTimePicker();
 		this.label3 = new System.Windows.Forms.Label();
@@ -448,14 +431,6 @@ public class Form1 : Form
 		this.label19.Size = new System.Drawing.Size(41, 12);
 		this.label19.TabIndex = 28;
 		this.label19.Text = "診療科";
-		this.printDocument1.PrintPage += new System.Drawing.Printing.PrintPageEventHandler(printDocument1_PrintPage);
-		this.printPreviewDialog1.AutoScrollMargin = new System.Drawing.Size(0, 0);
-		this.printPreviewDialog1.AutoScrollMinSize = new System.Drawing.Size(0, 0);
-		this.printPreviewDialog1.ClientSize = new System.Drawing.Size(400, 300);
-		this.printPreviewDialog1.Enabled = true;
-		this.printPreviewDialog1.Icon = (System.Drawing.Icon)resources.GetObject("printPreviewDialog1.Icon");
-		this.printPreviewDialog1.Name = "printPreviewDialog1";
-		this.printPreviewDialog1.Visible = false;
 		this.tmpAgreeButton.Location = new System.Drawing.Point(242, 36);
 		this.tmpAgreeButton.Name = "tmpAgreeButton";
 		this.tmpAgreeButton.Size = new System.Drawing.Size(128, 25);
@@ -721,16 +696,6 @@ public class Form1 : Form
 			Program.OfflineMode = true;
 			MessageBox.Show("データベースに接続できません。オフラインモード（画面確認用）で起動します。\n" + ex.Message, "オフラインモード", MessageBoxButtons.OK, MessageBoxIcon.Warning);
 		}
-		agreeBoxList.Clear();
-		agreeBoxList.Add(dr_id);
-		agreeBoxList.Add(staff);
-		agreeBoxList.Add(diag);
-		agreeBoxList.Add(anes);
-		agreeBoxList.Add(ope);
-		agreeBoxList.Add(explanation);
-		agreeBoxList.Add(item1);
-		agreeBoxList.Add(item2);
-		agreeBoxList.Add(item3);
 		agreePlanListLabel.Text = "患者番号を入力して Enter を押すと既存の同意書が表示されます";
 		initShow();
 	}
@@ -764,73 +729,76 @@ public class Form1 : Form
 		sheetName.Text = "";
 	}
 
-	private void readPatCsv()
+	/// <summary>
+	/// Pat.csv の先頭行を patCont に読み込む。ファイルが無い／空の場合は false を返し、
+	/// patCont は変更しない（呼び出し側はその場合 patCont を参照しない）。
+	/// </summary>
+	private bool loadPatCsvFields()
 	{
 		string path = Env.LEGACY_HOME + "\\Pat.csv";
 		if (!File.Exists(path))
 		{
-			return;
+			return false;
 		}
-		StreamReader streamReader = new StreamReader(path, Encoding.Default);
-		string text;
-		if ((text = streamReader.ReadLine()) != null)
+		using (StreamReader reader = new StreamReader(path, Encoding.Default))
 		{
-			string[] fields = text.Split(',');
+			string line = reader.ReadLine();
+			if (line == null)
+			{
+				return false;
+			}
+			string[] fields = line.Split(',');
 			for (int i = 0; i < fields.Length && i < 50; i++)
 			{
 				patCont[i] = fields[i];
 			}
-			clearPlan();
-			pt_id.Text = int.Parse(patCont[2]).ToString();
-			pt_name.Text = patCont[3];
-			pt_kana.Text = patCont[5];
-			if (patCont[6] == "2")
-			{
-				pt_sex.Text = "女";
-			}
-			else if (patCont[6] == "1")
-			{
-				pt_sex.Text = "男";
-			}
-			if (int.Parse(pt_id.Text) > 0)
-			{
-				showList();
-			}
 		}
-		streamReader.Dispose();
+		return true;
+	}
+
+	private void readPatCsv()
+	{
+		if (!loadPatCsvFields())
+		{
+			return;
+		}
+		clearPlan();
+		pt_id.Text = int.Parse(patCont[2]).ToString();
+		pt_name.Text = patCont[3];
+		pt_kana.Text = patCont[5];
+		if (patCont[6] == "2")
+		{
+			pt_sex.Text = "女";
+		}
+		else if (patCont[6] == "1")
+		{
+			pt_sex.Text = "男";
+		}
+		if (int.Parse(pt_id.Text) > 0)
+		{
+			showList();
+		}
 	}
 
 	private void readPatCsv2()
 	{
-		string path = Env.LEGACY_HOME + "\\Pat.csv";
-		if (!File.Exists(path))
+		if (!loadPatCsvFields())
 		{
 			return;
 		}
-		StreamReader streamReader = new StreamReader(path, Encoding.Default);
-		string text;
-		if ((text = streamReader.ReadLine()) != null)
+		if (patCont[27] == "1")
 		{
-			string[] fields = text.Split(',');
-			for (int i = 0; i < fields.Length && i < 50; i++)
+			dr_id.Text = int.Parse(patCont[9]).ToString();
+			dr_name.Text = patCont[10];
+			if (!Program.OfflineMode)
 			{
-				patCont[i] = fields[i];
-			}
-			if (patCont[27] == "1")
-			{
-				dr_id.Text = int.Parse(patCont[9]).ToString();
-				dr_name.Text = patCont[10];
-				if (!Program.OfflineMode)
+				if (short.Parse(patCont[13]) > 0 && short.Parse(patCont[13]) < 20 && patCont[14].Length > 0 && Dict.DeptDict.ContainsKey(short.Parse(patCont[13]).ToString()))
 				{
-					if (short.Parse(patCont[13]) > 0 && short.Parse(patCont[13]) < 20 && patCont[14].Length > 0 && Dict.DeptDict.ContainsKey(short.Parse(patCont[13]).ToString()))
-					{
-						dept.Text = short.Parse(patCont[13]) + " " + Dict.DeptDict[short.Parse(patCont[13]).ToString()].ShortName;
-					}
-					getStaffRoom();
+					dept.Text = short.Parse(patCont[13]) + " " + Dict.DeptDict[short.Parse(patCont[13]).ToString()].ShortName;
 				}
+				getStaffRoom();
 			}
 		}
-		streamReader.Dispose();
 	}
 
 	private void showList()
@@ -960,7 +928,6 @@ public class Form1 : Form
 					staff1_ok = false;
 				}
 				printAgreeButton.Enabled = true;
-				tempPlanId = int.Parse(Agree_id.Text);
 			}
 		}
 		catch (Exception ex)
@@ -1030,7 +997,6 @@ public class Form1 : Form
 	{
 		showPlan(rowIndex);
 		Agree_id.Text = "";
-		tempPlanId = 0;
 		staff1_ok = true;
 		if (int.TryParse(patCont[9], out int drCode))
 		{
@@ -1062,9 +1028,7 @@ public class Form1 : Form
 		case 0:
 			if (MessageBox.Show("登録が完了しました。印刷しますか？", "完了", MessageBoxButtons.YesNo) == DialogResult.Yes)
 			{
-				printOK = true;
 				printAgree();
-				printOK = false;
 			}
 			showList();
 			break;
@@ -1197,10 +1161,6 @@ public class Form1 : Form
 		{
 			save_date.Focus();
 		}
-	}
-
-	private void printDocument1_PrintPage(object sender, PrintPageEventArgs e)
-	{
 	}
 
 	private void printPlanButton_Click(object sender, EventArgs e)
@@ -1388,18 +1348,15 @@ public class Form1 : Form
 			case DialogResult.Yes:
 				regPlan();
 				clearPlan();
-				tempPlanId = 0;
 				break;
 			case DialogResult.No:
 				clearPlan();
-				tempPlanId = 0;
 				break;
 			}
 		}
 		else
 		{
 			clearPlan();
-			tempPlanId = 0;
 		}
 		sheetName.Text = "通常";
 		eye.Text = "右";

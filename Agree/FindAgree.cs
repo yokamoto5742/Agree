@@ -226,18 +226,17 @@ public class FindAgree : Form
 		{
 			return;
 		}
-		string text = "Select AGREE.AGREE_ID, AGREE.SAVE_DATE, AGREE.PATIENT_ID, Trim(M_PATIENT.P_NAME), AGREE.DEPT, Trim(M_DEPT.S_NAME), AGREE.DR, Trim(M_USR.NAME), case when AGREE.DR_OK = 1 then '○' else '-' end as 医師完了 from AGREE inner join M_PATIENT" + Env.DB_LINK + " on M_PATIENT.P_ID = AGREE.PATIENT_ID inner join M_DEPT" + Env.DB_LINK + " on AGREE.DEPT = M_DEPT.CODE inner join M_USR" + Env.DB_LINK + " on AGREE.DR = M_USR.CODE where DELETE_FLAG = 0 ";
-		string text2 = text;
-		text = text2 + " and SAVE_DATE >= " + dateFrom.Value.ToString("yyyyMMdd") + " and SAVE_DATE <= " + dateTo.Value.ToString("yyyyMMdd");
+		string sql = "Select AGREE.AGREE_ID, AGREE.SAVE_DATE, AGREE.PATIENT_ID, Trim(M_PATIENT.P_NAME), AGREE.DEPT, Trim(M_DEPT.S_NAME), AGREE.DR, Trim(M_USR.NAME), case when AGREE.DR_OK = 1 then '○' else '-' end as 医師完了 from AGREE inner join M_PATIENT" + Env.DB_LINK + " on M_PATIENT.P_ID = AGREE.PATIENT_ID inner join M_DEPT" + Env.DB_LINK + " on AGREE.DEPT = M_DEPT.CODE inner join M_USR" + Env.DB_LINK + " on AGREE.DR = M_USR.CODE where DELETE_FLAG = 0 ";
+		sql += " and SAVE_DATE >= " + dateFrom.Value.ToString("yyyyMMdd") + " and SAVE_DATE <= " + dateTo.Value.ToString("yyyyMMdd");
 		if (dr_ok2.Checked)
 		{
-			text += " and DR_OK = 1";
+			sql += " and DR_OK = 1";
 		}
 		else if (dr_ok3.Checked)
 		{
-			text += " and DR_OK = 0";
+			sql += " and DR_OK = 0";
 		}
-		oraCmd.CommandText = text;
+		oraCmd.CommandText = sql;
 		OleDbDataAdapter oleDbDataAdapter = new OleDbDataAdapter(oraCmd);
 		DataSet dataSet = new DataSet();
 		oleDbDataAdapter.Fill(dataSet, "同意書");

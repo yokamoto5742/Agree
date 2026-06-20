@@ -75,14 +75,11 @@ public class TmpStaff : Form
 	{
 		if (rowId >= 0 && rowId < staffGridView.Rows.Count)
 		{
-			string text = staffGridView.Rows[rowId].Cells[0].Value.ToString();
-			string text2 = staffGridView.Rows[rowId].Cells[1].Value.ToString();
-			string text3 = staffGridView.Rows[rowId].Cells[2].Value.ToString();
-			string text4 = staffGridView.Rows[rowId].Cells[3].Value.ToString();
-			id.Text = text;
-			staff_id.Text = text2;
-			staff_name.Text = text3;
-			cont.Text = text4;
+			DataGridViewRow row = staffGridView.Rows[rowId];
+			id.Text = row.Cells[0].Value.ToString();
+			staff_id.Text = row.Cells[1].Value.ToString();
+			staff_name.Text = row.Cells[2].Value.ToString();
+			cont.Text = row.Cells[3].Value.ToString();
 		}
 	}
 
@@ -164,7 +161,7 @@ public class TmpStaff : Form
 		{
 			return;
 		}
-		bool flag = false;
+		bool found = false;
 		if (staff_id.Text.Length <= 0)
 		{
 			return;
@@ -178,11 +175,11 @@ public class TmpStaff : Form
 				{
 					id.Text = item.Cells[0].Value.ToString();
 					cont.Text = item.Cells[3].Value.ToString();
-					flag = true;
+					found = true;
 					break;
 				}
 			}
-			if (!flag)
+			if (!found)
 			{
 				clearStaff(clearId: true, clearStaffId: false);
 			}
@@ -197,10 +194,6 @@ public class TmpStaff : Form
 	private void closeButton_Click(object sender, EventArgs e)
 	{
 		Dispose();
-	}
-
-	private void TmpStaff_Load(object sender, EventArgs e)
-	{
 	}
 
 	protected override void Dispose(bool disposing)
@@ -313,7 +306,6 @@ public class TmpStaff : Form
 		base.Icon = (System.Drawing.Icon)resources.GetObject("$this.Icon");
 		base.Name = "TmpStaff";
 		this.Text = "担当者テンプレート";
-		base.Load += new System.EventHandler(TmpStaff_Load);
 		((System.ComponentModel.ISupportInitialize)this.staffGridView).EndInit();
 		base.ResumeLayout(false);
 		base.PerformLayout();
