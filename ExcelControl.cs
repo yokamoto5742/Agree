@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
@@ -65,7 +65,7 @@ internal class ExcelControl
 
 	public void MakeEyeAgree(string sheetName)
 	{
-		Open(Env.AGENT_HOME + "\\Agree_眼科同意書.xls", "共通情報");
+		Open(Env.AGENT_HOME + "\\Agree_眼科同意書.xlsm", "共通情報");
 		setValue(valueList);
 		exWorksheet.Cells[8, 2] = DateTime.Now.ToString("yyyyMMdd");
 		exWorksheet.Cells[9, 2] = DateTime.Now.ToString("HHmmss");
