@@ -1525,7 +1525,7 @@ public class Form1 : Form
 				int fieldCount = reader.FieldCount;
 				for (int i = 0; i < fieldCount; i++)
 				{
-					sw.Write(CsvEscape(reader.GetName(i)));
+					sw.Write(AgreeSql.CsvEscape(reader.GetName(i)));
 					if (i < fieldCount - 1)
 					{
 						sw.Write(",");
@@ -1536,7 +1536,7 @@ public class Form1 : Form
 				{
 					for (int i = 0; i < fieldCount; i++)
 					{
-						sw.Write(CsvEscape(reader[i].ToString()));
+						sw.Write(AgreeSql.CsvEscape(reader[i].ToString()));
 						if (i < fieldCount - 1)
 						{
 							sw.Write(",");
@@ -1553,19 +1553,6 @@ public class Form1 : Form
 				oraConn.Close();
 			}
 		}
-	}
-
-	private string CsvEscape(string value)
-	{
-		if (value == null)
-		{
-			value = "";
-		}
-		if (value.Contains(",") || value.Contains("\"") || value.Contains("\n") || value.Contains("\r"))
-		{
-			value = "\"" + value.Replace("\"", "\"\"") + "\"";
-		}
-		return value;
 	}
 
 	private void ImportTable(string folder, string fileName, string tableName, string keyColumn, string seqName, StringBuilder report)
@@ -1638,7 +1625,7 @@ public class Form1 : Form
 
 	private void MergeRow(string tableName, string keyColumn, string[] columns, string[] values, int keyIndex, OleDbTransaction tx)
 	{
-		string keyValue = SqlValue(values[keyIndex]);
+		string keyValue = AgreeSql.SqlValue(values[keyIndex]);
 		int exists;
 		using (OleDbCommand chk = new OleDbCommand("select count(*) from " + tableName + " where " + keyColumn + " = " + keyValue, oraConn, tx))
 		{
@@ -1659,7 +1646,7 @@ public class Form1 : Form
 				{
 					sql.Append(", ");
 				}
-				sql.Append(columns[i] + " = " + SqlValue(values[i]));
+				sql.Append(columns[i] + " = " + AgreeSql.SqlValue(values[i]));
 				first = false;
 			}
 			sql.Append(" where " + keyColumn + " = " + keyValue);
@@ -1675,7 +1662,7 @@ public class Form1 : Form
 				{
 					sql.Append(", ");
 				}
-				sql.Append(SqlValue(values[i]));
+				sql.Append(AgreeSql.SqlValue(values[i]));
 			}
 			sql.Append(")");
 		}
@@ -1683,15 +1670,6 @@ public class Form1 : Form
 		{
 			cmd.ExecuteNonQuery();
 		}
-	}
-
-	private string SqlValue(string value)
-	{
-		if (string.IsNullOrEmpty(value))
-		{
-			return "NULL";
-		}
-		return "'" + value.Replace("'", "''") + "'";
 	}
 
 	private void ResyncSequence(string seqName, string tableName, string keyColumn)

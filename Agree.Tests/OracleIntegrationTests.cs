@@ -1,5 +1,6 @@
 using System;
 using System.Data.OleDb;
+using Agree;
 using NUnit.Framework;
 
 namespace Agree.Tests
@@ -101,6 +102,69 @@ namespace Agree.Tests
                 Assert.That(flag, Is.EqualTo(1), "DELETE_FLAG が 1 に更新されていること");
 
                 tx.Rollback(); // テストを再実行可能に保つ
+            }
+        }
+
+        /// <summary>
+        /// 自由記述欄に ' と日本語が混じっても、AgreeSql.SqlValue で正しくエスケープすれば
+        /// そのまま格納・読み戻しできること（regPlan が本来通すべきエスケープ契約の DB 実証）。
+        /// </summary>
+        [Test]
+        public void Agree_StoresApostropheAndJapanese_RoundTrips()
+        {
+            const string diag = "加齢黄斑変性（O'Brien法）";
+            using (var con = Open())
+            using (var tx = con.BeginTransaction())
+            {
+                long id = NextVal(con, tx, "AGREE_SEQ");
+
+                int inserted = Exec(con, tx,
+                    "INSERT INTO AGREE " +
+                    "(AGREE_ID, PATIENT_ID, SAVE_DATE, DEPT, DR, DIAG, DR_OK, DELETE_FLAG, SAVE_TIME) " +
+                    "VALUES (" + id + ", 1, 20260616, 1, 101, " + AgreeSql.SqlValue(diag) + ", 0, 0, 101010)");
+                Assert.That(inserted, Is.EqualTo(1), "エスケープ済みリテラルで INSERT が成立すること");
+
+                var read = Scalar(con, tx, "SELECT DIAG FROM AGREE WHERE AGREE_ID = " + id);
+                Assert.That(read, Is.EqualTo(diag), "' と日本語が無損失で読み戻せること");
+
+                tx.Rollback();
+            }
+        }
+
+        /// <summary>
+        /// regPlan が INSERT する全列を一度に往復させ、列名・型・本数の不一致を検出する。
+        /// </summary>
+        [Test]
+        public void Agree_FullColumnSet_RoundTrips()
+        {
+            using (var con = Open())
+            using (var tx = con.BeginTransaction())
+            {
+                long id = NextVal(con, tx, "AGREE_SEQ");
+
+                int inserted = Exec(con, tx,
+                    "INSERT INTO AGREE " +
+                    "(AGREE_ID, PATIENT_ID, SAVE_DATE, DEPT, DR, STAFF, EYE, DIAG, ANES, OPE, EXPLANATION, " +
+                    " ITEM1, ITEM2, ITEM3, ITEM4, SHEET_NAME, DR_OK, DELETE_FLAG, SAVE_TIME) " +
+                    "VALUES (" + id + ", 1, 20260616, 1, 101, '担当', '右', '病名', '局所', '術式', '説明', " +
+                    "'症状', '計画', '検査', '手術内容', '日帰り', 1, 0, 123456)");
+                Assert.That(inserted, Is.EqualTo(1));
+
+                using (var cmd = new OleDbCommand(
+                    "SELECT STAFF, EYE, DIAG, ANES, OPE, EXPLANATION, ITEM1, ITEM2, ITEM3, ITEM4, SHEET_NAME, DR_OK " +
+                    "FROM AGREE WHERE AGREE_ID = " + id, con, tx))
+                using (var r = cmd.ExecuteReader())
+                {
+                    Assert.That(r.Read(), Is.True, "INSERT した 1 行が読めること");
+                    Assert.That(r["STAFF"], Is.EqualTo("担当"));
+                    Assert.That(r["EYE"], Is.EqualTo("右"));
+                    Assert.That(r["DIAG"], Is.EqualTo("病名"));
+                    Assert.That(r["ITEM4"], Is.EqualTo("手術内容"));
+                    Assert.That(r["SHEET_NAME"], Is.EqualTo("日帰り"));
+                    Assert.That(Convert.ToInt32(r["DR_OK"]), Is.EqualTo(1));
+                }
+
+                tx.Rollback();
             }
         }
 

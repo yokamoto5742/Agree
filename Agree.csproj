@@ -99,6 +99,7 @@
       <DependentUpon>TmpStaff.cs</DependentUpon>
     </EmbeddedResource>
     <Compile Include="Agree\Program.cs" />
+    <Compile Include="Agree\AgreeSql.cs" />
     <Compile Include="ExcelControl.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
