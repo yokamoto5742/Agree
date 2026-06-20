@@ -564,7 +564,7 @@ public class Form1 : Form
 		this.sheetName.Size = new System.Drawing.Size(160, 20);
 		this.sheetName.TabIndex = 33;
 		this.label14.AutoSize = true;
-		this.label14.Location = new System.Drawing.Point(7, 418);
+		this.label14.Location = new System.Drawing.Point(7, 371);
 		this.label14.Name = "label14";
 		this.label14.RightToLeft = System.Windows.Forms.RightToLeft.No;
 		this.label14.Size = new System.Drawing.Size(53, 12);
@@ -577,7 +577,7 @@ public class Form1 : Form
 		this.eye.Name = "eye";
 		this.eye.Size = new System.Drawing.Size(109, 20);
 		this.eye.TabIndex = 4;
-		this.item4.Location = new System.Drawing.Point(87, 415);
+		this.item4.Location = new System.Drawing.Point(87, 368);
 		this.item4.MaxLength = 500;
 		this.item4.Multiline = true;
 		this.item4.Name = "item4";
