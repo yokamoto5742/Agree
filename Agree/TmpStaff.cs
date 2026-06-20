@@ -107,11 +107,11 @@ public class TmpStaff : Form
 			oraConn.Open();
 			if (id.Text.Length > 0)
 			{
-				oraCmd.CommandText = "update AGREE_STAFF set CONT = '" + cont.Text.Trim() + "' where ID = " + id.Text.Trim();
+				oraCmd.CommandText = "update AGREE_STAFF set CONT = " + AgreeSql.SqlValue(cont.Text.Trim()) + " where ID = " + id.Text.Trim();
 			}
 			else
 			{
-				oraCmd.CommandText = "insert into AGREE_STAFF (ID, STAFF, CONT) values (AGREE_STAFF_SEQ.nextval, " + staff_id.Text.Trim() + ", '" + cont.Text.Trim() + "')";
+				oraCmd.CommandText = "insert into AGREE_STAFF (ID, STAFF, CONT) values (AGREE_STAFF_SEQ.nextval, " + staff_id.Text.Trim() + ", " + AgreeSql.SqlValue(cont.Text.Trim()) + ")";
 			}
 			oraCmd.ExecuteNonQuery();
 			oraConn.Close();

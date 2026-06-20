@@ -365,7 +365,7 @@ public class TmpAgree : Form
 				MessageBox.Show("同じ名前の分類が既に存在します");
 				return;
 			}
-			text = ((temp_id.Text.Length <= 0) ? ("insert into AGREE_TEMPLATE (TEMP_ID, TEMP_LEVEL, TEMP_PARENT, TEMP_NAME, DELETE_FLAG) values (AGREE_TEMPLATE_SEQ.nextval, 0, 0, '" + temp_name.Text + "', 0)") : ("update AGREE_TEMPLATE set TEMP_NAME = '" + temp_name.Text + "' where TEMP_ID = " + temp_id.Text));
+			text = ((temp_id.Text.Length <= 0) ? ("insert into AGREE_TEMPLATE (TEMP_ID, TEMP_LEVEL, TEMP_PARENT, TEMP_NAME, DELETE_FLAG) values (AGREE_TEMPLATE_SEQ.nextval, 0, 0, " + AgreeSql.SqlValue(temp_name.Text) + ", 0)") : ("update AGREE_TEMPLATE set TEMP_NAME = " + AgreeSql.SqlValue(temp_name.Text) + " where TEMP_ID = " + temp_id.Text));
 		}
 		else
 		{
@@ -376,7 +376,7 @@ public class TmpAgree : Form
 				return;
 			}
 			string text2 = parentValue.ToString();
-			text = ((temp_id.Text.Length <= 0) ? ("insert into AGREE_TEMPLATE (TEMP_ID, TEMP_LEVEL, TEMP_PARENT, TEMP_NAME, EYE , DIAG, ANES ,OPE, EXPLANATION, ITEM1, ITEM2, ITEM3, ITEM4,SHEET_NAME, DELETE_FLAG) values (AGREE_TEMPLATE_SEQ.nextval, 1, " + text2 + ", '" + temp_name.Text + "', '" + eye.Text + "', '" + diag.Text + "', '" + anes.Text + "', '" + ope.Text + "', '" + explanation.Text + "', '" + item1.Text + "', '" + item2.Text + "', '" + item3.Text + "', '" + item4.Text + "', '" + sheetName.Text + "', 0)") : ("update AGREE_TEMPLATE set TEMP_NAME = '" + temp_name.Text + "', TEMP_PARENT = " + text2 + ", EYE = '" + eye.Text + "', DIAG = '" + diag.Text + "', ANES = '" + anes.Text + "', OPE = '" + ope.Text + "', EXPLANATION = '" + explanation.Text + "', ITEM1 = '" + item1.Text + "', ITEM2 = '" + item2.Text + "', ITEM3 = '" + item3.Text + "', ITEM4 = '" + item4.Text + "', SHEET_NAME = '" + sheetName.Text + "' where TEMP_ID = " + temp_id.Text));
+			text = ((temp_id.Text.Length <= 0) ? ("insert into AGREE_TEMPLATE (TEMP_ID, TEMP_LEVEL, TEMP_PARENT, TEMP_NAME, EYE , DIAG, ANES ,OPE, EXPLANATION, ITEM1, ITEM2, ITEM3, ITEM4,SHEET_NAME, DELETE_FLAG) values (AGREE_TEMPLATE_SEQ.nextval, 1, " + text2 + ", " + AgreeSql.SqlValue(temp_name.Text) + ", " + AgreeSql.SqlValue(eye.Text) + ", " + AgreeSql.SqlValue(diag.Text) + ", " + AgreeSql.SqlValue(anes.Text) + ", " + AgreeSql.SqlValue(ope.Text) + ", " + AgreeSql.SqlValue(explanation.Text) + ", " + AgreeSql.SqlValue(item1.Text) + ", " + AgreeSql.SqlValue(item2.Text) + ", " + AgreeSql.SqlValue(item3.Text) + ", " + AgreeSql.SqlValue(item4.Text) + ", " + AgreeSql.SqlValue(sheetName.Text) + ", 0)") : ("update AGREE_TEMPLATE set TEMP_NAME = " + AgreeSql.SqlValue(temp_name.Text) + ", TEMP_PARENT = " + text2 + ", EYE = " + AgreeSql.SqlValue(eye.Text) + ", DIAG = " + AgreeSql.SqlValue(diag.Text) + ", ANES = " + AgreeSql.SqlValue(anes.Text) + ", OPE = " + AgreeSql.SqlValue(ope.Text) + ", EXPLANATION = " + AgreeSql.SqlValue(explanation.Text) + ", ITEM1 = " + AgreeSql.SqlValue(item1.Text) + ", ITEM2 = " + AgreeSql.SqlValue(item2.Text) + ", ITEM3 = " + AgreeSql.SqlValue(item3.Text) + ", ITEM4 = " + AgreeSql.SqlValue(item4.Text) + ", SHEET_NAME = " + AgreeSql.SqlValue(sheetName.Text) + " where TEMP_ID = " + temp_id.Text));
 		}
 		try
 		{
