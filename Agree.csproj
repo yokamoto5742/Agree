@@ -120,6 +120,7 @@
     <EmbeddedResource Include="util_project\AgentlabUtilityLibrary.StringForm.resx" />
     <None Include="docs\CHANGELOG.md" />
     <None Include="docs\LICENSE" />
+    <None Include="Properties\README.md" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
