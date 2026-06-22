@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -77,18 +78,52 @@ internal class ExcelControl
 	{
 		Open(Env.AGENT_HOME + "\\Agree_眼科同意書.xlsm", "共通情報");
 		setValue(valueList);
-		exWorksheet.Cells[8, 2] = DateTime.Now.ToString("yyyyMMdd");
-		exWorksheet.Cells[9, 2] = DateTime.Now.ToString("HHmmss");
+		// 日付・時刻は1回だけ取得し、セル・バーコード値・ファイル名で共用する。
+		DateTime now = DateTime.Now;
+		string ymd = now.ToString("yyyyMMdd");
+		string hms = now.ToString("HHmmss");
+		exWorksheet.Cells[8, 2] = ymd;
+		exWorksheet.Cells[9, 2] = hms;
 		Range range = (Range)(dynamic)exWorksheet.Cells[3, 2];
 		Range range2 = (Range)(dynamic)exWorksheet.Cells[7, 2];
 		Range range3 = (Range)(dynamic)exWorksheet.Cells[4, 2];
 		Range range4 = (Range)(dynamic)exWorksheet.Cells[22, 2];
 		Range range5 = (Range)(dynamic)exWorksheet.Cells[5, 2];
-		Range range6 = (Range)(dynamic)exWorksheet.Cells[8, 2];
-		Range range7 = (Range)(dynamic)exWorksheet.Cells[9, 2];
-		exWorksheet.Cells[11, 2] = (object)(((dynamic)range.Value2).ToString().PadLeft(9, '0') + ((dynamic)range3.Value2).ToString() + ((dynamic)range5.Value2).ToString().PadLeft(3, '0') + ((dynamic)range2.Value2).ToString().PadLeft(5, '0') + ((dynamic)range6.Value2).ToString() + ((dynamic)range7.Value2).ToString());
-		exWorksheet.Cells[23, 2] = (object)(((dynamic)range.Value2).ToString().PadLeft(9, '0') + ((dynamic)range4.Value2).ToString() + ((dynamic)range5.Value2).ToString().PadLeft(3, '0') + ((dynamic)range2.Value2).ToString().PadLeft(5, '0') + ((dynamic)range6.Value2).ToString() + ((dynamic)range7.Value2).ToString());
-		string filename = Environment.GetEnvironmentVariable("TEMP") + "\\" + ((dynamic)range.Value2).ToString() + "_" + DateTime.Now.ToString("yyyyMMdd") + DateTime.Now.ToString("HHmmss") + "_" + "眼科同意書";
+		// 36桁バーコード値を構築する。日付・時刻は Value2 経由だと数値化で先頭ゼロが落ちる
+		// （例: 093948→93948）ため、上で確定した文字列をそのまま使う。
+		string patient = ((dynamic)range.Value2).ToString().PadLeft(9, '0');
+		string dept = ((dynamic)range5.Value2).ToString().PadLeft(3, '0');
+		string doctor = ((dynamic)range2.Value2).ToString().PadLeft(5, '0');
+		string doc1 = ((dynamic)range3.Value2).ToString().PadLeft(5, '0');
+		string doc2 = ((dynamic)range4.Value2).ToString().PadLeft(5, '0');
+		string barcode11 = patient + doc1 + dept + doctor + ymd + hms;
+		string barcode23 = patient + doc2 + dept + doctor + ymd + hms;
+		exWorksheet.Cells[11, 2] = (object)barcode11;
+		exWorksheet.Cells[23, 2] = (object)barcode23;
+		// 「バーコード印刷」フラグ（共通情報!B17）が "1" のときのみ、全フォームシートへ
+		// バーコード画像を挿入する（SaveAs より前に行うことで保存ファイルへ残す）。
+		Range flagRange = (Range)(dynamic)exWorksheet.Cells[17, 2];
+		object flagValue = flagRange.Value2;
+		string barcodeFlag = (flagValue == null) ? "" : ((dynamic)flagValue).ToString();
+		Marshal.ReleaseComObject(flagRange);
+		if (barcodeFlag == "1")
+		{
+			Sheets sheets = exWorkbook.Sheets;
+			int sheetCount = sheets.Count;
+			for (int i = 1; i <= sheetCount; i++)
+			{
+				_Worksheet formSheet = (_Worksheet)(dynamic)sheets[i];
+                if (formSheet.Name != "共通情報")
+                {
+                    // 同意書の文書番号をB11から取得(39911)
+                    string barcodeText = barcode11;
+                    insertBarcode(formSheet, barcodeText);
+                }
+                Marshal.ReleaseComObject(formSheet);
+			}
+			Marshal.ReleaseComObject(sheets);
+		}
+		string filename = Environment.GetEnvironmentVariable("TEMP") + "\\" + ((dynamic)range.Value2).ToString() + "_" + ymd + hms + "_" + "眼科同意書";
 		exWorkbook.SaveAs(filename, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value, XlSaveAsAccessMode.xlExclusive, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value);
 		exWorksheet = (_Worksheet)(dynamic)exWorkbook.Sheets[resolveSheetName(sheetName)];
 		exWorksheet.Select(true);
@@ -97,7 +132,106 @@ internal class ExcelControl
 		Marshal.ReleaseComObject(range3);
 		Marshal.ReleaseComObject(range4);
 		Marshal.ReleaseComObject(range5);
-		Marshal.ReleaseComObject(range6);
-		Marshal.ReleaseComObject(range7);
+	}
+
+	// 定数（バーコード画像の解像度）。1モジュール=BARCODE_LINE_WIDTH px。
+	private const float BARCODE_LINE_WIDTH = 3f;
+
+	private const float BARCODE_HEIGHT = 80f;
+
+	private const int BARCODE_QUIET_MODULES = 10;
+
+	private void insertBarcode(_Worksheet sheet, string barcodeText)
+	{
+		if (string.IsNullOrEmpty(barcodeText))
+		{
+			return;
+		}
+		// CODE128-C は数字を2桁ずつ符号化するため、36桁（偶数・全数字）でないと
+		// 桁ずれを無言で誤エンコードする。満たさない場合は挿入しない。
+		if (barcodeText.Length != 36 || !isAllDigits(barcodeText))
+		{
+			System.Diagnostics.Debug.WriteLine("バーコード値が36桁の数字でないため挿入をスキップ: " + barcodeText);
+			return;
+		}
+		string tempPath = null;
+		Range anchor = null;
+		object shapes = null;
+		object picture = null;
+		try
+		{
+			tempPath = generateBarcodeImage(barcodeText);
+			anchor = (Range)(dynamic)sheet.Cells[1, 4]; // D1
+			float left = (float)(double)anchor.Left;
+			float top = (float)(double)anchor.Top;
+			shapes = sheet.Shapes;
+			// AddPicture(filename, LinkToFile=msoFalse(0), SaveWithDocument=msoTrue(-1), left, top, width, height)。
+			// MsoTriState は CLI ビルドでは未参照のため、遅延バインドで int(0/-1) を渡す。
+			picture = ((dynamic)shapes).AddPicture(tempPath, 0, -1, left, top, 250f, 30f);
+			((dynamic)picture).Placement = (int)XlPlacement.xlMove;
+		}
+		catch (Exception ex)
+		{
+			System.Diagnostics.Debug.WriteLine("バーコード挿入エラー: " + ex.Message);
+		}
+		finally
+		{
+			if (picture != null)
+			{
+				Marshal.ReleaseComObject(picture);
+			}
+			if (shapes != null)
+			{
+				Marshal.ReleaseComObject(shapes);
+			}
+			if (anchor != null)
+			{
+				Marshal.ReleaseComObject(anchor);
+			}
+			if (tempPath != null && File.Exists(tempPath))
+			{
+				try
+				{
+					File.Delete(tempPath);
+				}
+				catch
+				{
+				}
+			}
+		}
+	}
+
+	private string generateBarcodeImage(string barcodeText)
+	{
+		// CODE128-C のモジュール数: (開始1 + データ(桁/2) + チェック1)*11 + 停止13 + クワイエットゾーン両側。
+		int symbols = 2 + barcodeText.Length / 2;
+		int totalModules = symbols * 11 + 13 + BARCODE_QUIET_MODULES * 2;
+		int widthPx = (int)Math.Ceiling(totalModules * BARCODE_LINE_WIDTH);
+		int heightPx = (int)Math.Ceiling(BARCODE_HEIGHT);
+		string tempPath = Path.Combine(Path.GetTempPath(), "barcode_" + Guid.NewGuid().ToString("N") + ".png");
+		using (Bitmap bitmap = new Bitmap(widthPx, heightPx))
+		{
+			using (Graphics g = Graphics.FromImage(bitmap))
+			{
+				g.Clear(Color.White);
+				Barcode128 barcode = new Barcode128();
+				float left = BARCODE_QUIET_MODULES * BARCODE_LINE_WIDTH;
+				barcode.Draw(Barcode128.CODE.C, barcodeText, g, left, 0f, BARCODE_HEIGHT, BARCODE_LINE_WIDTH);
+			}
+			bitmap.Save(tempPath, System.Drawing.Imaging.ImageFormat.Png);
+		}
+		return tempPath;
+	}
+
+	private static bool isAllDigits(string s)
+	{
+		foreach (char c in s)
+		{
+			if (c < '0' || c > '9')
+			{
+				return false;
+			}
+		}
+		return true;
 	}
 }
