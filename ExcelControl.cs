@@ -43,6 +43,10 @@ internal class ExcelControl
 		{
 			exApp = (Application)Activator.CreateInstance(Type.GetTypeFromCLSID(new Guid("00024500-0000-0000-C000-000000000046")));
 			exApp.Visible = true;
+			// テンプレート(.xlsm)のイベントマクロ(Workbook_Open/Worksheet_Change/BeforeSave等)を
+			// 自動処理中は発火させない。対象シート以外のボタンを消すクリーンアップが
+			// マクロ側にある場合、これで抑止する。MakeEyeAgree の SaveAs 後に true へ戻す。
+			exApp.EnableEvents = false;
 			exWorkbook = exApp.Workbooks.Open(fileName, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value);
 			exWorksheet = (_Worksheet)(dynamic)exWorkbook.Sheets[sheetName];
 		}
@@ -77,6 +81,25 @@ internal class ExcelControl
 	public void MakeEyeAgree(string sheetName)
 	{
 		Open(Env.AGENT_HOME + "\\Agree_眼科同意書.xlsm", "共通情報");
+		// 自動保存時に「セッション中アクティブにされていないシートのフォームコントロール
+		// （ボタン）が脱落する」既知の挙動を回避するため、全シートを一度アクティブ化して
+		// 描画レイヤーを確実に読み込ませる。EnableEvents=false 中なのでイベントは発火しない。
+		Sheets activateSheets = exWorkbook.Sheets;
+		int activateCount = activateSheets.Count;
+		for (int i = 1; i <= activateCount; i++)
+		{
+			_Worksheet ws = (_Worksheet)(dynamic)activateSheets[i];
+			try
+			{
+				ws.Activate();
+			}
+			catch
+			{
+				// 非表示シートはアクティブ化できないためスキップ
+			}
+			Marshal.ReleaseComObject(ws);
+		}
+		Marshal.ReleaseComObject(activateSheets);
 		setValue(valueList);
 		// 日付・時刻は1回だけ取得し、セル・バーコード値・ファイル名で共用する。
 		DateTime now = DateTime.Now;
@@ -123,10 +146,14 @@ internal class ExcelControl
 			}
 			Marshal.ReleaseComObject(sheets);
 		}
-		string filename = Environment.GetEnvironmentVariable("TEMP") + "\\" + ((dynamic)range.Value2).ToString() + "_" + ymd + hms + "_" + "眼科同意書";
-		exWorkbook.SaveAs(filename, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value, XlSaveAsAccessMode.xlExclusive, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value);
+		string filename = Environment.GetEnvironmentVariable("TEMP") + "\\" + ((dynamic)range.Value2).ToString() + "_" + ymd + hms + "_" + "眼科同意書.xlsm";
+		// マクロ有効形式(.xlsm)を明示して保存する。FileFormat未指定だとマクロ無効形式へ変換され、
+		// 全シートのボタン（フォームコントロール／ActiveX）が一時ファイルから消える。
+		exWorkbook.SaveAs(filename, XlFileFormat.xlOpenXMLWorkbookMacroEnabled, Missing.Value, Missing.Value, Missing.Value, Missing.Value, XlSaveAsAccessMode.xlExclusive, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value);
 		exWorksheet = (_Worksheet)(dynamic)exWorkbook.Sheets[resolveSheetName(sheetName)];
 		exWorksheet.Select(true);
+		// 自動処理が終わったのでイベントを元に戻す（ユーザーの手動印刷操作用）。
+		exApp.EnableEvents = true;
 		Marshal.ReleaseComObject(range);
 		Marshal.ReleaseComObject(range2);
 		Marshal.ReleaseComObject(range3);
