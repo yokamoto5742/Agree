@@ -1579,7 +1579,7 @@ public class Form1 : Form
 			clearPlan();
 		}
 		sheetName.Text = "通常";
-		eye.Text = "右";
+		eye.Text = "";
 		readPatCsv2();
 	}
 
