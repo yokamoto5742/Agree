@@ -80,12 +80,6 @@
     <EmbeddedResource Include="Agree\Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>
-    <Compile Include="Agree\FindAgree.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <EmbeddedResource Include="Agree\FindAgree.resx">
-      <DependentUpon>FindAgree.cs</DependentUpon>
-    </EmbeddedResource>
     <Compile Include="Agree\TmpAgree.cs">
       <SubType>Form</SubType>
     </Compile>

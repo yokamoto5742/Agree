@@ -100,8 +100,6 @@ public class Form1 : Form
 
 	private Button tmpStaffButton;
 
-	private Button findAgreeButton;
-
 	private Button settingButton;
 
 	private Button exportButton;
@@ -205,7 +203,6 @@ public class Form1 : Form
             this.item4 = new System.Windows.Forms.TextBox();
             this.label22 = new System.Windows.Forms.Label();
             this.tmpStaffButton = new System.Windows.Forms.Button();
-            this.findAgreeButton = new System.Windows.Forms.Button();
             this.settingButton = new System.Windows.Forms.Button();
             this.exportButton = new System.Windows.Forms.Button();
             this.importButton = new System.Windows.Forms.Button();
@@ -231,7 +228,7 @@ public class Form1 : Form
             this.label1.AutoSize = true;
             this.label1.Location = new System.Drawing.Point(18, 14);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(53, 12);
+            this.label1.Size = new System.Drawing.Size(40, 12);
             this.label1.TabIndex = 15;
             this.label1.Text = "患者ID";
             // 
@@ -470,7 +467,7 @@ public class Form1 : Form
             this.agreePlanListLabel.AutoSize = true;
             this.agreePlanListLabel.Location = new System.Drawing.Point(130, 67);
             this.agreePlanListLabel.Name = "agreePlanListLabel";
-            this.agreePlanListLabel.Size = new System.Drawing.Size(320, 12);
+            this.agreePlanListLabel.Size = new System.Drawing.Size(307, 12);
             this.agreePlanListLabel.TabIndex = 15;
             this.agreePlanListLabel.Text = "患者IDを入力して Enter を押すと既存の同意書が表示されます";
             this.agreePlanListLabel.Click += new System.EventHandler(this.agreePlanListLabel_Click);
@@ -538,7 +535,7 @@ public class Form1 : Form
             // 
             // tmpAgreeButton
             // 
-            this.tmpAgreeButton.Location = new System.Drawing.Point(242, 36);
+            this.tmpAgreeButton.Location = new System.Drawing.Point(119, 36);
             this.tmpAgreeButton.Name = "tmpAgreeButton";
             this.tmpAgreeButton.Size = new System.Drawing.Size(128, 25);
             this.tmpAgreeButton.TabIndex = 12;
@@ -638,6 +635,7 @@ public class Form1 : Form
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(575, 426);
             this.panel1.TabIndex = 3;
+            this.panel1.Paint += new System.Windows.Forms.PaintEventHandler(this.panel1_Paint);
             // 
             // label11
             // 
@@ -757,23 +755,13 @@ public class Form1 : Form
             // 
             // tmpStaffButton
             // 
-            this.tmpStaffButton.Location = new System.Drawing.Point(376, 36);
+            this.tmpStaffButton.Location = new System.Drawing.Point(253, 36);
             this.tmpStaffButton.Name = "tmpStaffButton";
             this.tmpStaffButton.Size = new System.Drawing.Size(138, 25);
             this.tmpStaffButton.TabIndex = 13;
             this.tmpStaffButton.Text = "スタッフテンプレート";
             this.tmpStaffButton.UseVisualStyleBackColor = true;
             this.tmpStaffButton.Click += new System.EventHandler(this.tmpStaffButton_Click);
-            // 
-            // findAgreeButton
-            // 
-            this.findAgreeButton.Location = new System.Drawing.Point(119, 36);
-            this.findAgreeButton.Name = "findAgreeButton";
-            this.findAgreeButton.Size = new System.Drawing.Size(117, 25);
-            this.findAgreeButton.TabIndex = 11;
-            this.findAgreeButton.Text = "同意書検索";
-            this.findAgreeButton.UseVisualStyleBackColor = true;
-            this.findAgreeButton.Click += new System.EventHandler(this.findPlanButton_Click);
             // 
             // settingButton
             // 
@@ -837,7 +825,6 @@ public class Form1 : Form
             this.Controls.Add(this.exportButton);
             this.Controls.Add(this.importButton);
             this.Controls.Add(this.settingButton);
-            this.Controls.Add(this.findAgreeButton);
             this.Controls.Add(this.tmpStaffButton);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.newAgreeButton);
@@ -854,7 +841,7 @@ public class Form1 : Form
             this.Controls.Add(this.pt_id);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "Form1";
-            this.Text = "同意書";
+            this.Text = "眼科同意書";
             ((System.ComponentModel.ISupportInitialize)(this.AgreeList)).EndInit();
             this.agreeListMenu.ResumeLayout(false);
             this.panel1.ResumeLayout(false);
@@ -1619,12 +1606,6 @@ public class Form1 : Form
 		tmpStaff.Show();
 	}
 
-	private void findPlanButton_Click(object sender, EventArgs e)
-	{
-		FindAgree findAgree = new FindAgree(this);
-		findAgree.Show();
-	}
-
 	private void settingButton_Click(object sender, EventArgs e)
 	{
 		bool show = !exportButton.Visible;
@@ -1913,6 +1894,11 @@ public class Form1 : Form
     }
 
     private void agreePlanListLabel_Click(object sender, EventArgs e)
+    {
+
+    }
+
+    private void panel1_Paint(object sender, PaintEventArgs e)
     {
 
     }
