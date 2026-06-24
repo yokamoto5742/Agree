@@ -81,6 +81,9 @@ internal class ExcelControl
 	public void MakeEyeAgree(string sheetName)
 	{
 		Open(Env.AGENT_HOME + "\\Agree_眼科同意書.xlsm", "共通情報");
+		// シート切替・セル書込み・バーコード挿入の途中経過を画面に見せないため、
+		// 自動処理中は描画を凍結する。最終シートを Select した後に true へ戻す。
+		exApp.ScreenUpdating = false;
 		// 自動保存時に「セッション中アクティブにされていないシートのフォームコントロール
 		// （ボタン）が脱落する」既知の挙動を回避するため、全シートを一度アクティブ化して
 		// 描画レイヤーを確実に読み込ませる。EnableEvents=false 中なのでイベントは発火しない。
@@ -154,6 +157,8 @@ internal class ExcelControl
 		exWorksheet.Select(true);
 		// 自動処理が終わったのでイベントを元に戻す（ユーザーの手動印刷操作用）。
 		exApp.EnableEvents = true;
+		// 描画凍結を解除し、最終シートを再描画させる。
+		exApp.ScreenUpdating = true;
 		Marshal.ReleaseComObject(range);
 		Marshal.ReleaseComObject(range2);
 		Marshal.ReleaseComObject(range3);
