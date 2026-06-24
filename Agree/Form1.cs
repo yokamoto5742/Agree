@@ -233,7 +233,7 @@ public class Form1 : Form
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(53, 12);
             this.label1.TabIndex = 15;
-            this.label1.Text = "患者番号";
+            this.label1.Text = "患者ID";
             // 
             // pt_name
             // 
@@ -316,20 +316,21 @@ public class Form1 : Form
             // label5
             // 
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(126, 8);
+            this.label5.Location = new System.Drawing.Point(163, 6);
             this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(85, 12);
+            this.label5.Size = new System.Drawing.Size(41, 12);
             this.label5.TabIndex = 21;
-            this.label5.Text = "主治医(入力者)";
+            this.label5.Text = "入力者";
+            this.label5.Click += new System.EventHandler(this.label5_Click);
             // 
             // label6
             // 
             this.label6.AutoSize = true;
             this.label6.Location = new System.Drawing.Point(273, 61);
             this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(111, 12);
+            this.label6.Size = new System.Drawing.Size(41, 12);
             this.label6.TabIndex = 26;
-            this.label6.Text = "主治医以外の担当者";
+            this.label6.Text = "担当者";
             // 
             // dr_id
             // 
@@ -471,7 +472,8 @@ public class Form1 : Form
             this.agreePlanListLabel.Name = "agreePlanListLabel";
             this.agreePlanListLabel.Size = new System.Drawing.Size(320, 12);
             this.agreePlanListLabel.TabIndex = 15;
-            this.agreePlanListLabel.Text = "患者番号を入力して Enter を押すと既存の同意書が表示されます";
+            this.agreePlanListLabel.Text = "患者IDを入力して Enter を押すと既存の同意書が表示されます";
+            this.agreePlanListLabel.Click += new System.EventHandler(this.agreePlanListLabel_Click);
             // 
             // regAgreeButton
             // 
@@ -884,7 +886,7 @@ public class Form1 : Form
 			Program.OfflineMode = true;
 			MessageBox.Show("データベースに接続できません。オフラインモード（画面確認用）で起動します。\n" + ex.Message, "オフラインモード", MessageBoxButtons.OK, MessageBoxIcon.Warning);
 		}
-		agreePlanListLabel.Text = "患者番号を入力して Enter を押すと既存の同意書が表示されます";
+		agreePlanListLabel.Text = "患者IDを入力して Enter を押すと既存の同意書が表示されます";
 		initShow();
 	}
 
@@ -1238,7 +1240,11 @@ public class Form1 : Form
 		save_date.Value = DateTime.Today;
 		if (regPlan() != -1)
 		{
-			showList();
+			oraConn.Open();
+			oraCmd.CommandText = "select max(AGREE_ID) from AGREE where PATIENT_ID = " + pt_id.Text.Trim() + " and DELETE_FLAG = 0";
+			string newId = oraCmd.ExecuteScalar().ToString();
+			oraConn.Close();
+			showPlan(newId, pt_id.Text);
 			MessageBox.Show("コピーして作成しました");
 		}
 	}
@@ -1284,12 +1290,12 @@ public class Form1 : Form
 		}
 		if (pt_id.Text.Length == 0)
 		{
-			MessageBox.Show("患者番号を入力してください");
+			MessageBox.Show("患者IDを入力してください");
 			return -1;
 		}
 		if (dr_id.Text.Length == 0)
 		{
-			MessageBox.Show("主治医を入力してください");
+			MessageBox.Show("入力者IDを入力してください");
 			return -1;
 		}
 		if (dept.Text.Length == 0)
@@ -1900,4 +1906,14 @@ public class Form1 : Form
 			cmd.ExecuteNonQuery();
 		}
 	}
+
+    private void label5_Click(object sender, EventArgs e)
+    {
+
+    }
+
+    private void agreePlanListLabel_Click(object sender, EventArgs e)
+    {
+
+    }
 }
