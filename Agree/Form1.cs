@@ -700,9 +700,9 @@ public class Form1 : Form
             // 
             this.sheetName.FormattingEnabled = true;
             this.sheetName.Items.AddRange(new object[] {
-            "日帰り",
-            "入院",
+            "通常",
             "短期滞在",
+            "注射",
             "検査同意書"});
             this.sheetName.Location = new System.Drawing.Point(275, 31);
             this.sheetName.MaxLength = 50;
