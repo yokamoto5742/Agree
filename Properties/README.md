@@ -80,7 +80,7 @@ dotnet build Agree.slnx
 
 ## 設定
 
-UI の挙動はリポジトリ同梱の `AgreeSettings.ini` で制御します。
+UI の挙動はリポジトリ同梱の `EyeAgreeSettings.ini` で制御します。
 
 ```ini
 [UI_SETTINGS]

@@ -890,12 +890,12 @@ public class Form1 : Form
 
 	private void applySettingButtonVisibility()
 	{
-		// 専用の外部設定ファイル AgreeSettings.ini から設定ボタンの表示・非表示を読み込む。
+		// 専用の外部設定ファイル EyeAgreeSettings.ini から設定ボタンの表示・非表示を読み込む。
 		// ファイルが無い・読めない・値が不正な場合は安全のため非表示にする。
 		settingButton.Visible = false;
 		try
 		{
-			string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "AgreeSettings.ini");
+			string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "EyeAgreeSettings.ini");
 			if (!File.Exists(configPath))
 			{
 				return;
