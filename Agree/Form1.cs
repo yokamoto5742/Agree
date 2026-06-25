@@ -1446,8 +1446,20 @@ public class Form1 : Form
 		dictionary["34, 2"] = item3.Text;
 		dictionary["35, 2"] = item4.Text;
 		excelControl.ValueList = dictionary;
-		excelControl.MakeEyeAgree(sheetName.Text);
-		excelControl.ReleaseExcel();
+		try
+		{
+			excelControl.MakeEyeAgree(sheetName.Text);
+		}
+		catch (Exception ex)
+		{
+			Logger.Error("printAgree", ex);
+			MessageBox.Show("同意書の作成中にエラーが発生しました。\nExcelが起動しているか確認してください。", "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
+		}
+		finally
+		{
+			// 正常・異常いずれの経路でも COM を解放し、EXCEL.EXE の残留を防ぐ。
+			excelControl.ReleaseExcel();
+		}
 	}
 
 	private void tmpPlanButton_Click(object sender, EventArgs e)

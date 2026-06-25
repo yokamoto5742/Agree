@@ -29,9 +29,23 @@ internal class ExcelControl
 
 	public void ReleaseExcel()
 	{
-		Marshal.ReleaseComObject(exWorksheet);
-		Marshal.ReleaseComObject(exWorkbook);
-		Marshal.ReleaseComObject(exApp);
+		// Open() 失敗時は各 COM フィールドが null のため、finally から無条件に呼べるよう
+		// null ガードする。解放漏れによる Excel プロセス残留を防ぐ。
+		if (exWorksheet != null)
+		{
+			Marshal.ReleaseComObject(exWorksheet);
+			exWorksheet = null;
+		}
+		if (exWorkbook != null)
+		{
+			Marshal.ReleaseComObject(exWorkbook);
+			exWorkbook = null;
+		}
+		if (exApp != null)
+		{
+			Marshal.ReleaseComObject(exApp);
+			exApp = null;
+		}
 	}
 
 	public string Open(string fileName, string sheetName)
@@ -79,7 +93,13 @@ internal class ExcelControl
 
 	public void MakeEyeAgree(string sheetName)
 	{
-		Open(Env.AGENT_HOME + "\\EyeAgree.xlsm", "共通情報");
+		// Open() 失敗時はエラー文字列が返る。null の exApp を参照して NullReference を起こす前に
+		// 例外として通知し、呼び出し側で握って Excel を解放させる。
+		string openError = Open(Env.AGENT_HOME + "\\EyeAgree.xlsm", "共通情報");
+		if (!string.IsNullOrEmpty(openError))
+		{
+			throw new IOException(openError);
+		}
 		// シート切替・セル書込み・バーコード挿入の途中経過を画面に見せないため、
 		// 自動処理中は描画を凍結する。最終シートを Select した後に true へ戻す。
 		exApp.ScreenUpdating = false;
@@ -228,7 +248,8 @@ internal class ExcelControl
 		}
 		if (barcodeText.Length != 36 || !isAllDigits(barcodeText))
 		{
-			System.Diagnostics.Debug.WriteLine("バーコード値が36桁の数字でないため挿入をスキップ: " + barcodeText);
+			// バーコード値は患者IDを含むため値そのものは記録せず、桁数のみ残す。
+			Agree.Logger.Info("insertBarcode", "バーコード値が36桁の数字でないため挿入をスキップ（桁数=" + barcodeText.Length + "）");
 			return;
 		}
 		string tempPath = null;
@@ -248,7 +269,7 @@ internal class ExcelControl
 		}
 		catch (Exception ex)
 		{
-			System.Diagnostics.Debug.WriteLine("バーコード挿入エラー: " + ex.Message);
+			Agree.Logger.Error("insertBarcode", ex);
 		}
 		finally
 		{

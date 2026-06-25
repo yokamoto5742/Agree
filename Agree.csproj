@@ -94,6 +94,7 @@
     </EmbeddedResource>
     <Compile Include="Agree\Program.cs" />
     <Compile Include="Agree\AgreeSql.cs" />
+    <Compile Include="Agree\Logger.cs" />
     <Compile Include="ExcelControl.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">

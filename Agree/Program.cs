@@ -12,6 +12,19 @@ internal static class Program
 	[STAThread]
 	private static void Main()
 	{
+		Logger.Purge(60);
+		// UI スレッドの未処理例外を WinForms に捕捉させ、標準クラッシュダイアログの代わりに
+		// ログ記録＋日本語メッセージで継続する。フォーム生成前に設定する必要がある。
+		Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
+		Application.ThreadException += (sender, e) =>
+		{
+			Logger.Error("UI", e.Exception);
+			MessageBox.Show("予期しないエラーが発生しました。操作をやり直してください。\n問題が続く場合は管理者に連絡してください。", "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
+		};
+		AppDomain.CurrentDomain.UnhandledException += (sender, e) =>
+		{
+			Logger.Error("Fatal", e.ExceptionObject as Exception);
+		};
 		Directory.SetCurrentDirectory(Application.StartupPath);
 		Process currentProcess = Process.GetCurrentProcess();
 		Process[] processesByName = Process.GetProcessesByName(currentProcess.ProcessName);
@@ -31,8 +44,9 @@ internal static class Program
 						process.Kill();
 						process.WaitForExit(3000);
 					}
-					catch
+					catch (Exception ex)
 					{
+						Logger.Error("KillPrev", ex);
 					}
 				}
 			}
