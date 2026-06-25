@@ -43,9 +43,6 @@ internal class ExcelControl
 		{
 			exApp = (Application)Activator.CreateInstance(Type.GetTypeFromCLSID(new Guid("00024500-0000-0000-C000-000000000046")));
 			exApp.Visible = true;
-			// テンプレート(.xlsm)のイベントマクロ(Workbook_Open/Worksheet_Change/BeforeSave等)を
-			// 自動処理中は発火させない。対象シート以外のボタンを消すクリーンアップが
-			// マクロ側にある場合、これで抑止する。MakeEyeAgree の SaveAs 後に true へ戻す。
 			exApp.EnableEvents = false;
 			exWorkbook = exApp.Workbooks.Open(fileName, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value);
 			exWorksheet = (_Worksheet)(dynamic)exWorkbook.Sheets[sheetName];
@@ -141,7 +138,6 @@ internal class ExcelControl
 				_Worksheet formSheet = (_Worksheet)(dynamic)sheets[i];
                 if (formSheet.Name != "共通情報")
                 {
-                    // 同意書の文書番号をB11から取得(39911)
                     string barcodeText = barcode11;
                     insertBarcode(formSheet, barcodeText);
                 }
@@ -150,12 +146,11 @@ internal class ExcelControl
 			Marshal.ReleaseComObject(sheets);
 		}
 		string filename = Environment.GetEnvironmentVariable("TEMP") + "\\" + ((dynamic)range.Value2).ToString() + "_" + ymd + hms + "_" + "眼科同意書.xlsm";
-		// マクロ有効形式(.xlsm)を明示して保存する。FileFormat未指定だとマクロ無効形式へ変換され、
-		// 全シートのボタン（フォームコントロール／ActiveX）が一時ファイルから消える。
+		// マクロ有効形式(.xlsm)を明示して保存する
 		exWorkbook.SaveAs(filename, XlFileFormat.xlOpenXMLWorkbookMacroEnabled, Missing.Value, Missing.Value, Missing.Value, Missing.Value, XlSaveAsAccessMode.xlExclusive, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value);
 		exWorksheet = (_Worksheet)(dynamic)exWorkbook.Sheets[resolveSheetName(sheetName)];
 		exWorksheet.Select(true);
-		// 自動処理が終わったのでイベントを元に戻す（ユーザーの手動印刷操作用）。
+		// 自動処理が終わったのでイベントを元に戻す。
 		exApp.EnableEvents = true;
 		// 描画凍結を解除し、最終シートを再描画させる。
 		exApp.ScreenUpdating = true;
@@ -179,8 +174,6 @@ internal class ExcelControl
 		{
 			return;
 		}
-		// CODE128-C は数字を2桁ずつ符号化するため、36桁（偶数・全数字）でないと
-		// 桁ずれを無言で誤エンコードする。満たさない場合は挿入しない。
 		if (barcodeText.Length != 36 || !isAllDigits(barcodeText))
 		{
 			System.Diagnostics.Debug.WriteLine("バーコード値が36桁の数字でないため挿入をスキップ: " + barcodeText);
@@ -197,8 +190,7 @@ internal class ExcelControl
 			float left = (float)(double)anchor.Left;
 			float top = (float)(double)anchor.Top;
 			shapes = sheet.Shapes;
-			// AddPicture(filename, LinkToFile=msoFalse(0), SaveWithDocument=msoTrue(-1), left, top, width, height)。
-			// MsoTriState は CLI ビルドでは未参照のため、遅延バインドで int(0/-1) を渡す。
+
 			picture = ((dynamic)shapes).AddPicture(tempPath, 0, -1, left, top, 250f, 30f);
 			((dynamic)picture).Placement = (int)XlPlacement.xlMove;
 		}
