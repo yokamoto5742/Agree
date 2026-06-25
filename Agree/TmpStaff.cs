@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.ComponentModel;
 using System.Data;
@@ -60,8 +60,8 @@ public class TmpStaff : Form
 		OleDbDataAdapter oleDbDataAdapter = new OleDbDataAdapter(oraCmd);
 		oraConn.Close();
 		DataSet dataSet = new DataSet();
-		oleDbDataAdapter.Fill(dataSet, "スタッフ");
-		staffGridView.DataSource = dataSet.Tables["スタッフ"];
+		oleDbDataAdapter.Fill(dataSet, "担当者");
+		staffGridView.DataSource = dataSet.Tables["担当者"];
 		staffGridView.Columns[0].Visible = false;
 		staffGridView.Columns[1].HeaderText = "ID";
 		staffGridView.Columns[1].Width = 40;
@@ -186,7 +186,7 @@ public class TmpStaff : Form
 		}
 		else
 		{
-			MessageBox.Show("該当するスタッフはありません");
+			MessageBox.Show("該当する担当者はありません");
 			clearStaff(clearId: true, clearStaffId: true);
 		}
 	}

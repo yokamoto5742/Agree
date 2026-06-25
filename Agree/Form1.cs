@@ -260,6 +260,7 @@ public class Form1 : Form
             dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
             this.AgreeList.RowHeadersDefaultCellStyle = dataGridViewCellStyle1;
             this.AgreeList.RowHeadersVisible = false;
+            this.AgreeList.RowHeadersWidth = 51;
             this.AgreeList.RowTemplate.Height = 21;
             this.AgreeList.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.AgreeList.Size = new System.Drawing.Size(575, 122);
@@ -269,6 +270,7 @@ public class Form1 : Form
             // 
             // agreeListMenu
             // 
+            this.agreeListMenu.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.agreeListMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.copyNewMenuItem});
             this.agreeListMenu.Name = "agreeListMenu";
@@ -402,6 +404,7 @@ public class Form1 : Form
             this.explanation.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.explanation.Size = new System.Drawing.Size(464, 110);
             this.explanation.TabIndex = 8;
+            this.explanation.TextChanged += new System.EventHandler(this.explanation_TextChanged);
             // 
             // label10
             // 
@@ -759,7 +762,7 @@ public class Form1 : Form
             this.tmpStaffButton.Name = "tmpStaffButton";
             this.tmpStaffButton.Size = new System.Drawing.Size(138, 25);
             this.tmpStaffButton.TabIndex = 13;
-            this.tmpStaffButton.Text = "スタッフテンプレート";
+            this.tmpStaffButton.Text = "担当者テンプレート";
             this.tmpStaffButton.UseVisualStyleBackColor = true;
             this.tmpStaffButton.Click += new System.EventHandler(this.tmpStaffButton_Click);
             // 
@@ -1592,7 +1595,7 @@ public class Form1 : Form
 		oraConn.Open();
 		oraCmd.CommandText = "select CONT from AGREE_STAFF where STAFF = " + dr_id.Text.Trim();
 		oraReader = oraCmd.ExecuteReader();
-		if (oraReader.Read() && (staff.Text.Length == 0 || MessageBox.Show("スタッフが既に入力されています。上書きしますか？", "確認", MessageBoxButtons.YesNo) == DialogResult.Yes))
+		if (oraReader.Read() && (staff.Text.Length == 0 || MessageBox.Show("担当者が既に入力されています。上書きしますか？", "確認", MessageBoxButtons.YesNo) == DialogResult.Yes))
 		{
 			staff.Text = oraReader["CONT"].ToString().Trim();
 		}
@@ -1899,6 +1902,11 @@ public class Form1 : Form
     }
 
     private void panel1_Paint(object sender, PaintEventArgs e)
+    {
+
+    }
+
+    private void explanation_TextChanged(object sender, EventArgs e)
     {
 
     }
