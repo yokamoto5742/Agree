@@ -140,9 +140,9 @@ internal class ExcelControl
             Marshal.ReleaseComObject(formSheet);
 		}
 		Marshal.ReleaseComObject(sheets);
-		string filename = Environment.GetEnvironmentVariable("TEMP") + "\\" + ((dynamic)range.Value2).ToString() + "_" + ymd + hms + "_" + "眼科同意書.xlsm";
-		// マクロ有効形式(.xlsm)を明示して保存する
-		exWorkbook.SaveAs(filename, XlFileFormat.xlOpenXMLWorkbookMacroEnabled, Missing.Value, Missing.Value, Missing.Value, Missing.Value, XlSaveAsAccessMode.xlExclusive, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value);
+        string filename = Environment.GetEnvironmentVariable("TEMP") + "\\" + ((dynamic)range.Value2).ToString() + ymd + hms + "_" + "EyeAgree.xlsm";
+        // マクロ有効形式(.xlsm)を明示して保存する
+        exWorkbook.SaveAs(filename, XlFileFormat.xlOpenXMLWorkbookMacroEnabled, Missing.Value, Missing.Value, Missing.Value, Missing.Value, XlSaveAsAccessMode.xlExclusive, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value);
 		exWorksheet = (_Worksheet)(dynamic)exWorkbook.Sheets[resolveSheetName(sheetName)];
 		exWorksheet.Select(true);
 		// 自動処理が終わったのでイベントを元に戻す。
