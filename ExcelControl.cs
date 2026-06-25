@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text;
 using AgentlabUtilityLibrary;
 using Microsoft.Office.Interop.Excel;
 
@@ -123,28 +125,21 @@ internal class ExcelControl
 		string barcode23 = patient + doc2 + dept + doctor + ymd + hms;
 		exWorksheet.Cells[11, 2] = (object)barcode11;
 		exWorksheet.Cells[23, 2] = (object)barcode23;
-		// 「バーコード印刷」フラグ（共通情報!B17）が "1" のときのみ、全フォームシートへ
-		// バーコード画像を挿入する（SaveAs より前に行うことで保存ファイルへ残す）。
-		Range flagRange = (Range)(dynamic)exWorksheet.Cells[17, 2];
-		object flagValue = flagRange.Value2;
-		string barcodeFlag = (flagValue == null) ? "" : ((dynamic)flagValue).ToString();
-		Marshal.ReleaseComObject(flagRange);
-		if (barcodeFlag == "1")
+		// 全フォームシートへバーコード画像を挿入する（SaveAs より前に行うことで保存ファイルへ残す）。
+		loadBarcodeSettings();
+		Sheets sheets = exWorkbook.Sheets;
+		int sheetCount = sheets.Count;
+		for (int i = 1; i <= sheetCount; i++)
 		{
-			Sheets sheets = exWorkbook.Sheets;
-			int sheetCount = sheets.Count;
-			for (int i = 1; i <= sheetCount; i++)
-			{
-				_Worksheet formSheet = (_Worksheet)(dynamic)sheets[i];
-                if (formSheet.Name != "共通情報")
-                {
-                    string barcodeText = barcode11;
-                    insertBarcode(formSheet, barcodeText);
-                }
-                Marshal.ReleaseComObject(formSheet);
-			}
-			Marshal.ReleaseComObject(sheets);
+			_Worksheet formSheet = (_Worksheet)(dynamic)sheets[i];
+            if (formSheet.Name != "共通情報")
+            {
+                string barcodeText = barcode11;
+                insertBarcode(formSheet, barcodeText);
+            }
+            Marshal.ReleaseComObject(formSheet);
 		}
+		Marshal.ReleaseComObject(sheets);
 		string filename = Environment.GetEnvironmentVariable("TEMP") + "\\" + ((dynamic)range.Value2).ToString() + "_" + ymd + hms + "_" + "眼科同意書.xlsm";
 		// マクロ有効形式(.xlsm)を明示して保存する
 		exWorkbook.SaveAs(filename, XlFileFormat.xlOpenXMLWorkbookMacroEnabled, Missing.Value, Missing.Value, Missing.Value, Missing.Value, XlSaveAsAccessMode.xlExclusive, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value);
@@ -161,12 +156,69 @@ internal class ExcelControl
 		Marshal.ReleaseComObject(range5);
 	}
 
-	// 定数（バーコード画像の解像度）。1モジュール=BARCODE_LINE_WIDTH px。
-	private const float BARCODE_LINE_WIDTH = 3f;
+	// バーコード画像の解像度設定。既定値は EyeAgreeSettings.ini の
+	// [BARCODE_SETTINGS] で上書きできる。1モジュール=barcodeLineWidth px。
+	private float barcodeLineWidth = 3f;
 
-	private const float BARCODE_HEIGHT = 80f;
+	private float barcodeHeight = 80f;
 
-	private const int BARCODE_QUIET_MODULES = 10;
+	private int barcodeQuietModules = 10;
+
+	// EyeAgreeSettings.ini からバーコード解像度を読み込む。
+	// ファイルが無い・読めない・値が不正な場合は既定値を維持する。
+	private void loadBarcodeSettings()
+	{
+		try
+		{
+			string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "EyeAgreeSettings.ini");
+			if (!File.Exists(configPath))
+			{
+				return;
+			}
+			string[] lines = File.ReadAllLines(configPath, Encoding.Default);
+			foreach (string line in lines)
+			{
+				if (string.IsNullOrWhiteSpace(line) || line.StartsWith(";"))
+				{
+					continue;
+				}
+				string[] parts = line.Split('=');
+				if (parts.Length != 2)
+				{
+					continue;
+				}
+				string key = parts[0].Trim();
+				string val = parts[1].Trim();
+				if (key == "BARCODE_LINE_WIDTH")
+				{
+					float f;
+					if (float.TryParse(val, NumberStyles.Float, CultureInfo.InvariantCulture, out f) && f > 0f)
+					{
+						barcodeLineWidth = f;
+					}
+				}
+				else if (key == "BARCODE_HEIGHT")
+				{
+					float f;
+					if (float.TryParse(val, NumberStyles.Float, CultureInfo.InvariantCulture, out f) && f > 0f)
+					{
+						barcodeHeight = f;
+					}
+				}
+				else if (key == "BARCODE_QUIET_MODULES")
+				{
+					int n;
+					if (int.TryParse(val, NumberStyles.Integer, CultureInfo.InvariantCulture, out n) && n >= 0)
+					{
+						barcodeQuietModules = n;
+					}
+				}
+			}
+		}
+		catch (IOException)
+		{
+		}
+	}
 
 	private void insertBarcode(_Worksheet sheet, string barcodeText)
 	{
@@ -229,9 +281,9 @@ internal class ExcelControl
 	{
 		// CODE128-C のモジュール数: (開始1 + データ(桁/2) + チェック1)*11 + 停止13 + クワイエットゾーン両側。
 		int symbols = 2 + barcodeText.Length / 2;
-		int totalModules = symbols * 11 + 13 + BARCODE_QUIET_MODULES * 2;
-		int widthPx = (int)Math.Ceiling(totalModules * BARCODE_LINE_WIDTH);
-		int heightPx = (int)Math.Ceiling(BARCODE_HEIGHT);
+		int totalModules = symbols * 11 + 13 + barcodeQuietModules * 2;
+		int widthPx = (int)Math.Ceiling(totalModules * barcodeLineWidth);
+		int heightPx = (int)Math.Ceiling(barcodeHeight);
 		string tempPath = Path.Combine(Path.GetTempPath(), "barcode_" + Guid.NewGuid().ToString("N") + ".png");
 		using (Bitmap bitmap = new Bitmap(widthPx, heightPx))
 		{
@@ -239,8 +291,8 @@ internal class ExcelControl
 			{
 				g.Clear(Color.White);
 				Barcode128 barcode = new Barcode128();
-				float left = BARCODE_QUIET_MODULES * BARCODE_LINE_WIDTH;
-				barcode.Draw(Barcode128.CODE.C, barcodeText, g, left, 0f, BARCODE_HEIGHT, BARCODE_LINE_WIDTH);
+				float left = barcodeQuietModules * barcodeLineWidth;
+				barcode.Draw(Barcode128.CODE.C, barcodeText, g, left, 0f, barcodeHeight, barcodeLineWidth);
 			}
 			bitmap.Save(tempPath, System.Drawing.Imaging.ImageFormat.Png);
 		}
