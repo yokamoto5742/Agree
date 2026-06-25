@@ -80,7 +80,7 @@ internal class ExcelControl
 
 	public void MakeEyeAgree(string sheetName)
 	{
-		Open(Env.AGENT_HOME + "\\Agree_眼科同意書.xlsm", "共通情報");
+		Open(Env.AGENT_HOME + "\\EyeAgree.xlsm", "共通情報");
 		// シート切替・セル書込み・バーコード挿入の途中経過を画面に見せないため、
 		// 自動処理中は描画を凍結する。最終シートを Select した後に true へ戻す。
 		exApp.ScreenUpdating = false;

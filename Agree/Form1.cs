@@ -295,7 +295,7 @@ public class Form1 : Form
             // delAgreeButton
             // 
             this.delAgreeButton.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
-            this.delAgreeButton.Location = new System.Drawing.Point(346, 655);
+            this.delAgreeButton.Location = new System.Drawing.Point(346, 755);
             this.delAgreeButton.Name = "delAgreeButton";
             this.delAgreeButton.Size = new System.Drawing.Size(75, 25);
             this.delAgreeButton.TabIndex = 5;
@@ -402,14 +402,14 @@ public class Form1 : Form
             this.explanation.Multiline = true;
             this.explanation.Name = "explanation";
             this.explanation.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.explanation.Size = new System.Drawing.Size(464, 110);
+            this.explanation.Size = new System.Drawing.Size(464, 220);
             this.explanation.TabIndex = 8;
             this.explanation.TextChanged += new System.EventHandler(this.explanation_TextChanged);
             // 
             // label10
             // 
             this.label10.AutoSize = true;
-            this.label10.Location = new System.Drawing.Point(7, 295);
+            this.label10.Location = new System.Drawing.Point(7, 405);
             this.label10.Name = "label10";
             this.label10.Size = new System.Drawing.Size(29, 12);
             this.label10.TabIndex = 6;
@@ -417,7 +417,7 @@ public class Form1 : Form
             // 
             // item1
             // 
-            this.item1.Location = new System.Drawing.Point(88, 295);
+            this.item1.Location = new System.Drawing.Point(88, 405);
             this.item1.MaxLength = 200;
             this.item1.Multiline = true;
             this.item1.Name = "item1";
@@ -428,7 +428,7 @@ public class Form1 : Form
             // label12
             // 
             this.label12.AutoSize = true;
-            this.label12.Location = new System.Drawing.Point(8, 333);
+            this.label12.Location = new System.Drawing.Point(8, 443);
             this.label12.Name = "label12";
             this.label12.Size = new System.Drawing.Size(53, 12);
             this.label12.TabIndex = 3;
@@ -436,7 +436,7 @@ public class Form1 : Form
             // 
             // item2
             // 
-            this.item2.Location = new System.Drawing.Point(87, 333);
+            this.item2.Location = new System.Drawing.Point(87, 443);
             this.item2.MaxLength = 200;
             this.item2.Multiline = true;
             this.item2.Name = "item2";
@@ -447,7 +447,7 @@ public class Form1 : Form
             // label15
             // 
             this.label15.AutoSize = true;
-            this.label15.Location = new System.Drawing.Point(8, 372);
+            this.label15.Location = new System.Drawing.Point(8, 482);
             this.label15.Name = "label15";
             this.label15.Size = new System.Drawing.Size(53, 12);
             this.label15.TabIndex = 7;
@@ -456,7 +456,7 @@ public class Form1 : Form
             // 
             // item3
             // 
-            this.item3.Location = new System.Drawing.Point(88, 368);
+            this.item3.Location = new System.Drawing.Point(88, 478);
             this.item3.MaxLength = 200;
             this.item3.Multiline = true;
             this.item3.Name = "item3";
@@ -478,7 +478,7 @@ public class Form1 : Form
             // regAgreeButton
             // 
             this.regAgreeButton.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
-            this.regAgreeButton.Location = new System.Drawing.Point(265, 655);
+            this.regAgreeButton.Location = new System.Drawing.Point(265, 755);
             this.regAgreeButton.Name = "regAgreeButton";
             this.regAgreeButton.Size = new System.Drawing.Size(75, 25);
             this.regAgreeButton.TabIndex = 4;
@@ -489,7 +489,7 @@ public class Form1 : Form
             // closeButton
             // 
             this.closeButton.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
-            this.closeButton.Location = new System.Drawing.Point(508, 655);
+            this.closeButton.Location = new System.Drawing.Point(508, 755);
             this.closeButton.Name = "closeButton";
             this.closeButton.Size = new System.Drawing.Size(75, 25);
             this.closeButton.TabIndex = 7;
@@ -500,7 +500,7 @@ public class Form1 : Form
             // printAgreeButton
             // 
             this.printAgreeButton.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
-            this.printAgreeButton.Location = new System.Drawing.Point(427, 655);
+            this.printAgreeButton.Location = new System.Drawing.Point(427, 755);
             this.printAgreeButton.Name = "printAgreeButton";
             this.printAgreeButton.Size = new System.Drawing.Size(75, 25);
             this.printAgreeButton.TabIndex = 6;
@@ -636,7 +636,7 @@ public class Form1 : Form
             this.panel1.Controls.Add(this.label4);
             this.panel1.Location = new System.Drawing.Point(15, 213);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(575, 426);
+            this.panel1.Size = new System.Drawing.Size(575, 536);
             this.panel1.TabIndex = 3;
             this.panel1.Paint += new System.Windows.Forms.PaintEventHandler(this.panel1_Paint);
             // 
@@ -716,7 +716,7 @@ public class Form1 : Form
             // label14
             // 
             this.label14.AutoSize = true;
-            this.label14.Location = new System.Drawing.Point(7, 371);
+            this.label14.Location = new System.Drawing.Point(7, 481);
             this.label14.Name = "label14";
             this.label14.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.label14.Size = new System.Drawing.Size(53, 12);
@@ -738,7 +738,7 @@ public class Form1 : Form
             // 
             // item4
             // 
-            this.item4.Location = new System.Drawing.Point(87, 368);
+            this.item4.Location = new System.Drawing.Point(87, 478);
             this.item4.MaxLength = 500;
             this.item4.Multiline = true;
             this.item4.Name = "item4";
@@ -822,7 +822,7 @@ public class Form1 : Form
             // 
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
-            this.ClientSize = new System.Drawing.Size(604, 689);
+            this.ClientSize = new System.Drawing.Size(604, 799);
             this.Controls.Add(this.pt_sex);
             this.Controls.Add(this.pt_kana);
             this.Controls.Add(this.exportButton);
