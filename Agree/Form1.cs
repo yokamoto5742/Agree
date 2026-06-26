@@ -859,6 +859,7 @@ public class Form1 : Form
 		InitializeComponent();
 		System.Version version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
 		this.Text = $"眼科同意書v{version.Major}.{version.Minor}.{version.Build}";
+		applyWindowPosition();
 		oraConn = DBConn.GetOpenDBConn();
 		oraCmd.Connection = oraConn;
 		try
@@ -924,6 +925,56 @@ public class Form1 : Form
 		{
 			settingButton.Visible = false;
 		}
+	}
+
+	// ウィンドウの初期表示位置を毎回固定する。既定は画面左上 (0, 0)。
+	// EyeAgreeSettings.ini の [WINDOW_SETTINGS] WINDOW_X / WINDOW_Y で上書きできる。
+	// ファイルが無い・読めない・値が不正な場合は既定値を維持する。
+	private void applyWindowPosition()
+	{
+		StartPosition = FormStartPosition.Manual;
+		int x = 0;
+		int y = 0;
+		try
+		{
+			string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "EyeAgreeSettings.ini");
+			if (File.Exists(configPath))
+			{
+				string[] lines = File.ReadAllLines(configPath, Encoding.Default);
+				foreach (string line in lines)
+				{
+					if (string.IsNullOrWhiteSpace(line) || line.StartsWith(";"))
+					{
+						continue;
+					}
+					string[] parts = line.Split('=');
+					if (parts.Length != 2)
+					{
+						continue;
+					}
+					string key = parts[0].Trim();
+					string val = parts[1].Trim();
+					if (key == "WINDOW_X")
+					{
+						if (int.TryParse(val, out int n))
+						{
+							x = n;
+						}
+					}
+					else if (key == "WINDOW_Y")
+					{
+						if (int.TryParse(val, out int n))
+						{
+							y = n;
+						}
+					}
+				}
+			}
+		}
+		catch (IOException)
+		{
+		}
+		Location = new Point(x, y);
 	}
 
 	private void clearPlan()
