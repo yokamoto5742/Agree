@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.IO;
 using System.Windows.Forms;
@@ -12,7 +12,7 @@ internal static class Program
 	[STAThread]
 	private static void Main()
 	{
-		Logger.Purge(60);
+		Logger.Purge(30);
 		// UI スレッドの未処理例外を WinForms に捕捉させ、標準クラッシュダイアログの代わりに
 		// ログ記録＋日本語メッセージで継続する。フォーム生成前に設定する必要がある。
 		Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);

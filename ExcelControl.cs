@@ -95,7 +95,7 @@ internal class ExcelControl
 	{
 		// Open() 失敗時はエラー文字列が返る。null の exApp を参照して NullReference を起こす前に
 		// 例外として通知し、呼び出し側で握って Excel を解放させる。
-		string openError = Open(Env.AGENT_HOME + "\\EyeAgree.xlsm", "共通情報");
+		string openError = Open(Env.AGENT_HOME + "\\EyeAgree\\EyeAgree.xlsm", "共通情報");
 		if (!string.IsNullOrEmpty(openError))
 		{
 			throw new IOException(openError);

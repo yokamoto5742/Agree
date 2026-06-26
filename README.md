@@ -18,7 +18,7 @@
 
 汎用の文書作成ツールではなく、**眼科の同意書業務の流れに特化**しています。
 
-- **電子カルテ連携** — 電子カルテの患者情報（`Pat.csv`）を読み込み、患者ID・氏名・診療科・入力者を自動セットします。患者IDを入力して Enter を押すと、その患者の既存同意書が一覧表示されます。
+- **電子カルテ連携** — 電子カルテの患者情報（`pat.csv``）を読み込み、患者ID・氏名・診療科・入力者を自動セットします。患者IDを入力して Enter を押すと、その患者の既存同意書が一覧表示されます。
 - **Excel 帳票の自動生成** — テンプレート `EyeAgree.xlsm` にデータを差し込み、患者ごとの同意書を生成します。通常・短期滞在などのシート切り替えに対応します。
 - **テンプレート管理** — 病名・術式・説明文などの定型文をテンプレートとして登録・並び替えができ、入力の手間を削減します。他の担当医などの**担当者テンプレート**も別途管理します。
 - **コピーして作成** — 既存の同意書を複製して新しい同意書を素早く作成できます。
@@ -48,11 +48,11 @@
 
 1. リポジトリを取得します。
    ```sh
-   git clone <repository-url>
+   git clone https://github.com/yokamoto5742/Agree
    cd Agree
    ```
 2. Visual Studio で `Agree.slnx`（または `Agree.csproj`）を開きます。
-3. 外部依存 `AgentlabUtilityLibrary.dll` と Excel テンプレート `EyeAgree.xlsm`、患者情報受け渡し用の `Pat.csv` が、配置先（`AGENT_HOME` / `LEGACY_HOME`）に揃っていることを確認します。
+3. 外部依存 `AgentlabUtilityLibrary.dll` と Excel テンプレート `EyeAgree.xlsm`、患者情報受け渡し用の `pat.csv`` が、配置先（`AGENT_HOME` / `LEGACY_HOME`）に揃っていることを確認します。
 4. **F5** で実行します（プラットフォームは x86）。
 
 CLI でビルドの検証のみ行う場合:
@@ -72,7 +72,7 @@ dotnet build Agree.slnx
 3. 一覧から開く、または **新規作成**で同意書を作成します。
    - 必須項目（患者・入力者・診療科）が未入力の場合はガードが表示されます。
    - **コピーして新規作成**（一覧の右クリックメニュー）で既存の同意書を複製できます。
-4. 病名・術式・説明内容などを入力します。**テンプレート**ボタンから定型文を呼び出せます。
+4. 病名・術式・説明内容などを入力します。**同意書テンプレート**ボタンから定型文を呼び出せます。
 5. **登録**で保存します。保存後は一覧へ反映されます。
 6. **印刷**で Excel 帳票（同意書）を生成します。Excel が起動し、対象シートが選択された状態で開きます。
 
@@ -100,9 +100,8 @@ SHOW_SETTING_BUTTON=0
 | ビルド・起動が失敗する | `AgentlabUtilityLibrary.dll` が見つからない可能性があります。配置を確認してください（ソースには含まれません）。 |
 | 印刷時にエラー／帳票が出ない | Excel がインストールされているか、テンプレート `EyeAgree.xlsm` が `AGENT_HOME` 配下にあるかを確認してください。 |
 | 印刷後に Excel プロセスが残る | COM オブジェクトの解放漏れが原因です（通常は `ReleaseExcel` で解放されます）。残った Excel プロセスを終了してください。 |
-| 患者情報が自動で入らない | `Pat.csv` が `LEGACY_HOME` 配下に存在し、内容が空でないかを確認してください。 |
+| 患者情報が自動で入らない | `pat.csv`` が `LEGACY_HOME` 配下に存在し、内容が空でないかを確認してください。 |
 | 起動時に「すでに起動している同意書システムを終了してよろしいですか？」と出る | 多重起動防止の確認です。OK で既存インスタンスを終了して起動します。 |
-| `'`（アポストロフィ）を含む病名・説明で登録が不安定 | 一部の保存経路でエスケープ未対応の既知事項です。詳細は `docs/test_strategy.md` を参照してください。 |
 
 <div align="right"><a href="#目次">▲ 目次へ戻る</a></div>
 
@@ -113,7 +112,7 @@ SHOW_SETTING_BUTTON=0
 - DB アクセス: `AgentlabUtilityLibrary.DBConn.GetOpenDBConn()`（OleDb）。主なテーブルは `AGREE` / `AGREE_TEMPLATE` / `AGREE_STAFF` / `M_PATIENT` / `M_DEPT` / `M_USR`。
 - Excel 生成: `Microsoft.Office.Interop.Excel`（COM）。使用後は `ExcelControl.ReleaseExcel` で必ず解放します。
 
-テスト（詳細は `docs/test_strategy.md`）:
+テスト:
 
 ```sh
 # 単体テスト（DB 不要・どこでも実行可）
@@ -131,7 +130,6 @@ dotnet test Agree.Tests/Agree.Tests.csproj --filter "TestCategory=Integration"
 
 このプロジェクトのライセンス情報については、[LICENSE](docs/LICENSE) を参照してください。
 
-<div align="right"><a href="#目次">▲ 目次へ戻る</a></div>
 
 ## 更新履歴
 
