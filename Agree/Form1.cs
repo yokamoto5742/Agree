@@ -1445,57 +1445,44 @@ public class Form1 : Form
 	private void printAgree()
 	{
 		ExcelControl excelControl = new ExcelControl();
+		// キーは "行, 列" 形式で、ExcelControl 側で Cells[行, 列] に書き込む（列2=B, 3=C, 4=D, 7=G）。
 		Dictionary<string, string> dictionary = new Dictionary<string, string>();
-		dictionary["3, 2"] = pt_id.Text;
-		dictionary["3, 3"] = pt_kana.Text;
-		dictionary["3, 4"] = pt_name.Text;
+		dictionary["3, 2"] = pt_id.Text;      // B3: 患者ID
+		dictionary["3, 3"] = pt_kana.Text;    // C3: 患者カナ氏名
+		dictionary["3, 4"] = pt_name.Text;    // D3: 患者氏名
 		if (pt_sex.Equals("2"))
 		{
-			dictionary["3, 7"] = "女";
+			dictionary["3, 7"] = "女";        // G3: 性別（女）
 		}
 		else
 		{
-			dictionary["3, 7"] = "男";
+			dictionary["3, 7"] = "男";        // G3: 性別（男）
 		}
-		dictionary["5, 2"] = dept.Text.Split(' ')[0];
-		dictionary["5,3"] = dept.Text.Split(' ')[1];
+		dictionary["5, 2"] = dept.Text.Split(' ')[0];   // B5: 診療科コード（"コード 科名" の前半）
+		dictionary["5,3"] = dept.Text.Split(' ')[1];    // C5: 診療科名（"コード 科名" の後半）
+		// 医師ID/氏名は起動時(readPatCsv)に patCont へ読み込み済みのため再読込しない。
 		string path = Env.LEGACY_HOME + "\\Pat.csv";
-		string text = "";
-		string value = "";
 		if (File.Exists(path))
 		{
-			StreamReader streamReader = new StreamReader(path, Encoding.Default);
-			string text2;
-			if ((text2 = streamReader.ReadLine()) != null)
-			{
-				string[] fields = text2.Split(',');
-				for (int i = 0; i < fields.Length && i < 50; i++)
-				{
-					patCont[i] = fields[i];
-				}
-				text = patCont[9];
-				value = patCont[10];
-			}
-			streamReader.Dispose();
-			dictionary["7, 2"] = text.PadLeft(5, '0');
-			dictionary["7, 3"] = value;
+			dictionary["7, 2"] = patCont[9].PadLeft(5, '0');  // B7: 医師ID（Pat.csv由来・5桁ゼロ埋め）
+			dictionary["7, 3"] = patCont[10];                 // C7: 医師氏名（Pat.csv由来）
 		}
 		else
 		{
-			dictionary["7,2"] = dr_id.Text.PadLeft(5, '0');
-			dictionary["7, 3"] = dr_name.Text;
+			dictionary["7,2"] = dr_id.Text.PadLeft(5, '0');   // B7: 医師ID（画面入力・5桁ゼロ埋め）
+			dictionary["7, 3"] = dr_name.Text;                // C7: 医師氏名（画面入力）
 		}
-		dictionary["27, 2"] = dr_name.Text;
-		dictionary["28, 2"] = eye.Text;
-		dictionary["28, 4"] = staff.Text;
-		dictionary["29, 2"] = ope.Text;
-		dictionary["30, 2"] = diag.Text;
-		dictionary["30, 4"] = anes.Text;
-		dictionary["31, 2"] = explanation.Text;
-		dictionary["32, 2"] = item1.Text;
-		dictionary["33, 2"] = item2.Text;
-		dictionary["34, 2"] = item3.Text;
-		dictionary["35, 2"] = item4.Text;
+		dictionary["27, 2"] = dr_name.Text;       // B27: 医師名
+		dictionary["28, 2"] = eye.Text;           // B28: 術眼
+		dictionary["28, 4"] = staff.Text;         // D28: 担当者
+		dictionary["29, 2"] = ope.Text;           // B29: 術式
+		dictionary["30, 2"] = diag.Text;          // B30: 病名
+		dictionary["30, 4"] = anes.Text;          // D30: 麻酔
+		dictionary["31, 2"] = explanation.Text;   // B31: 説明
+		dictionary["32, 2"] = item1.Text;         // B32: 項目1
+		dictionary["33, 2"] = item2.Text;         // B33: 項目2
+		dictionary["34, 2"] = item3.Text;         // B34: 項目3
+		dictionary["35, 2"] = item4.Text;         // B35: 項目4
 		excelControl.ValueList = dictionary;
 		try
 		{
