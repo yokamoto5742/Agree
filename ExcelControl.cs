@@ -129,24 +129,21 @@ internal class ExcelControl
 		string hms = now.ToString("HHmmss");
 		exWorksheet.Cells[8, 2] = ymd;
 		exWorksheet.Cells[9, 2] = hms;
+		// バーコード解像度と文書コードを INI から読み込む（文書コードは下のバーコード値構築で使う）。
+		loadBarcodeSettings();
 		Range range = (Range)(dynamic)exWorksheet.Cells[3, 2];
 		Range range2 = (Range)(dynamic)exWorksheet.Cells[7, 2];
-		Range range3 = (Range)(dynamic)exWorksheet.Cells[4, 2];
-		Range range4 = (Range)(dynamic)exWorksheet.Cells[22, 2];
 		Range range5 = (Range)(dynamic)exWorksheet.Cells[5, 2];
 		// 36桁バーコード値を構築する。日付・時刻は Value2 経由だと数値化で先頭ゼロが落ちる
 		// （例: 093948→93948）ため、上で確定した文字列をそのまま使う。
 		string patient = ((dynamic)range.Value2).ToString().PadLeft(9, '0');
 		string dept = ((dynamic)range5.Value2).ToString().PadLeft(3, '0');
 		string doctor = ((dynamic)range2.Value2).ToString().PadLeft(5, '0');
-		string doc1 = ((dynamic)range3.Value2).ToString().PadLeft(5, '0');
-		string doc2 = ((dynamic)range4.Value2).ToString().PadLeft(5, '0');
+		// 文書コードは旧・共通情報シート B4 ではなく EyeAgreeSettings.ini から取得する。
+		string doc1 = documentCode.PadLeft(5, '0');
 		string barcode11 = patient + doc1 + dept + doctor + ymd + hms;
-		string barcode23 = patient + doc2 + dept + doctor + ymd + hms;
 		exWorksheet.Cells[11, 2] = (object)barcode11;
-		exWorksheet.Cells[23, 2] = (object)barcode23;
 		// 全フォームシートへバーコード画像を挿入する（SaveAs より前に行うことで保存ファイルへ残す）。
-		loadBarcodeSettings();
 		Sheets sheets = exWorkbook.Sheets;
 		int sheetCount = sheets.Count;
 		for (int i = 1; i <= sheetCount; i++)
@@ -171,8 +168,6 @@ internal class ExcelControl
 		exApp.ScreenUpdating = true;
 		Marshal.ReleaseComObject(range);
 		Marshal.ReleaseComObject(range2);
-		Marshal.ReleaseComObject(range3);
-		Marshal.ReleaseComObject(range4);
 		Marshal.ReleaseComObject(range5);
 	}
 
@@ -183,6 +178,10 @@ internal class ExcelControl
 	private float barcodeHeight = 80f;
 
 	private int barcodeQuietModules = 10;
+
+	// バーコードに埋め込む文書コード（旧・共通情報シート B4 の値）。
+	// 既定値は EyeAgreeSettings.ini の [BARCODE_SETTINGS] DOCUMENT_CODE で上書きできる。
+	private string documentCode = "39911";
 
 	// EyeAgreeSettings.ini からバーコード解像度を読み込む。
 	// ファイルが無い・読めない・値が不正な場合は既定値を維持する。
@@ -231,6 +230,14 @@ internal class ExcelControl
 					if (int.TryParse(val, NumberStyles.Integer, CultureInfo.InvariantCulture, out n) && n >= 0)
 					{
 						barcodeQuietModules = n;
+					}
+				}
+				else if (key == "DOCUMENT_CODE")
+				{
+					// バーコードの桁数を保つため、数字のみ・空でない値だけ採用する。
+					if (!string.IsNullOrEmpty(val) && isAllDigits(val))
+					{
+						documentCode = val;
 					}
 				}
 			}

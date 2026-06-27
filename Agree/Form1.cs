@@ -1460,7 +1460,6 @@ public class Form1 : Form
 		}
 		dictionary["5, 2"] = dept.Text.Split(' ')[0];   // B5: 診療科コード（"コード 科名" の前半）
 		dictionary["5,3"] = dept.Text.Split(' ')[1];    // C5: 診療科名（"コード 科名" の後半）
-		// 医師ID/氏名は起動時(readPatCsv)に patCont へ読み込み済みのため再読込しない。
 		string path = Env.LEGACY_HOME + "\\Pat.csv";
 		if (File.Exists(path))
 		{
