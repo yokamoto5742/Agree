@@ -139,7 +139,6 @@ internal class ExcelControl
 		string patient = ((dynamic)range.Value2).ToString().PadLeft(9, '0');
 		string dept = ((dynamic)range5.Value2).ToString().PadLeft(3, '0');
 		string doctor = ((dynamic)range2.Value2).ToString().PadLeft(5, '0');
-		// 文書コードは旧・共通情報シート B4 ではなく EyeAgreeSettings.ini から取得する。
 		string doc1 = documentCode.PadLeft(5, '0');
 		string barcode11 = patient + doc1 + dept + doctor + ymd + hms;
 		// B11 は入力者氏名に使うため、バーコード値は B10 へ出力する。

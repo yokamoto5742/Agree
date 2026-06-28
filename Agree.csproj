@@ -82,9 +82,11 @@
     </Compile>
     <Compile Include="Agree\Form1.Plan.cs">
       <DependentUpon>Form1.cs</DependentUpon>
+      <SubType>Form</SubType>
     </Compile>
     <Compile Include="Agree\Form1.ImportExport.cs">
       <DependentUpon>Form1.cs</DependentUpon>
+      <SubType>Form</SubType>
     </Compile>
     <EmbeddedResource Include="Agree\Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
