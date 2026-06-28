@@ -15,8 +15,6 @@ public partial class TmpStaff : Form
 
 	private OleDbCommand oraCmd = new OleDbCommand();
 
-	private OleDbDataReader oraReader;
-
 	public TmpStaff()
 	{
 		InitializeComponent();

@@ -5,7 +5,7 @@ namespace Agree;
 
 partial class TmpAgree
 {
-	private IContainer components;
+	private IContainer components = null;
 
 	private TreeView tmpAgreeTree;
 

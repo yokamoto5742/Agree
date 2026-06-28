@@ -5,7 +5,7 @@ namespace Agree;
 
 partial class TmpStaff
 {
-	private IContainer components;
+	private IContainer components = null;
 
 	private DataGridView staffGridView;
 
