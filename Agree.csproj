@@ -77,17 +77,32 @@
     <Compile Include="Agree\Form1.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="Agree\Form1.Designer.cs">
+      <DependentUpon>Form1.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Agree\Form1.Plan.cs">
+      <DependentUpon>Form1.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Agree\Form1.ImportExport.cs">
+      <DependentUpon>Form1.cs</DependentUpon>
+    </Compile>
     <EmbeddedResource Include="Agree\Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>
     <Compile Include="Agree\TmpAgree.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="Agree\TmpAgree.Designer.cs">
+      <DependentUpon>TmpAgree.cs</DependentUpon>
+    </Compile>
     <EmbeddedResource Include="Agree\TmpAgree.resx">
       <DependentUpon>TmpAgree.cs</DependentUpon>
     </EmbeddedResource>
     <Compile Include="Agree\TmpStaff.cs">
       <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Agree\TmpStaff.Designer.cs">
+      <DependentUpon>TmpStaff.cs</DependentUpon>
     </Compile>
     <EmbeddedResource Include="Agree\TmpStaff.resx">
       <DependentUpon>TmpStaff.cs</DependentUpon>
@@ -106,13 +121,6 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <EmbeddedResource Include="util_project\AgentlabUtilityLibrary.FormDate.resx" />
-    <EmbeddedResource Include="util_project\AgentlabUtilityLibrary.InfoShareForm.resx" />
-    <EmbeddedResource Include="util_project\AgentlabUtilityLibrary.LoginChange.resx" />
-    <EmbeddedResource Include="util_project\AgentlabUtilityLibrary.LoginPrompt.resx" />
-    <EmbeddedResource Include="util_project\AgentlabUtilityLibrary.PatFindForm.resx" />
-    <EmbeddedResource Include="util_project\AgentlabUtilityLibrary.SendMessageForm.resx" />
-    <EmbeddedResource Include="util_project\AgentlabUtilityLibrary.StringForm.resx" />
     <None Include="docs\CHANGELOG.md" />
     <None Include="docs\dataflow.md" />
     <None Include="docs\LICENSE" />
@@ -127,7 +135,6 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
     <None Include="README.md" />
-    <None Include="util_project\AgentlabUtilityLibrary.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
