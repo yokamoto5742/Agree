@@ -1445,43 +1445,44 @@ public class Form1 : Form
 	private void printAgree()
 	{
 		ExcelControl excelControl = new ExcelControl();
-		// キーは "行, 列" 形式で、ExcelControl 側で Cells[行, 列] に書き込む（列2=B, 3=C, 4=D, 7=G）。
+		// キーは "行, 列" 形式で、ExcelControl 側で Cells[行, 列] に書き込む。すべて列2=B に出力する。
 		Dictionary<string, string> dictionary = new Dictionary<string, string>();
-		dictionary["3, 2"] = pt_id.Text;      // B3: 患者ID
-		dictionary["3, 3"] = pt_kana.Text;    // C3: 患者カナ氏名
-		dictionary["3, 4"] = pt_name.Text;    // D3: 患者氏名
+		dictionary["1, 2"] = pt_id.Text;      // B1: 患者ID
+		dictionary["2, 2"] = pt_kana.Text;    // B2: 患者カナ氏名
+		dictionary["3, 2"] = pt_name.Text;    // B3: 患者氏名
 		if (pt_sex.Equals("2"))
 		{
-			dictionary["3, 7"] = "女";        // G3: 性別（女）
+			dictionary["4, 2"] = "女";        // B4: 性別（女）
 		}
 		else
 		{
-			dictionary["3, 7"] = "男";        // G3: 性別（男）
+			dictionary["4, 2"] = "男";        // B4: 性別（男）
 		}
 		dictionary["5, 2"] = dept.Text.Split(' ')[0];   // B5: 診療科コード（"コード 科名" の前半）
-		dictionary["5,3"] = dept.Text.Split(' ')[1];    // C5: 診療科名（"コード 科名" の後半）
+		dictionary["6, 2"] = dept.Text.Split(' ')[1];   // B6: 診療科名（"コード 科名" の後半）
 		string path = Env.LEGACY_HOME + "\\Pat.csv";
 		if (File.Exists(path))
 		{
-			dictionary["7, 2"] = patCont[9].PadLeft(5, '0');  // B7: 医師ID（Pat.csv由来・5桁ゼロ埋め）
-			dictionary["7, 3"] = patCont[10];                 // C7: 医師氏名（Pat.csv由来）
+			dictionary["7, 2"] = patCont[9].PadLeft(5, '0');  // B7: 入力者ID（Pat.csv由来・5桁ゼロ埋め）
+			dictionary["11, 2"] = patCont[10];                // B11: 入力者氏名（Pat.csv由来）
 		}
 		else
 		{
-			dictionary["7,2"] = dr_id.Text.PadLeft(5, '0');   // B7: 医師ID（画面入力・5桁ゼロ埋め）
-			dictionary["7, 3"] = dr_name.Text;                // C7: 医師氏名（画面入力）
+			dictionary["7, 2"] = dr_id.Text.PadLeft(5, '0');  // B7: 入力者ID（画面入力・5桁ゼロ埋め）
+			dictionary["11, 2"] = dr_name.Text;               // B11: 入力者氏名（画面入力）
 		}
-		dictionary["27, 2"] = dr_name.Text;       // B27: 医師名
-		dictionary["28, 2"] = eye.Text;           // B28: 術眼
-		dictionary["28, 4"] = staff.Text;         // D28: 担当者
-		dictionary["29, 2"] = ope.Text;           // B29: 術式
-		dictionary["30, 2"] = diag.Text;          // B30: 病名
-		dictionary["30, 4"] = anes.Text;          // D30: 麻酔
-		dictionary["31, 2"] = explanation.Text;   // B31: 説明
-		dictionary["32, 2"] = item1.Text;         // B32: 項目1
-		dictionary["33, 2"] = item2.Text;         // B33: 項目2
-		dictionary["34, 2"] = item3.Text;         // B34: 項目3
-		dictionary["35, 2"] = item4.Text;         // B35: 項目4
+		dictionary["8, 2"] = save_date.Value.ToString("yyyyMMdd");  // B8: 作成日
+		dictionary["9, 2"] = DateTime.Now.ToString("HHmmss");       // B9: 作成時刻
+		// B10 は ExcelControl.MakeEyeAgree が36桁バーコード値を書き込むため、ここでは設定しない。
+		dictionary["12, 2"] = staff.Text;         // B12: 担当者
+		dictionary["13, 2"] = eye.Text;           // B13: 眼
+		dictionary["14, 2"] = ope.Text;           // B14: 手術名
+		dictionary["15, 2"] = anes.Text;          // B15: 麻酔
+		dictionary["16, 2"] = diag.Text;          // B16: 病名
+		dictionary["17, 2"] = explanation.Text;   // B17: 説明
+		dictionary["18, 2"] = item1.Text;         // B18: 症状
+		dictionary["19, 2"] = item2.Text;         // B19: 治療計画
+		dictionary["20, 2"] = item4.Text;         // B20: 手術内容
 		excelControl.ValueList = dictionary;
 		try
 		{

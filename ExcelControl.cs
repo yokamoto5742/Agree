@@ -131,7 +131,7 @@ internal class ExcelControl
 		exWorksheet.Cells[9, 2] = hms;
 		// バーコード解像度と文書コードを INI から読み込む（文書コードは下のバーコード値構築で使う）。
 		loadBarcodeSettings();
-		Range range = (Range)(dynamic)exWorksheet.Cells[3, 2];
+		Range range = (Range)(dynamic)exWorksheet.Cells[1, 2];
 		Range range2 = (Range)(dynamic)exWorksheet.Cells[7, 2];
 		Range range5 = (Range)(dynamic)exWorksheet.Cells[5, 2];
 		// 36桁バーコード値を構築する。日付・時刻は Value2 経由だと数値化で先頭ゼロが落ちる
@@ -142,7 +142,8 @@ internal class ExcelControl
 		// 文書コードは旧・共通情報シート B4 ではなく EyeAgreeSettings.ini から取得する。
 		string doc1 = documentCode.PadLeft(5, '0');
 		string barcode11 = patient + doc1 + dept + doctor + ymd + hms;
-		exWorksheet.Cells[11, 2] = (object)barcode11;
+		// B11 は入力者氏名に使うため、バーコード値は B10 へ出力する。
+		exWorksheet.Cells[10, 2] = (object)barcode11;
 		// 全フォームシートへバーコード画像を挿入する（SaveAs より前に行うことで保存ファイルへ残す）。
 		Sheets sheets = exWorkbook.Sheets;
 		int sheetCount = sheets.Count;
