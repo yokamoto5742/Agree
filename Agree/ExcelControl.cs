@@ -1,9 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using AgentlabUtilityLibrary;
@@ -11,21 +10,23 @@ using Microsoft.Office.Interop.Excel;
 
 internal class ExcelControl
 {
-	private Dictionary<string, string> valueList = new Dictionary<string, string>();
-
 	private Application exApp;
 
 	private _Workbook exWorkbook;
 
 	private _Worksheet exWorksheet;
 
-	public Dictionary<string, string> ValueList
-	{
-		set
-		{
-			valueList = value;
-		}
-	}
+	// バーコード画像の解像度設定。既定値は EyeAgreeSettings.ini の
+	// [BARCODE_SETTINGS] で上書きできる。1モジュール=barcodeLineWidth px。
+	private float barcodeLineWidth = 3f;
+
+	private float barcodeHeight = 80f;
+
+	private int barcodeQuietModules = 10;
+
+	// バーコードに埋め込む文書コード
+	// 既定値は EyeAgreeSettings.ini の [BARCODE_SETTINGS] DOCUMENT_CODE で上書きできる。
+	private string documentCode = "39911";
 
 	public void ReleaseExcel()
 	{
@@ -48,27 +49,150 @@ internal class ExcelControl
 		}
 	}
 
-	public string Open(string fileName, string sheetName)
+	// テンプレートを開き、指定シートを exWorksheet に設定する。
+	// ファイルが無い場合は IOException、Excel の起動・シート取得の失敗は例外がそのまま伝播する。
+	public void Open(string fileName, string sheetName)
 	{
-		string result = "";
 		if (!File.Exists(fileName))
 		{
-			return "ファイルが存在しません";
+			throw new IOException("ファイルが存在しません");
 		}
+		exApp = new Application();
+		exApp.Visible = true;
+		exApp.EnableEvents = false;
+		Workbooks workbooks = exApp.Workbooks;
 		try
 		{
-			exApp = (Application)Activator.CreateInstance(Type.GetTypeFromCLSID(new Guid("00024500-0000-0000-C000-000000000046")));
-			exApp.Visible = true;
-			exApp.EnableEvents = false;
-			exWorkbook = exApp.Workbooks.Open(fileName, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value);
-			exWorksheet = (_Worksheet)(dynamic)exWorkbook.Sheets[sheetName];
+			exWorkbook = workbooks.Open(fileName);
 		}
-		catch (Exception ex)
+		finally
 		{
-			string message = ex.Message;
-			result = message;
+			Marshal.ReleaseComObject(workbooks);
 		}
-		return result;
+		exWorksheet = (_Worksheet)exWorkbook.Sheets[sheetName];
+	}
+
+	public void MakeEyeAgree(string sheetName, Dictionary<string, string> values)
+	{
+		Open(Env.AGENT_HOME + "\\EyeAgree\\EyeAgree.xlsm", "共通情報");
+		// シート切替・セル書込み・バーコード挿入の途中経過を画面に見せないため、
+		// 自動処理中は描画を凍結する。例外時に凍結・イベント無効のまま Excel が
+		// 残らないよう、finally で必ず復元する。
+		exApp.ScreenUpdating = false;
+		try
+		{
+			activateAllSheets();
+			setValue(values);
+			// 日付・時刻は1回だけ取得し、セル・バーコード値・ファイル名で共用する。
+			DateTime now = DateTime.Now;
+			string ymd = now.ToString("yyyyMMdd");
+			string hms = now.ToString("HHmmss");
+			exWorksheet.Cells[8, 2] = ymd;
+			exWorksheet.Cells[9, 2] = hms;
+			// バーコード解像度と文書コードを INI から読み込む（文書コードはバーコード値構築で使う）。
+			loadBarcodeSettings();
+			string patientId = getCellText(1, 2);
+			string barcodeValue = buildBarcodeValue(patientId, ymd, hms);
+			// B11 は入力者氏名に使うため、バーコード値は B10 へ出力する。
+			exWorksheet.Cells[10, 2] = barcodeValue;
+			insertBarcodeToFormSheets(barcodeValue);
+			saveWorkbook(patientId, ymd, hms);
+			selectTargetSheet(sheetName);
+		}
+		finally
+		{
+			// 自動処理を終えたのでイベントを再開し、描画凍結を解除する。
+			exApp.EnableEvents = true;
+			exApp.ScreenUpdating = true;
+		}
+	}
+
+	// 自動保存時に「セッション中アクティブにされていないシートのフォームコントロール
+	// （ボタン）が脱落する」既知の挙動を回避するため、全シートを一度アクティブ化して
+	// 描画レイヤーを確実に読み込ませる。EnableEvents=false 中なのでイベントは発火しない。
+	private void activateAllSheets()
+	{
+		Sheets sheets = exWorkbook.Sheets;
+		int sheetCount = sheets.Count;
+		for (int i = 1; i <= sheetCount; i++)
+		{
+			_Worksheet sheet = (_Worksheet)sheets[i];
+			try
+			{
+				sheet.Activate();
+			}
+			catch
+			{
+				// 非表示シートはアクティブ化できないためスキップ
+			}
+			Marshal.ReleaseComObject(sheet);
+		}
+		Marshal.ReleaseComObject(sheets);
+	}
+
+	private void setValue(Dictionary<string, string> valueToCell)
+	{
+		// キーは "行, 列" 形式（Form1.Plan.cs 側で構築）。
+		foreach (KeyValuePair<string, string> pair in valueToCell)
+		{
+			string[] rowCol = pair.Key.Split(',');
+			exWorksheet.Cells[int.Parse(rowCol[0]), int.Parse(rowCol[1])] = pair.Value;
+		}
+	}
+
+	private string getCellText(int row, int col)
+	{
+		Range cell = (Range)exWorksheet.Cells[row, col];
+		try
+		{
+			object value = cell.Value2;
+			return value.ToString();
+		}
+		finally
+		{
+			Marshal.ReleaseComObject(cell);
+		}
+	}
+
+	// 36桁バーコード値を構築する。日付・時刻は Value2 経由だと数値化で先頭ゼロが落ちる
+	// （例: 093948→93948）ため、セルへ書き込んだ文字列をそのまま使う。
+	private string buildBarcodeValue(string patientId, string ymd, string hms)
+	{
+		string deptCode = getCellText(5, 2).PadLeft(3, '0');   // B5: 診療科コード
+		string doctorId = getCellText(7, 2).PadLeft(5, '0');   // B7: 入力者ID
+		return patientId.PadLeft(9, '0') + documentCode.PadLeft(5, '0') + deptCode + doctorId + ymd + hms;
+	}
+
+	// 全フォームシートへバーコード画像を挿入する（SaveAs より前に行うことで保存ファイルへ残す）。
+	private void insertBarcodeToFormSheets(string barcodeValue)
+	{
+		Sheets sheets = exWorkbook.Sheets;
+		int sheetCount = sheets.Count;
+		for (int i = 1; i <= sheetCount; i++)
+		{
+			_Worksheet formSheet = (_Worksheet)sheets[i];
+			if (formSheet.Name != "共通情報")
+			{
+				insertBarcode(formSheet, barcodeValue);
+			}
+			Marshal.ReleaseComObject(formSheet);
+		}
+		Marshal.ReleaseComObject(sheets);
+	}
+
+	private void saveWorkbook(string patientId, string ymd, string hms)
+	{
+		string filename = Environment.GetEnvironmentVariable("TEMP") + "\\" + patientId + "_" + ymd + hms + "_" + "EyeAgree.xlsm";
+		// マクロ有効形式(.xlsm)を明示して保存する
+		exWorkbook.SaveAs(filename, XlFileFormat.xlOpenXMLWorkbookMacroEnabled, AccessMode: XlSaveAsAccessMode.xlExclusive);
+	}
+
+	private void selectTargetSheet(string sheetName)
+	{
+		// 共通情報シートの COM 参照を解放してから、表示対象シートへ差し替える。
+		Marshal.ReleaseComObject(exWorksheet);
+		exWorksheet = (_Worksheet)exWorkbook.Sheets[resolveSheetName(sheetName)];
+		exWorksheet.Select(true);
 	}
 
 	private string resolveSheetName(string sheetName)
@@ -80,108 +204,6 @@ internal class ExcelControl
 		}
 		return sheetName;
 	}
-
-	private void setValue(Dictionary<string, string> valueToCell)
-	{
-		foreach (string key in valueToCell.Keys)
-		{
-			int num = int.Parse(key.Split(',')[0]);
-			int num2 = int.Parse(key.Split(',')[1]);
-			exWorksheet.Cells[num, num2] = valueToCell[key];
-		}
-	}
-
-	public void MakeEyeAgree(string sheetName)
-	{
-		// Open() 失敗時はエラー文字列が返る。null の exApp を参照して NullReference を起こす前に
-		// 例外として通知し、呼び出し側で握って Excel を解放させる。
-		string openError = Open(Env.AGENT_HOME + "\\EyeAgree\\EyeAgree.xlsm", "共通情報");
-		if (!string.IsNullOrEmpty(openError))
-		{
-			throw new IOException(openError);
-		}
-		// シート切替・セル書込み・バーコード挿入の途中経過を画面に見せないため、
-		// 自動処理中は描画を凍結する。最終シートを Select した後に true へ戻す。
-		exApp.ScreenUpdating = false;
-		// 自動保存時に「セッション中アクティブにされていないシートのフォームコントロール
-		// （ボタン）が脱落する」既知の挙動を回避するため、全シートを一度アクティブ化して
-		// 描画レイヤーを確実に読み込ませる。EnableEvents=false 中なのでイベントは発火しない。
-		Sheets activateSheets = exWorkbook.Sheets;
-		int activateCount = activateSheets.Count;
-		for (int i = 1; i <= activateCount; i++)
-		{
-			_Worksheet ws = (_Worksheet)(dynamic)activateSheets[i];
-			try
-			{
-				ws.Activate();
-			}
-			catch
-			{
-				// 非表示シートはアクティブ化できないためスキップ
-			}
-			Marshal.ReleaseComObject(ws);
-		}
-		Marshal.ReleaseComObject(activateSheets);
-		setValue(valueList);
-		// 日付・時刻は1回だけ取得し、セル・バーコード値・ファイル名で共用する。
-		DateTime now = DateTime.Now;
-		string ymd = now.ToString("yyyyMMdd");
-		string hms = now.ToString("HHmmss");
-		exWorksheet.Cells[8, 2] = ymd;
-		exWorksheet.Cells[9, 2] = hms;
-		// バーコード解像度と文書コードを INI から読み込む（文書コードは下のバーコード値構築で使う）。
-		loadBarcodeSettings();
-		Range range = (Range)(dynamic)exWorksheet.Cells[1, 2];
-		Range range2 = (Range)(dynamic)exWorksheet.Cells[7, 2];
-		Range range5 = (Range)(dynamic)exWorksheet.Cells[5, 2];
-		// 36桁バーコード値を構築する。日付・時刻は Value2 経由だと数値化で先頭ゼロが落ちる
-		// （例: 093948→93948）ため、上で確定した文字列をそのまま使う。
-		string patient = ((dynamic)range.Value2).ToString().PadLeft(9, '0');
-		string dept = ((dynamic)range5.Value2).ToString().PadLeft(3, '0');
-		string doctor = ((dynamic)range2.Value2).ToString().PadLeft(5, '0');
-		string doc1 = documentCode.PadLeft(5, '0');
-		string barcode11 = patient + doc1 + dept + doctor + ymd + hms;
-		// B11 は入力者氏名に使うため、バーコード値は B10 へ出力する。
-		exWorksheet.Cells[10, 2] = (object)barcode11;
-		// 全フォームシートへバーコード画像を挿入する（SaveAs より前に行うことで保存ファイルへ残す）。
-		Sheets sheets = exWorkbook.Sheets;
-		int sheetCount = sheets.Count;
-		for (int i = 1; i <= sheetCount; i++)
-		{
-			_Worksheet formSheet = (_Worksheet)(dynamic)sheets[i];
-            if (formSheet.Name != "共通情報")
-            {
-                string barcodeText = barcode11;
-                insertBarcode(formSheet, barcodeText);
-            }
-            Marshal.ReleaseComObject(formSheet);
-		}
-		Marshal.ReleaseComObject(sheets);
-        string filename = Environment.GetEnvironmentVariable("TEMP") + "\\" + ((dynamic)range.Value2).ToString() + "_" + ymd + hms + "_" + "EyeAgree.xlsm";
-        // マクロ有効形式(.xlsm)を明示して保存する
-        exWorkbook.SaveAs(filename, XlFileFormat.xlOpenXMLWorkbookMacroEnabled, Missing.Value, Missing.Value, Missing.Value, Missing.Value, XlSaveAsAccessMode.xlExclusive, Missing.Value, Missing.Value, Missing.Value, Missing.Value, Missing.Value);
-		exWorksheet = (_Worksheet)(dynamic)exWorkbook.Sheets[resolveSheetName(sheetName)];
-		exWorksheet.Select(true);
-		// 自動処理が終わったのでイベントを元に戻す。
-		exApp.EnableEvents = true;
-		// 描画凍結を解除し、最終シートを再描画させる。
-		exApp.ScreenUpdating = true;
-		Marshal.ReleaseComObject(range);
-		Marshal.ReleaseComObject(range2);
-		Marshal.ReleaseComObject(range5);
-	}
-
-	// バーコード画像の解像度設定。既定値は EyeAgreeSettings.ini の
-	// [BARCODE_SETTINGS] で上書きできる。1モジュール=barcodeLineWidth px。
-	private float barcodeLineWidth = 3f;
-
-	private float barcodeHeight = 80f;
-
-	private int barcodeQuietModules = 10;
-
-	// バーコードに埋め込む文書コード（旧・共通情報シート B4 の値）。
-	// 既定値は EyeAgreeSettings.ini の [BARCODE_SETTINGS] DOCUMENT_CODE で上書きできる。
-	private string documentCode = "39911";
 
 	// EyeAgreeSettings.ini からバーコード解像度を読み込む。
 	// ファイルが無い・読めない・値が不正な場合は既定値を維持する。
@@ -242,8 +264,9 @@ internal class ExcelControl
 				}
 			}
 		}
-		catch (IOException)
+		catch (Exception)
 		{
+			// 読み込みに失敗した場合は既定値のまま続行する。
 		}
 	}
 
@@ -266,11 +289,12 @@ internal class ExcelControl
 		try
 		{
 			tempPath = generateBarcodeImage(barcodeText);
-			anchor = (Range)(dynamic)sheet.Cells[1, 4]; // D1
+			anchor = (Range)sheet.Cells[1, 4]; // D1
 			float left = (float)(double)anchor.Left;
 			float top = (float)(double)anchor.Top;
 			shapes = sheet.Shapes;
-
+			// AddPicture の引数型 MsoTriState は office.dll(PIA) 由来だが、CLI ビルド用には
+			// Excel PIA しか同梱していないため、この呼び出しのみ dynamic 経由で遅延バインドする。
 			picture = ((dynamic)shapes).AddPicture(tempPath, 0, -1, left, top, 250f, 30f);
 			((dynamic)picture).Placement = (int)XlPlacement.xlMove;
 		}

@@ -346,10 +346,9 @@ public partial class Form1
 		dictionary["18, 2"] = item1.Text;         // B18: 症状
 		dictionary["19, 2"] = item2.Text;         // B19: 治療計画
 		dictionary["20, 2"] = item4.Text;         // B20: 手術内容
-		excelControl.ValueList = dictionary;
 		try
 		{
-			excelControl.MakeEyeAgree(sheetName.Text);
+			excelControl.MakeEyeAgree(sheetName.Text, dictionary);
 		}
 		catch (Exception ex)
 		{
