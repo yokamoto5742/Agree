@@ -4,7 +4,6 @@ using System.ComponentModel;
 using System.Data;
 using System.Data.OleDb;
 using System.Drawing;
-using System.IO;
 using System.Text;
 using System.Windows.Forms;
 using AgentlabUtilityLibrary;
@@ -111,8 +110,9 @@ public partial class Form1
 				}
 				else
 				{
-					dr_id.Text = "";
-					dr_name.Text = "";
+					// 職員マスタに無いコード（退職者等）でも、DBに保存された入力者を欠落させない。
+					dr_id.Text = AgreeList.Rows[rowIndex].Cells[4].Value.ToString().Trim();
+					dr_name.Text = AgreeList.Rows[rowIndex].Cells[5].Value.ToString().Trim();
 				}
 				string text = "";
 				if (AgreeList.Rows[rowIndex].Cells[1].Value.ToString().Length == 8)
@@ -323,17 +323,10 @@ public partial class Form1
 		}
 		dictionary["5, 2"] = dept.Text.Split(' ')[0];   // B5: 診療科コード（"コード 科名" の前半）
 		dictionary["6, 2"] = dept.Text.Split(' ')[1];   // B6: 診療科名（"コード 科名" の後半）
-		string path = Env.LEGACY_HOME + "\\Pat.csv";
-		if (File.Exists(path))
-		{
-			dictionary["7, 2"] = patCont[9].PadLeft(5, '0');  // B7: 入力者ID（Pat.csv由来・5桁ゼロ埋め）
-			dictionary["11, 2"] = patCont[10];                // B11: 入力者氏名（Pat.csv由来）
-		}
-		else
-		{
-			dictionary["7, 2"] = dr_id.Text.PadLeft(5, '0');  // B7: 入力者ID（画面入力・5桁ゼロ埋め）
-			dictionary["11, 2"] = dr_name.Text;               // B11: 入力者氏名（画面入力）
-		}
+		// 入力者はDBに保存された値（AGREE.DR）を出力する。一覧選択時に showPlan が
+		// dr_id/dr_name へセットするため、スタッフが印刷しても医師の入力者IDで出力される。
+		dictionary["7, 2"] = dr_id.Text.Trim().PadLeft(5, '0');  // B7: 入力者ID（DB由来・5桁ゼロ埋め）
+		dictionary["11, 2"] = dr_name.Text.Trim();               // B11: 入力者氏名（DB由来）
 		dictionary["8, 2"] = save_date.Value.ToString("yyyyMMdd");  // B8: 作成日
 		dictionary["9, 2"] = DateTime.Now.ToString("HHmmss");       // B9: 作成時刻
 		// B10 は ExcelControl.MakeEyeAgree が36桁バーコード値を書き込むため、ここでは設定しない。
