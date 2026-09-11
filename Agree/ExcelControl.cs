@@ -83,11 +83,11 @@ internal class ExcelControl
 		{
 			activateAllSheets();
 			setValue(values);
-			// 日付・時刻は1回だけ取得し、セル・バーコード値・ファイル名で共用する。
+			// バーコード値の日付は作成日（B8、printAgree が save_date から設定済み）を使う。
+			// 時刻は印刷時刻を1回だけ取得し、セル・バーコード値・ファイル名で共用する。
 			DateTime now = DateTime.Now;
-			string ymd = now.ToString("yyyyMMdd");
+			string ymd = values["8, 2"];
 			string hms = now.ToString("HHmmss");
-			exWorksheet.Cells[8, 2] = ymd;
 			exWorksheet.Cells[9, 2] = hms;
 			// バーコード解像度と文書コードを INI から読み込む（文書コードはバーコード値構築で使う）。
 			loadBarcodeSettings();
@@ -96,7 +96,8 @@ internal class ExcelControl
 			// B11 は入力者氏名に使うため、バーコード値は B10 へ出力する。
 			exWorksheet.Cells[10, 2] = barcodeValue;
 			insertBarcodeToFormSheets(barcodeValue);
-			saveWorkbook(patientId, ymd, hms);
+			// ファイル名は再印刷時の重複を避けるため印刷日時で付ける。
+			saveWorkbook(patientId, now.ToString("yyyyMMdd"), hms);
 			selectTargetSheet(sheetName);
 		}
 		finally
