@@ -50,12 +50,12 @@ internal class ExcelControl
 	}
 
 	// テンプレートを開き、指定シートを exWorksheet に設定する。
-	// ファイルが無い場合は IOException、Excel の起動・シート取得の失敗は例外がそのまま伝播する。
+	// ファイルが無い場合は FileNotFoundException（FileName に探したパス）、Excel の起動・シート取得の失敗は例外がそのまま伝播する。
 	public void Open(string fileName, string sheetName)
 	{
 		if (!File.Exists(fileName))
 		{
-			throw new IOException("ファイルが存在しません");
+			throw new FileNotFoundException("ファイルが存在しません", fileName);
 		}
 		exApp = new Application();
 		exApp.Visible = true;

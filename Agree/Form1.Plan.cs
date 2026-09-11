@@ -343,6 +343,12 @@ public partial class Form1
 		{
 			excelControl.MakeEyeAgree(sheetName.Text, dictionary);
 		}
+		catch (System.IO.FileNotFoundException ex)
+		{
+			// テンプレート未配置を「Excel未起動」と誤案内しないよう、探したパスを示す。
+			Logger.Error("printAgree", ex);
+			MessageBox.Show("同意書のテンプレートが見つかりません。\n次の場所に配置してください。\n" + ex.FileName, "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
+		}
 		catch (Exception ex)
 		{
 			Logger.Error("printAgree", ex);
