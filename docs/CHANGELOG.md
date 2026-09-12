@@ -7,6 +7,19 @@
 
 ## [Unreleased]
 
+### 変更
+- DB接続を OLE DB（`MSDAORA.1` / `OraOLEDB.Oracle`）から **ODP.NET マネージド・ドライバ**
+  （`Oracle.ManagedDataAccess` 4.122.19.1）へ移行。**Oracle クライアントのインストールが不要**になった
+  （電子カルテ端末にOracleクライアントを導入しない方針への対応。DBはOracleのまま）
+- 外部DLL `AgentlabUtilityLibrary.dll` のDB機能への依存を解消。接続生成を `Agree/OracleDb.cs`、
+  診療科・職員マスタの読込を `Agree/MasterDict.cs` としてリポジトリ内に実装（旧 `DBConn` / `Dict` の置き換え）。
+  外部DLLは `Env`（ini読込）と `Barcode128`（バーコード描画）のみ使用する
+- 結合テストもマネージド・ドライバへ移行。32bit `OraOLEDB` の regsvr32 登録が不要になった
+
+### 注意
+- 配布時は `Oracle.ManagedDataAccess.dll` と **`tnsnames.ora`** をexeと同じフォルダに配置すること。
+  Oracleクライアントを撤去する場合は、撤去前に `%ORACLE_HOME%\network\admin\tnsnames.ora` を退避しておく
+
 ## [1.0.2] - 2026-09-11
 
 ### 変更

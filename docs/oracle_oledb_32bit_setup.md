@@ -1,5 +1,14 @@
 # 32bit OraOLEDB 登録 ＆ テストDB整合 トラブルシュート手順
 
+> ## ⚠️ 問題A（OraOLEDB の登録）は役目を終えました
+>
+> 本アプリは ODP.NET マネージド・ドライバへ移行済みで、**OLE DB プロバイダを使いません**。
+> 32bit `OraOLEDB.Oracle` の regsvr32 登録も、Oracle クライアントのインストールも不要です。
+> 経緯は [`agree_oracle_client_removal_plan.md`](agree_oracle_client_removal_plan.md) を参照。
+>
+> **問題B（テストDBのスキーマdrift）は現在も有効**です。`ORA-00904` が出た場合はそちらを参照してください。
+> 以下の問題Aの記述は、旧構成の記録として残しています。
+
 x86 の `Agree.Tests`（および x86 アプリ本体）をローカル Oracle Free に接続する際、
 `OraOLEDB.Oracle` プロバイダ未登録 / テストDBのスキーマdrift でつまずいた場合の復旧手順。
 セットアップ全体は [`local_oracle_setup.md`](local_oracle_setup.md) を参照。本書はその「32bit プロバイダ」と

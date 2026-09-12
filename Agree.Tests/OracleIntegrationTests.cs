@@ -1,45 +1,47 @@
 using System;
-using System.Data.OleDb;
 using Agree;
 using NUnit.Framework;
+using Oracle.ManagedDataAccess.Client;
 
 namespace Agree.Tests
 {
     /// <summary>
-    /// ローカル Oracle Free (OraOLEDB.Oracle / localhost:1521/FREEPDB1) に対する
+    /// ローカル Oracle Free (ODP.NET マネージド / localhost:1521/FREEPDB1) に対する
     /// SQL 読み書きの結合テスト。アプリ本体や AgentlabUtilityLibrary.dll には依存しない。
     ///
     /// 前提:
     ///   1. ローカルに Oracle Database Free が起動している。
-    ///   2. 32bit 版 ODAC (OraOLEDB.Oracle) がインストール済み（このテストは x86 で走る）。
-    ///   3. docs/test_db_schema.sql を TEST_USER スキーマへ投入済み。
+    ///   2. docs/test_db_schema.sql を TEST_USER スキーマへ投入済み。
     /// いずれかが満たされない場合、各テストは Ignore（失敗ではなくスキップ）になる。
     /// 接続文字列は環境変数 AGREE_TEST_ORACLE で上書き可能。
+    ///
+    /// ODP.NET マネージドは 100% マネージドのため、Oracle クライアントのインストールも
+    /// 32bit プロバイダの regsvr32 登録も不要（EZ-Connect 指定なので tnsnames.ora も不要）。
     /// </summary>
     [TestFixture]
     [Category("Integration")]
     public class OracleIntegrationTests
     {
         private const string DefaultConnectionString =
-            "Provider=OraOLEDB.Oracle;Data Source=localhost:1521/FREEPDB1;User ID=TEST_USER;Password=TEST_PWD";
+            "User Id=TEST_USER;Password=TEST_PWD;Data Source=localhost:1521/FREEPDB1";
 
         private static string ConnectionString =>
             Environment.GetEnvironmentVariable("AGREE_TEST_ORACLE") ?? DefaultConnectionString;
 
         /// <summary>
         /// DB未起動 / スキーマ未投入なら Ignore（スキップ）。
-        /// 一方、ビット不一致(BadImageFormatException)やプロバイダ未登録は環境構築ミスなので、
-        /// Ignore で握り潰さず Fail させて表面化させる（"DB未起動" と取り違えないため）。
+        /// 一方、認証失敗は環境構築ミスなので Ignore で握り潰さず Fail させて表面化させる
+        /// （"DB未起動" と取り違えないため）。
         /// </summary>
         [OneTimeSetUp]
         public void EnsureDatabaseAvailable()
         {
             try
             {
-                using (var con = new OleDbConnection(ConnectionString))
+                using (var con = new OracleConnection(ConnectionString))
                 {
                     con.Open();
-                    using (var cmd = new OleDbCommand(
+                    using (var cmd = new OracleCommand(
                         "SELECT COUNT(*) FROM USER_TABLES " +
                         "WHERE TABLE_NAME IN ('AGREE','AGREE_TEMPLATE','AGREE_STAFF')", con))
                     {
@@ -49,21 +51,13 @@ namespace Agree.Tests
                     }
                 }
             }
-            catch (BadImageFormatException ex)
+            catch (OracleException ex) when (ex.Number == 1017 || ex.Number == 28040)
             {
-                Assert.Fail("テストホストのアーキテクチャ不一致です。x86 で実行してください" +
-                            "（x86.runsettings / テストエクスプローラーのプロセスアーキテクチャ=x86）: " + ex.Message);
+                // ORA-01017: ユーザー名/パスワード不一致、ORA-28040: 認証プロトコル不一致
+                Assert.Fail("ローカル Oracle への認証に失敗しました。TEST_USER の設定を確認してください: " + ex.Message);
             }
             catch (Exception ex) when (!(ex is IgnoreException))
             {
-                var msg = ex.Message ?? "";
-                bool providerProblem =
-                    msg.IndexOf("OraOLEDB", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                    msg.IndexOf("provider", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                    msg.Contains("プロバイダー") || msg.Contains("登録されていません");
-                if (providerProblem)
-                    Assert.Fail("OraOLEDB.Oracle プロバイダをロードできません。" +
-                                "32bit 版 ODAC のインストール / ビット一致を確認してください: " + ex.Message);
                 Assert.Ignore("ローカル Oracle に接続できません（DB未起動など）: " + ex.Message);
             }
         }
@@ -71,7 +65,7 @@ namespace Agree.Tests
         [Test]
         public void Connection_Opens()
         {
-            using (var con = new OleDbConnection(ConnectionString))
+            using (var con = new OracleConnection(ConnectionString))
             {
                 con.Open();
                 Assert.That(con.State, Is.EqualTo(System.Data.ConnectionState.Open));
@@ -150,18 +144,21 @@ namespace Agree.Tests
                     "'症状', '計画', '検査', '手術内容', '日帰り', 1, 0, 123456)");
                 Assert.That(inserted, Is.EqualTo(1));
 
-                using (var cmd = new OleDbCommand(
+                using (var cmd = new OracleCommand(
                     "SELECT STAFF, EYE, DIAG, ANES, OPE, EXPLANATION, ITEM1, ITEM2, ITEM3, ITEM4, SHEET_NAME, DR_OK " +
-                    "FROM AGREE WHERE AGREE_ID = " + id, con, tx))
-                using (var r = cmd.ExecuteReader())
+                    "FROM AGREE WHERE AGREE_ID = " + id, con))
                 {
-                    Assert.That(r.Read(), Is.True, "INSERT した 1 行が読めること");
-                    Assert.That(r["STAFF"], Is.EqualTo("担当"));
-                    Assert.That(r["EYE"], Is.EqualTo("右"));
-                    Assert.That(r["DIAG"], Is.EqualTo("病名"));
-                    Assert.That(r["ITEM4"], Is.EqualTo("手術内容"));
-                    Assert.That(r["SHEET_NAME"], Is.EqualTo("日帰り"));
-                    Assert.That(Convert.ToInt32(r["DR_OK"]), Is.EqualTo(1));
+                    cmd.Transaction = tx;
+                    using (var r = cmd.ExecuteReader())
+                    {
+                        Assert.That(r.Read(), Is.True, "INSERT した 1 行が読めること");
+                        Assert.That(r["STAFF"], Is.EqualTo("担当"));
+                        Assert.That(r["EYE"], Is.EqualTo("右"));
+                        Assert.That(r["DIAG"], Is.EqualTo("病名"));
+                        Assert.That(r["ITEM4"], Is.EqualTo("手術内容"));
+                        Assert.That(r["SHEET_NAME"], Is.EqualTo("日帰り"));
+                        Assert.That(Convert.ToInt32(r["DR_OK"]), Is.EqualTo(1));
+                    }
                 }
 
                 tx.Rollback();
@@ -218,28 +215,37 @@ namespace Agree.Tests
 
         // ---- helpers ----
 
-        private static OleDbConnection Open()
+        private static OracleConnection Open()
         {
-            var con = new OleDbConnection(ConnectionString);
+            var con = new OracleConnection(ConnectionString);
             con.Open();
             return con;
         }
 
-        private static long NextVal(OleDbConnection con, OleDbTransaction tx, string sequenceName)
+        // OracleCommand には (sql, connection, transaction) のコンストラクタが無いため、
+        // Transaction は生成後に代入する。
+        private static OracleCommand Command(OracleConnection con, OracleTransaction tx, string sql)
         {
-            using (var cmd = new OleDbCommand("SELECT " + sequenceName + ".NEXTVAL FROM DUAL", con, tx))
+            var cmd = new OracleCommand(sql, con);
+            cmd.Transaction = tx;
+            return cmd;
+        }
+
+        private static long NextVal(OracleConnection con, OracleTransaction tx, string sequenceName)
+        {
+            using (var cmd = Command(con, tx, "SELECT " + sequenceName + ".NEXTVAL FROM DUAL"))
                 return Convert.ToInt64(cmd.ExecuteScalar());
         }
 
-        private static int Exec(OleDbConnection con, OleDbTransaction tx, string sql)
+        private static int Exec(OracleConnection con, OracleTransaction tx, string sql)
         {
-            using (var cmd = new OleDbCommand(sql, con, tx))
+            using (var cmd = Command(con, tx, sql))
                 return cmd.ExecuteNonQuery();
         }
 
-        private static object Scalar(OleDbConnection con, OleDbTransaction tx, string sql)
+        private static object Scalar(OracleConnection con, OracleTransaction tx, string sql)
         {
-            using (var cmd = new OleDbCommand(sql, con, tx))
+            using (var cmd = Command(con, tx, sql))
                 return cmd.ExecuteScalar();
         }
     }

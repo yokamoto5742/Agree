@@ -2,23 +2,23 @@
 using System.Collections;
 using System.ComponentModel;
 using System.Data;
-using System.Data.OleDb;
 using System.Drawing;
 using System.Windows.Forms;
 using AgentlabUtilityLibrary;
+using Oracle.ManagedDataAccess.Client;
 
 namespace Agree;
 
 public partial class TmpStaff : Form
 {
-	private OleDbConnection oraConn;
+	private OracleConnection oraConn;
 
-	private OleDbCommand oraCmd = new OleDbCommand();
+	private OracleCommand oraCmd = new OracleCommand();
 
 	public TmpStaff()
 	{
 		InitializeComponent();
-		oraConn = DBConn.GetOpenDBConn();
+		oraConn = OracleDb.CreateOpenConnection();
 		oraCmd.Connection = oraConn;
 		if (Program.OfflineMode)
 		{
@@ -33,7 +33,7 @@ public partial class TmpStaff : Form
 	{
 		oraConn.Open();
 		oraCmd.CommandText = "Select ID, STAFF, Trim(NAME), CONT from AGREE_STAFF inner join M_USR" + Env.DB_LINK + " on AGREE_STAFF.STAFF = CODE";
-		OleDbDataAdapter oleDbDataAdapter = new OleDbDataAdapter(oraCmd);
+		OracleDataAdapter oleDbDataAdapter = new OracleDataAdapter(oraCmd);
 		oraConn.Close();
 		DataSet dataSet = new DataSet();
 		oleDbDataAdapter.Fill(dataSet, "担当者");
@@ -142,9 +142,9 @@ public partial class TmpStaff : Form
 		{
 			return;
 		}
-		if (Dict.StaffDict.ContainsKey(staff_id.Text))
+		if (MasterDict.Staff.ContainsKey(staff_id.Text))
 		{
-			staff_name.Text = Dict.StaffDict[staff_id.Text].Name;
+			staff_name.Text = MasterDict.Staff[staff_id.Text];
 			foreach (DataGridViewRow item in (IEnumerable)staffGridView.Rows)
 			{
 				if (staff_id.Text == item.Cells[1].Value.ToString())

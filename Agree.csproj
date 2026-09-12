@@ -60,6 +60,13 @@
     <Reference Include="AgentlabUtilityLibrary">
       <HintPath>AgentlabUtilityLibrary.dll</HintPath>
     </Reference>
+    <!-- ODP.NET マネージド・ドライバ。100%マネージドのため Oracle クライアントのインストールは不要で、
+         このDLLをexeと同じフォルダに置くだけで動作する。TNSエイリアスを使うため
+         tnsnames.ora はexeと同じフォルダに配置すること。 -->
+    <Reference Include="Oracle.ManagedDataAccess">
+      <HintPath>Oracle.ManagedDataAccess.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -111,6 +118,8 @@
     </EmbeddedResource>
     <Compile Include="Agree\Program.cs" />
     <Compile Include="Agree\AgreeSql.cs" />
+    <Compile Include="Agree\OracleDb.cs" />
+    <Compile Include="Agree\MasterDict.cs" />
     <Compile Include="Agree\Logger.cs" />
     <Compile Include="Agree\ExcelControl.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

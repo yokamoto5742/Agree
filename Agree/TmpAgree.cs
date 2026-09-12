@@ -2,10 +2,10 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data.OleDb;
 using System.Drawing;
 using System.Windows.Forms;
 using AgentlabUtilityLibrary;
+using Oracle.ManagedDataAccess.Client;
 
 namespace Agree;
 
@@ -36,11 +36,11 @@ public partial class TmpAgree : Form
 
 	private List<ComboBox> tmpComboList = new List<ComboBox>();
 
-	private OleDbConnection oraConn;
+	private OracleConnection oraConn;
 
-	private OleDbCommand oraCmd = new OleDbCommand();
+	private OracleCommand oraCmd = new OracleCommand();
 
-	private OleDbDataReader oraReader;
+	private OracleDataReader oraReader;
 
 	private bool editingParent;
 
@@ -78,7 +78,7 @@ public partial class TmpAgree : Form
 			temp_parent.Enabled = false;
 			return;
 		}
-		oraConn = DBConn.GetOpenDBConn();
+		oraConn = OracleDb.CreateOpenConnection();
 		oraCmd.Connection = oraConn;
 		loadParents();
 		initTree();

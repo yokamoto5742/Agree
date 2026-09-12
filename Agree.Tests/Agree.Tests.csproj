@@ -1,9 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!--
-    ローカルOracle Free (OraOLEDB.Oracle) に対する結合テスト。
-    32bit の OraOLEDB プロバイダをロードするため x86 でビルド/実行する。
-    System.Data.OleDb は .NET Framework 同梱のため PackageReference 不要。
+    ローカルOracle Free に対する結合テスト。
+    ODP.NET マネージド・ドライバ（100%マネージド）を使うため、
+    Oracle クライアントのインストールも 32bit プロバイダの登録も不要。
   -->
   <PropertyGroup>
     <TargetFramework>net48</TargetFramework>
@@ -11,7 +11,8 @@
     <IsPackable>false</IsPackable>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
-    <!-- テストホストを x86 に固定（32bit OraOLEDB をロードするため）。 -->
+    <!-- マネージド・ドライバ自体は MSIL で x86 縛りは不要だが、本体が Excel COM の都合で
+         x86 ビルドのため揃えておく。 -->
     <RunSettingsFilePath>$(MSBuildProjectDirectory)\x86.runsettings</RunSettingsFilePath>
   </PropertyGroup>
   <ItemGroup>
@@ -31,6 +32,17 @@
   -->
   <ItemGroup>
     <Compile Include="..\Agree\AgreeSql.cs" Link="Linked\AgreeSql.cs" />
+  </ItemGroup>
+
+  <!--
+    本体と同一の DLL ファイルを参照する（PackageReference にしない）。
+    こうしておくとアプリとテストでバージョンがズレないため bindingRedirect が不要。
+  -->
+  <ItemGroup>
+    <Reference Include="Oracle.ManagedDataAccess">
+      <HintPath>..\Oracle.ManagedDataAccess.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
   </ItemGroup>
 
   <ItemGroup>

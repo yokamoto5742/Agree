@@ -25,16 +25,25 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 外部依存（重要）
 
-- **`AgentlabUtilityLibrary.dll`** はソースに含まれない外部DLL。`DBConn` クラスを提供し、
-  これが無いとビルド・実行とも失敗する。
-- DB接続は `AgentlabUtilityLibrary.DBConn.GetOpenDBConn()`（OleDb）経由。
-  接続文字列・認証情報は外部DLL側で管理され、リポジトリ内に設定ファイルは無い。
+- **`AgentlabUtilityLibrary.dll`** はソースに含まれない外部DLL。これが無いとビルド・実行とも失敗する。
+  **DB接続には使わない**（`DBConn` / `Dict` / `DB` には触れないこと）。使うのは
+  `Env`（ini読込）と `Barcode128`（バーコード描画）のみで、どちらもDBに接続しない。
+- DB接続は **ODP.NET マネージド・ドライバ**（`Oracle.ManagedDataAccess.dll`、リポジトリ同梱）経由。
+  接続生成は `Agree/OracleDb.cs`、マスタ読込は `Agree/MasterDict.cs`。
+  100%マネージドのため **Oracle クライアントのインストールは不要**だが、
+  接続先がTNSエイリアス指定のため **`tnsnames.ora` をexeと同じフォルダに置く必要がある**。
+  接続情報（復号済み）は `Env.OPEN_DB` / `OPEN_USER` / `OPEN_PWD` から取得する。
+  経緯と検証手順は `docs/agree_oracle_client_removal_plan.md` を参照。
+- SQLはすべて文字列連結で組み立てる（バインド変数は未使用）。自由記述列は必ず
+  `AgreeSql.SqlValue()` を通すこと。
 - Excel生成は `Microsoft.Office.Interop.Excel`（COM）を使用。Excelのインストールが必要で、
   COMオブジェクトは使用後に確実に解放すること（解放漏れでExcelプロセスが残る）。
 
 ## テスト・CI
 
-- ユニットテスト・CIパイプラインは未整備。
+- `dotnet test Agree.Tests/Agree.Tests.csproj` で単体テスト＋ローカルOracleへの結合テストを実行する。
+  ローカルOracle未起動／スキーマ未投入の場合、結合テストは失敗ではなくIgnore（スキップ）になる。
+- CIパイプラインは未整備。
 
 ## コミット
 

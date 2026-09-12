@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
-using System.Data.OleDb;
 using System.Drawing;
 using System.IO;
 using System.Text;
 using System.Windows.Forms;
 using AgentlabUtilityLibrary;
 using Microsoft.VisualBasic.FileIO;
+using Oracle.ManagedDataAccess.Client;
 
 namespace Agree;
 
@@ -18,11 +18,11 @@ public partial class Form1 : Form
 
 	private string[] patCont = new string[50];
 
-	private OleDbConnection oraConn;
+	private OracleConnection oraConn;
 
-	private OleDbCommand oraCmd = new OleDbCommand();
+	private OracleCommand oraCmd = new OracleCommand();
 
-	private OleDbDataReader oraReader;
+	private OracleDataReader oraReader;
 
 	public Form1()
 	{
@@ -30,15 +30,15 @@ public partial class Form1 : Form
 		System.Version version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
 		this.Text = $"眼科同意書v{version.Major}.{version.Minor}.{version.Build}";
 		applyWindowPosition();
-		oraConn = DBConn.GetOpenDBConn();
+		oraConn = OracleDb.CreateOpenConnection();
 		oraCmd.Connection = oraConn;
 		try
 		{
-			foreach (string key in Dict.DeptDict.Keys)
+			foreach (string key in MasterDict.Dept.Keys)
 			{
 				if (!key.Equals("0"))
 				{
-					dept.Items.Add(key + " " + Dict.DeptDict[key].ShortName);
+					dept.Items.Add(key + " " + MasterDict.Dept[key]);
 				}
 			}
 		}
@@ -232,9 +232,9 @@ public partial class Form1 : Form
 			dr_name.Text = patCont[10];
 			if (!Program.OfflineMode)
 			{
-				if (short.Parse(patCont[13]) > 0 && short.Parse(patCont[13]) < 20 && patCont[14].Length > 0 && Dict.DeptDict.ContainsKey(short.Parse(patCont[13]).ToString()))
+				if (short.Parse(patCont[13]) > 0 && short.Parse(patCont[13]) < 20 && patCont[14].Length > 0 && MasterDict.Dept.ContainsKey(short.Parse(patCont[13]).ToString()))
 				{
-					dept.Text = short.Parse(patCont[13]) + " " + Dict.DeptDict[short.Parse(patCont[13]).ToString()].ShortName;
+					dept.Text = short.Parse(patCont[13]) + " " + MasterDict.Dept[short.Parse(patCont[13]).ToString()];
 				}
 				getStaffRoom();
 			}
@@ -294,9 +294,9 @@ public partial class Form1 : Form
 		}
 		if (dr_id.Text.Length > 0)
 		{
-			if (Dict.StaffDict.ContainsKey(dr_id.Text.Trim()))
+			if (MasterDict.Staff.ContainsKey(dr_id.Text.Trim()))
 			{
-				dr_name.Text = Dict.StaffDict[dr_id.Text.Trim()].Name;
+				dr_name.Text = MasterDict.Staff[dr_id.Text.Trim()];
 				getStaffRoom();
 			}
 			else

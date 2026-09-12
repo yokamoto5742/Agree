@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
-using System.Data.OleDb;
 using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
 using AgentlabUtilityLibrary;
 using Microsoft.VisualBasic.FileIO;
+using Oracle.ManagedDataAccess.Client;
 
 namespace Agree;
 
@@ -26,7 +26,7 @@ public partial class Form1
 			oraCmd.CommandText = "Select P_NAME,P_KANA,P_SEX from M_PATIENT" + Env.DB_LINK + " where P_ID = " + pt_id.Text.Trim();
 			oraReader = oraCmd.ExecuteReader();
 			string selectCommandText = "Select AGREE_ID, SAVE_DATE, AGREE.DEPT, Trim(M_DEPT.S_NAME), AGREE.DR, Trim(M_USR.NAME), '' ,  STAFF, EYE,  DIAG,  OPE, EXPLANATION,ITEM1,ITEM2,ITEM3,ITEM4, DR_OK ,SHEET_NAME,'',case when DR_OK = 1 then '○' else '-' end as 医師完了 , ANES  from AGREE inner join M_DEPT" + Env.DB_LINK + " on AGREE.DEPT = M_DEPT.CODE inner join M_USR" + Env.DB_LINK + " on AGREE.DR = M_USR.CODE where PATIENT_ID = " + pt_id.Text.Trim() + " and DELETE_FLAG = 0 order by SAVE_DATE desc";
-			OleDbDataAdapter oleDbDataAdapter = new OleDbDataAdapter(selectCommandText, oraConn);
+			OracleDataAdapter oleDbDataAdapter = new OracleDataAdapter(selectCommandText, oraConn);
 			if (oraReader.Read())
 			{
 				pt_name.Text = oraReader[0].ToString();
@@ -103,10 +103,10 @@ public partial class Form1
 			if (rowIndex >= 0)
 			{
 				Agree_id.Text = AgreeList.Rows[rowIndex].Cells[0].Value.ToString().Trim();
-				if (Dict.StaffDict.ContainsKey(AgreeList.Rows[rowIndex].Cells[4].Value.ToString().Trim()))
+				if (MasterDict.Staff.ContainsKey(AgreeList.Rows[rowIndex].Cells[4].Value.ToString().Trim()))
 				{
 					dr_id.Text = AgreeList.Rows[rowIndex].Cells[4].Value.ToString().Trim();
-					dr_name.Text = Dict.StaffDict[dr_id.Text].Name;
+					dr_name.Text = MasterDict.Staff[dr_id.Text];
 				}
 				else
 				{

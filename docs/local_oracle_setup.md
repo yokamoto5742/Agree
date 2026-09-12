@@ -1,5 +1,20 @@
 # ローカル Oracle Free デバッグ環境 セットアップ手順
 
+> ## ⚠️ 一部が旧構成（OLE DB）の記述です
+>
+> 本アプリは ODP.NET マネージド・ドライバへ移行済みです
+> （[`agree_oracle_client_removal_plan.md`](agree_oracle_client_removal_plan.md)）。
+> 現在**不要**になった手順:
+>
+> - **0. 前提** の「32bit版ODAC（`OraOLEDB.Oracle`）のインストール」— 不要
+> - **2. 接続設定** の `PROVIDER` キー — 参照されなくなったため無視してよい
+> - **3. AgentlabUtilityLibrary.dll の再ビルド** — DB接続に外部DLLを使わなくなったため不要。
+>   `Env`（ini読込）のみ使うので、**本番DLLのままローカルデバッグできる**
+> - **5. 結合テスト** の「x86必須（32bit OraOLEDB のため）」— マネージド・ドライバはMSILのため不要
+>   （本体がExcel COMの都合でx86なので設定自体は据え置き）
+>
+> 引き続き必要なのは **1. テスト用スキーマの投入** と、ini の `OPEN_DB` / `OPEN_USER` / `OPEN_PWD` 設定です。
+
 ローカル端末で Agree アプリをデバッグ実行（F5）した際、本番DBではなく
 ローカルの Oracle Database Free に対して SQL の読み書きを行うための構成。
 本書は、本リポジトリに加えた変更と、各端末で必要な作業をまとめる。

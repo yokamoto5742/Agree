@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
-using System.Data.OleDb;
 using System.Drawing;
 using System.IO;
 using System.Text;
 using System.Windows.Forms;
 using AgentlabUtilityLibrary;
 using Microsoft.VisualBasic.FileIO;
+using Oracle.ManagedDataAccess.Client;
 
 namespace Agree;
 
@@ -85,8 +85,8 @@ public partial class Form1
 		oraConn.Open();
 		try
 		{
-			using (OleDbCommand cmd = new OleDbCommand("select * from " + tableName, oraConn))
-			using (OleDbDataReader reader = cmd.ExecuteReader())
+			using (OracleCommand cmd = new OracleCommand("select * from " + tableName, oraConn))
+			using (OracleDataReader reader = cmd.ExecuteReader())
 			using (StreamWriter sw = new StreamWriter(filePath, append: false, Encoding.Default))
 			{
 				int fieldCount = reader.FieldCount;
@@ -139,7 +139,7 @@ public partial class Form1
 	{
 		int count = 0;
 		oraConn.Open();
-		OleDbTransaction tx = oraConn.BeginTransaction();
+		OracleTransaction tx = oraConn.BeginTransaction();
 		try
 		{
 			using (TextFieldParser parser = new TextFieldParser(filePath, Encoding.Default))
@@ -190,12 +190,13 @@ public partial class Form1
 		return count;
 	}
 
-	private void MergeRow(string tableName, string keyColumn, string[] columns, string[] values, int keyIndex, OleDbTransaction tx)
+	private void MergeRow(string tableName, string keyColumn, string[] columns, string[] values, int keyIndex, OracleTransaction tx)
 	{
 		string keyValue = AgreeSql.SqlValue(values[keyIndex]);
 		int exists;
-		using (OleDbCommand chk = new OleDbCommand("select count(*) from " + tableName + " where " + keyColumn + " = " + keyValue, oraConn, tx))
+		using (OracleCommand chk = new OracleCommand("select count(*) from " + tableName + " where " + keyColumn + " = " + keyValue, oraConn))
 		{
+			chk.Transaction = tx;
 			exists = Convert.ToInt32(chk.ExecuteScalar());
 		}
 		StringBuilder sql = new StringBuilder();
@@ -233,8 +234,9 @@ public partial class Form1
 			}
 			sql.Append(")");
 		}
-		using (OleDbCommand cmd = new OleDbCommand(sql.ToString(), oraConn, tx))
+		using (OracleCommand cmd = new OracleCommand(sql.ToString(), oraConn))
 		{
+			cmd.Transaction = tx;
 			cmd.ExecuteNonQuery();
 		}
 	}
@@ -245,12 +247,12 @@ public partial class Form1
 		try
 		{
 			long maxId;
-			using (OleDbCommand cmd = new OleDbCommand("select nvl(max(" + keyColumn + "), 0) from " + tableName, oraConn))
+			using (OracleCommand cmd = new OracleCommand("select nvl(max(" + keyColumn + "), 0) from " + tableName, oraConn))
 			{
 				maxId = Convert.ToInt64(cmd.ExecuteScalar());
 			}
 			long current;
-			using (OleDbCommand cmd = new OleDbCommand("select " + seqName + ".nextval from dual", oraConn))
+			using (OracleCommand cmd = new OracleCommand("select " + seqName + ".nextval from dual", oraConn))
 			{
 				current = Convert.ToInt64(cmd.ExecuteScalar());
 			}
@@ -260,7 +262,7 @@ public partial class Form1
 			if (gap > 0)
 			{
 				ExecuteDdl("alter sequence " + seqName + " increment by " + gap);
-				using (OleDbCommand cmd = new OleDbCommand("select " + seqName + ".nextval from dual", oraConn))
+				using (OracleCommand cmd = new OracleCommand("select " + seqName + ".nextval from dual", oraConn))
 				{
 					cmd.ExecuteScalar();
 				}
@@ -278,7 +280,7 @@ public partial class Form1
 
 	private void ExecuteDdl(string sql)
 	{
-		using (OleDbCommand cmd = new OleDbCommand(sql, oraConn))
+		using (OracleCommand cmd = new OracleCommand(sql, oraConn))
 		{
 			cmd.ExecuteNonQuery();
 		}
