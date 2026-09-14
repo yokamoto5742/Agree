@@ -7,6 +7,11 @@
 
 ## [Unreleased]
 
+## [1.0.3] - 2026-09-14
+
+### 修正
+- テンプレート未配置時に「Excelが起動しているか確認してください」と誤案内していた問題を修正。ExcelControl.Open で FileNotFoundException に探索パスを含めるようにし、Form1.Plan.cs の printAgree で個別に捕捉してテンプレートの配置先パスを表示するようにした
+
 ## [1.0.2] - 2026-09-11
 
 ### 変更
