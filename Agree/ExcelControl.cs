@@ -24,7 +24,6 @@ internal class ExcelControl : IDisposable
 
 	private int barcodeQuietModules = 10;
 
-	// バーコードに埋め込む文書コード
 	// 既定値は EyeAgreeSettings.ini の [BARCODE_SETTINGS] DOCUMENT_CODE で上書きできる。
 	private string documentCode = "39911";
 
@@ -108,7 +107,6 @@ internal class ExcelControl : IDisposable
 		}
 		finally
 		{
-			// 自動処理を終えたのでイベントを再開し、描画凍結を解除する。
 			exApp.EnableEvents = true;
 			exApp.ScreenUpdating = true;
 		}
@@ -189,7 +187,6 @@ internal class ExcelControl : IDisposable
 	private void saveWorkbook(string patientId, string ymd, string hms)
 	{
 		string filename = Environment.GetEnvironmentVariable("TEMP") + "\\" + patientId + "_" + ymd + hms + "_" + "EyeAgree.xlsm";
-		// マクロ有効形式(.xlsm)を明示して保存する
 		exWorkbook.SaveAs(filename, XlFileFormat.xlOpenXMLWorkbookMacroEnabled, AccessMode: XlSaveAsAccessMode.xlExclusive);
 	}
 

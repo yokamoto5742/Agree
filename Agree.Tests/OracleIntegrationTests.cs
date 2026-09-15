@@ -107,7 +107,7 @@ namespace Agree.Tests
 
         /// <summary>
         /// 自由記述欄に ' と日本語が混じっても、AgreeSql.SqlValue で正しくエスケープすれば
-        /// そのまま格納・読み戻しできること（regPlan が本来通すべきエスケープ契約の DB 実証）。
+        /// そのまま格納・読み戻しできること（regAgree が本来通すべきエスケープ契約の DB 実証）。
         /// </summary>
         [Test]
         public void Agree_StoresApostropheAndJapanese_RoundTrips()
@@ -132,7 +132,7 @@ namespace Agree.Tests
         }
 
         /// <summary>
-        /// regPlan が INSERT する全列を一度に往復させ、列名・型・本数の不一致を検出する。
+        /// regAgree が INSERT する全列を一度に往復させ、列名・型・本数の不一致を検出する。
         /// </summary>
         [Test]
         public void Agree_FullColumnSet_RoundTrips()
@@ -215,8 +215,6 @@ namespace Agree.Tests
                 tx.Rollback();
             }
         }
-
-        // ---- helpers ----
 
         private static OleDbConnection Open()
         {

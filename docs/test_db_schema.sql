@@ -16,7 +16,7 @@
 -- 1. アプリ専用テーブル（本アプリが INSERT/UPDATE する。INSERT 文から全列確定）
 -- ---------------------------------------------------------------------
 
--- 同意書本体（Form1.regPlan / delPlan / showList, FindAgree.showList）
+-- 同意書本体（Form1.regAgree / delAgree / showList）
 CREATE TABLE AGREE (
     AGREE_ID     NUMBER          NOT NULL,        -- AGREE_SEQ.nextval
     PATIENT_ID   NUMBER,                          -- M_PATIENT.P_ID に対応

@@ -3,7 +3,6 @@ namespace Agree;
 /// <summary>
 /// DB / CSV 入出力で使う純粋な文字列変換ヘルパー。
 /// WinForms・COM・外部DLL に依存しないため、テストプロジェクトへソースリンクして単体テストできる。
-/// （Form1 の private 実装をそのまま static 化して切り出したもの。挙動は不変。）
 /// </summary>
 internal static class AgreeSql
 {

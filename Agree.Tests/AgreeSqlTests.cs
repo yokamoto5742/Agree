@@ -12,8 +12,6 @@ namespace Agree.Tests
     [Category("Unit")]
     public class AgreeSqlTests
     {
-        // ---- SqlValue: SQL 文字列リテラル化 ----
-
         [Test]
         public void SqlValue_Null_ReturnsNullKeyword()
         {
@@ -53,8 +51,6 @@ namespace Agree.Tests
             Assert.That(AgreeSql.SqlValue("'); drop table AGREE --"),
                 Is.EqualTo("'''); drop table AGREE --'"));
         }
-
-        // ---- CsvEscape: CSV 1 フィールドのエスケープ ----
 
         [Test]
         public void CsvEscape_Null_ReturnsEmpty()

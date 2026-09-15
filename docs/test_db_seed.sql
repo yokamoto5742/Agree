@@ -88,7 +88,7 @@ VALUES
 
 -- ---------------------------------------------------------------------
 -- テンプレート AGREE_TEMPLATE（親2 / 子2）
---   親(TEMP_LEVEL=0)は initTree で TEMP_PARENT を int.Parse するため NULL 不可 → 0 を格納。
+--   親(TEMP_LEVEL=0)は showTemplate で TEMP_PARENT を int.Parse するため NULL 不可 → 0 を格納。
 --   子(TEMP_LEVEL=1)の TEMP_PARENT には親の TEMP_ID を設定。
 --   シーケンス採番を崩さないため PL/SQL で nextval を捕捉して親子を関連付ける。
 -- ---------------------------------------------------------------------

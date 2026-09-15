@@ -82,7 +82,6 @@ public partial class TmpAgree : Form
 		}
 	}
 
-	// 操作ボタンの押下可否をまとめて設定する。
 	private void setButtons(bool apply, bool create, bool edit, bool register, bool delete, bool addParent)
 	{
 		applyTmpButton.Enabled = apply;
@@ -93,7 +92,6 @@ public partial class TmpAgree : Form
 		addParentButton.Enabled = addParent;
 	}
 
-	// 分類コンボを空にして入力不可にする。
 	private void lockParentCombo()
 	{
 		temp_parent.Text = "";
