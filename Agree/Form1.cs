@@ -1,28 +1,22 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Data.OleDb;
 using System.Drawing;
 using System.IO;
 using System.Text;
 using System.Windows.Forms;
 using AgentlabUtilityLibrary;
-using Microsoft.VisualBasic.FileIO;
 
 namespace Agree;
 
+// 用語: dr_id / dr_name は画面上「入力者」と表示する。DB では AGREE.DR（M_USR のコード）に対応する。
 public partial class Form1 : Form
 {
-	private bool staff1_ok = true;
+	// 医師完了フラグ（AGREE.DR_OK）。true のとき登録完了後に印刷を促す。
+	private bool doctorConfirmed = true;
 
 	private string[] patCont = new string[50];
 
 	private OleDbConnection oraConn;
-
-	private OleDbCommand oraCmd = new OleDbCommand();
-
-	private OleDbDataReader oraReader;
 
 	public Form1()
 	{
@@ -31,7 +25,6 @@ public partial class Form1 : Form
 		this.Text = $"眼科同意書v{version.Major}.{version.Minor}.{version.Build}";
 		applyWindowPosition();
 		oraConn = DBConn.GetOpenDBConn();
-		oraCmd.Connection = oraConn;
 		try
 		{
 			foreach (string key in Dict.DeptDict.Keys)
@@ -44,57 +37,27 @@ public partial class Form1 : Form
 		}
 		catch (Exception ex)
 		{
+			Logger.Error("Form1", ex);
 			Program.OfflineMode = true;
 			MessageBox.Show("データベースに接続できません。オフラインモード（画面確認用）で起動します。\n" + ex.Message, "オフラインモード", MessageBoxButtons.OK, MessageBoxIcon.Warning);
 		}
-		agreePlanListLabel.Text = "患者IDを入力して Enter を押すと既存の同意書が表示されます";
+		agreeListLabel.Text = "患者IDを入力して Enter を押すと既存の同意書が表示されます";
 		initShow();
 	}
 
 	private void initShow()
 	{
-		clearPlan();
+		clearAgree();
 		readPatCsv();
 		printAgreeButton.Enabled = false;
 		applySettingButtonVisibility();
 	}
 
+	// EyeAgreeSettings.ini の SHOW_SETTING_BUTTON=1 のときだけ設定ボタンを表示する。
+	// ファイルが無い・読めない・値が不正な場合は安全のため非表示にする。
 	private void applySettingButtonVisibility()
 	{
-		// 専用の外部設定ファイル EyeAgreeSettings.ini から設定ボタンの表示・非表示を読み込む。
-		// ファイルが無い・読めない・値が不正な場合は安全のため非表示にする。
-		settingButton.Visible = false;
-		try
-		{
-			string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "EyeAgreeSettings.ini");
-			if (!File.Exists(configPath))
-			{
-				return;
-			}
-
-			string[] lines = File.ReadAllLines(configPath, Encoding.Default);
-			foreach (string line in lines)
-			{
-				if (string.IsNullOrWhiteSpace(line) || line.StartsWith(";"))
-				{
-					continue;
-				}
-
-				if (line.Contains("SHOW_SETTING_BUTTON"))
-				{
-					string[] parts = line.Split('=');
-					if (parts.Length == 2)
-					{
-						settingButton.Visible = (parts[1].Trim() == "1");
-					}
-					break;
-				}
-			}
-		}
-		catch (IOException)
-		{
-			settingButton.Visible = false;
-		}
+		settingButton.Visible = AppSettings.Get("SHOW_SETTING_BUTTON", "0") == "1";
 	}
 
 	// ウィンドウの初期表示位置を毎回固定する。既定は画面左上 (0, 0)。
@@ -103,51 +66,10 @@ public partial class Form1 : Form
 	private void applyWindowPosition()
 	{
 		StartPosition = FormStartPosition.Manual;
-		int x = 0;
-		int y = 0;
-		try
-		{
-			string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "EyeAgreeSettings.ini");
-			if (File.Exists(configPath))
-			{
-				string[] lines = File.ReadAllLines(configPath, Encoding.Default);
-				foreach (string line in lines)
-				{
-					if (string.IsNullOrWhiteSpace(line) || line.StartsWith(";"))
-					{
-						continue;
-					}
-					string[] parts = line.Split('=');
-					if (parts.Length != 2)
-					{
-						continue;
-					}
-					string key = parts[0].Trim();
-					string val = parts[1].Trim();
-					if (key == "WINDOW_X")
-					{
-						if (int.TryParse(val, out int n))
-						{
-							x = n;
-						}
-					}
-					else if (key == "WINDOW_Y")
-					{
-						if (int.TryParse(val, out int n))
-						{
-							y = n;
-						}
-					}
-				}
-			}
-		}
-		catch (IOException)
-		{
-		}
-		Location = new Point(x, y);
+		Location = new Point(AppSettings.GetInt("WINDOW_X", 0), AppSettings.GetInt("WINDOW_Y", 0));
 	}
 
-	private void clearPlan()
+	private void clearAgree()
 	{
 		Agree_id.Text = "";
 		dr_id.Text = "";
@@ -163,7 +85,7 @@ public partial class Form1 : Form
 		item3.Text = "";
 		item4.Text = "";
 		explanation.Text = "";
-		staff1_ok = true;
+		doctorConfirmed = true;
 		eye.Text = "";
 		printAgreeButton.Enabled = false;
 		sheetName.Text = "";
@@ -198,12 +120,13 @@ public partial class Form1 : Form
 
 	private void readPatCsv()
 	{
-		if (!loadPatCsvFields())
+		// コンストラクタから呼ばれるため、患者IDが数字でない Pat.csv は例外にせず読み飛ばす。
+		if (!loadPatCsvFields() || !int.TryParse(patCont[2], out int ptId))
 		{
 			return;
 		}
-		clearPlan();
-		pt_id.Text = int.Parse(patCont[2]).ToString();
+		clearAgree();
+		pt_id.Text = ptId.ToString();
 		pt_name.Text = patCont[3];
 		pt_kana.Text = patCont[5];
 		if (patCont[6] == "2")
@@ -214,13 +137,14 @@ public partial class Form1 : Form
 		{
 			pt_sex.Text = "男";
 		}
-		if (int.Parse(pt_id.Text) > 0)
+		if (ptId > 0)
 		{
 			showList();
 		}
 	}
 
-	private void readPatCsv2()
+	// Pat.csv の医師情報（入力者・診療科）を画面に反映する。
+	private void applyDoctorFromPatCsv()
 	{
 		if (!loadPatCsvFields())
 		{
@@ -232,13 +156,19 @@ public partial class Form1 : Form
 			dr_name.Text = patCont[10];
 			if (!Program.OfflineMode)
 			{
-				if (short.Parse(patCont[13]) > 0 && short.Parse(patCont[13]) < 20 && patCont[14].Length > 0 && Dict.DeptDict.ContainsKey(short.Parse(patCont[13]).ToString()))
+				if (tryParseDeptCode(patCont[13], out short deptCode) && patCont[14].Length > 0 && Dict.DeptDict.ContainsKey(deptCode.ToString()))
 				{
-					dept.Text = short.Parse(patCont[13]) + " " + Dict.DeptDict[short.Parse(patCont[13]).ToString()].ShortName;
+					dept.Text = deptCode + " " + Dict.DeptDict[deptCode.ToString()].ShortName;
 				}
 				getStaffRoom();
 			}
 		}
+	}
+
+	// 診療科コード（1〜20）として解釈できる場合だけ true を返す。
+	private static bool tryParseDeptCode(string text, out short code)
+	{
+		return short.TryParse(text, out code) && code >= 1 && code <= 20;
 	}
 
 	private void pt_id_KeyDown(object sender, KeyEventArgs e)
@@ -249,9 +179,9 @@ public partial class Form1 : Form
 		}
 	}
 
-	private void agreePlanList_RowEnter(object sender, DataGridViewCellEventArgs e)
+	private void AgreeList_RowEnter(object sender, DataGridViewCellEventArgs e)
 	{
-		showPlan(e.RowIndex);
+		showAgree(e.RowIndex);
 	}
 
 	private void AgreeList_CellMouseDown(object sender, DataGridViewCellMouseEventArgs e)
@@ -260,7 +190,7 @@ public partial class Form1 : Form
 		{
 			AgreeList.ClearSelection();
 			AgreeList.Rows[e.RowIndex].Selected = true;
-			AgreeList.CurrentCell = AgreeList.Rows[e.RowIndex].Cells[1];
+			AgreeList.CurrentCell = AgreeList.Rows[e.RowIndex].Cells["SAVE_DATE"];
 		}
 	}
 
@@ -271,22 +201,14 @@ public partial class Form1 : Form
 
 	private void dept_Leave(object sender, EventArgs e)
 	{
-		if (dept.Text.Length > 0)
+		if (dept.Text.Length > 0 && (dept.Text.Split(' ').Length != 2 || !tryParseDeptCode(dept.Text.Split(' ')[0], out _)))
 		{
-			if (dept.Text.Split(' ').Length != 2)
-			{
-				MessageBox.Show("診療科はリストから選んでください");
-				dept.Text = "";
-			}
-			else if (short.Parse(dept.Text.Split(' ')[0]) < 1 || short.Parse(dept.Text.Split(' ')[0]) > 20)
-			{
-				MessageBox.Show("診療科はリストから選んでください");
-				dept.Text = "";
-			}
+			MessageBox.Show("診療科はリストから選んでください");
+			dept.Text = "";
 		}
 	}
 
-	private void staff1_id_Leave(object sender, EventArgs e)
+	private void dr_id_Leave(object sender, EventArgs e)
 	{
 		if (Program.OfflineMode)
 		{
@@ -313,7 +235,7 @@ public partial class Form1 : Form
 		}
 	}
 
-	private void staff1_id_KeyDown(object sender, KeyEventArgs e)
+	private void dr_id_KeyDown(object sender, KeyEventArgs e)
 	{
 		if (e.KeyCode == Keys.Return)
 		{
@@ -321,59 +243,50 @@ public partial class Form1 : Form
 		}
 	}
 
-	private void tmpPlanButton_Click(object sender, EventArgs e)
+	private void tmpAgreeButton_Click(object sender, EventArgs e)
 	{
-		if (regAgreeButton.Enabled)
-		{
-			TmpAgree tmpAgree = new TmpAgree(this, applyButtonVisible: true);
-			tmpAgree.Show();
-		}
-		else
-		{
-			TmpAgree tmpAgree2 = new TmpAgree(this, applyButtonVisible: false);
-			tmpAgree2.Show();
-		}
+		new TmpAgree(this, applyButtonVisible: true).Show();
 	}
 
-	private void newPlanButton_Click(object sender, EventArgs e)
+	private void newAgreeButton_Click(object sender, EventArgs e)
 	{
 		if (Agree_id.Text.Length > 0)
 		{
 			switch (MessageBox.Show("記載中の内容を保存しますか？", "保存", MessageBoxButtons.YesNoCancel))
 			{
 			case DialogResult.Yes:
-				regPlan();
-				clearPlan();
+				// 保存が入力チェックで中断した場合は、入力内容を残すため新規作成に進まない。
+				if (!regAgree())
+				{
+					return;
+				}
+				clearAgree();
 				break;
 			case DialogResult.No:
-				clearPlan();
+				clearAgree();
 				break;
 			}
 		}
 		else
 		{
-			clearPlan();
+			clearAgree();
 		}
 		sheetName.Text = "通常";
 		eye.Text = "";
-		readPatCsv2();
+		applyDoctorFromPatCsv();
 	}
 
 	public void getStaffRoom()
 	{
-		if (Program.OfflineMode)
+		if (Program.OfflineMode || !int.TryParse(dr_id.Text.Trim(), out int drId))
 		{
 			return;
 		}
-		oraConn.Open();
-		oraCmd.CommandText = "select CONT from AGREE_STAFF where STAFF = " + dr_id.Text.Trim();
-		oraReader = oraCmd.ExecuteReader();
-		if (oraReader.Read() && (staff.Text.Length == 0 || MessageBox.Show("担当者が既に入力されています。上書きしますか？", "確認", MessageBoxButtons.YesNo) == DialogResult.Yes))
+		object cont = Db.Scalar(oraConn, "select CONT from AGREE_STAFF where STAFF = " + drId);
+		if (cont != null && (staff.Text.Length == 0 || MessageBox.Show("担当者が既に入力されています。上書きしますか？", "確認", MessageBoxButtons.YesNo) == DialogResult.Yes))
 		{
-			staff.Text = oraReader["CONT"].ToString().Trim();
+			staff.Text = cont.ToString().Trim();
 		}
-		oraReader.Close();
-		oraConn.Close();
 	}
 
 	private void tmpStaffButton_Click(object sender, EventArgs e)
@@ -393,24 +306,4 @@ public partial class Form1 : Form
 			importButton.BringToFront();
 		}
 	}
-
-    private void label5_Click(object sender, EventArgs e)
-    {
-
-    }
-
-    private void agreePlanListLabel_Click(object sender, EventArgs e)
-    {
-
-    }
-
-    private void panel1_Paint(object sender, PaintEventArgs e)
-    {
-
-    }
-
-    private void explanation_TextChanged(object sender, EventArgs e)
-    {
-
-    }
 }

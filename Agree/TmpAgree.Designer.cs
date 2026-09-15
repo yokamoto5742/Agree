@@ -139,7 +139,7 @@ partial class TmpAgree
 		this.tmpAgreeTree.Name = "tmpAgreeTree";
 		this.tmpAgreeTree.Size = new System.Drawing.Size(233, 474);
 		this.tmpAgreeTree.TabIndex = 0;
-		this.tmpAgreeTree.NodeMouseClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(tmpPlanTree_NodeMouseClick);
+		this.tmpAgreeTree.NodeMouseClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(tmpAgreeTree_NodeMouseClick);
 		this.label1.AutoSize = true;
 		this.label1.Location = new System.Drawing.Point(12, 9);
 		this.label1.Name = "label1";
@@ -423,7 +423,7 @@ partial class TmpAgree
 		base.Icon = (System.Drawing.Icon)resources.GetObject("$this.Icon");
 		base.Name = "TmpAgree";
 		this.Text = "テンプレート";
-		base.Load += new System.EventHandler(TmpPlan_Load);
+		base.Load += new System.EventHandler(TmpAgree_Load);
 		this.panel2.ResumeLayout(false);
 		this.panel2.PerformLayout();
 		base.ResumeLayout(false);

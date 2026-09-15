@@ -57,7 +57,7 @@ partial class Form1
 
 	private TextBox item3;
 
-	private Label agreePlanListLabel;
+	private Label agreeListLabel;
 
 	private Button regAgreeButton;
 
@@ -158,7 +158,7 @@ partial class Form1
             this.item2 = new System.Windows.Forms.TextBox();
             this.label15 = new System.Windows.Forms.Label();
             this.item3 = new System.Windows.Forms.TextBox();
-            this.agreePlanListLabel = new System.Windows.Forms.Label();
+            this.agreeListLabel = new System.Windows.Forms.Label();
             this.regAgreeButton = new System.Windows.Forms.Button();
             this.closeButton = new System.Windows.Forms.Button();
             this.printAgreeButton = new System.Windows.Forms.Button();
@@ -247,7 +247,7 @@ partial class Form1
             this.AgreeList.Size = new System.Drawing.Size(575, 122);
             this.AgreeList.TabIndex = 2;
             this.AgreeList.CellMouseDown += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.AgreeList_CellMouseDown);
-            this.AgreeList.RowEnter += new System.Windows.Forms.DataGridViewCellEventHandler(this.agreePlanList_RowEnter);
+            this.AgreeList.RowEnter += new System.Windows.Forms.DataGridViewCellEventHandler(this.AgreeList_RowEnter);
             // 
             // agreeListMenu
             // 
@@ -282,7 +282,7 @@ partial class Form1
             this.delAgreeButton.TabIndex = 5;
             this.delAgreeButton.Text = "削除";
             this.delAgreeButton.UseVisualStyleBackColor = false;
-            this.delAgreeButton.Click += new System.EventHandler(this.delPlanButton_Click);
+            this.delAgreeButton.Click += new System.EventHandler(this.delAgreeButton_Click);
             // 
             // label4
             // 
@@ -301,7 +301,6 @@ partial class Form1
             this.label5.Size = new System.Drawing.Size(41, 12);
             this.label5.TabIndex = 21;
             this.label5.Text = "入力者";
-            this.label5.Click += new System.EventHandler(this.label5_Click);
             // 
             // label6
             // 
@@ -321,8 +320,8 @@ partial class Form1
             this.dr_id.Size = new System.Drawing.Size(48, 19);
             this.dr_id.TabIndex = 1;
             this.dr_id.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-            this.dr_id.KeyDown += new System.Windows.Forms.KeyEventHandler(this.staff1_id_KeyDown);
-            this.dr_id.Leave += new System.EventHandler(this.staff1_id_Leave);
+            this.dr_id.KeyDown += new System.Windows.Forms.KeyEventHandler(this.dr_id_KeyDown);
+            this.dr_id.Leave += new System.EventHandler(this.dr_id_Leave);
             // 
             // staff
             // 
@@ -385,7 +384,6 @@ partial class Form1
             this.explanation.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.explanation.Size = new System.Drawing.Size(464, 220);
             this.explanation.TabIndex = 8;
-            this.explanation.TextChanged += new System.EventHandler(this.explanation_TextChanged);
             // 
             // label10
             // 
@@ -446,15 +444,14 @@ partial class Form1
             this.item3.TabIndex = 11;
             this.item3.Visible = false;
             // 
-            // agreePlanListLabel
+            // agreeListLabel
             // 
-            this.agreePlanListLabel.AutoSize = true;
-            this.agreePlanListLabel.Location = new System.Drawing.Point(130, 67);
-            this.agreePlanListLabel.Name = "agreePlanListLabel";
-            this.agreePlanListLabel.Size = new System.Drawing.Size(307, 12);
-            this.agreePlanListLabel.TabIndex = 15;
-            this.agreePlanListLabel.Text = "患者IDを入力して Enter を押すと既存の同意書が表示されます";
-            this.agreePlanListLabel.Click += new System.EventHandler(this.agreePlanListLabel_Click);
+            this.agreeListLabel.AutoSize = true;
+            this.agreeListLabel.Location = new System.Drawing.Point(130, 67);
+            this.agreeListLabel.Name = "agreeListLabel";
+            this.agreeListLabel.Size = new System.Drawing.Size(307, 12);
+            this.agreeListLabel.TabIndex = 15;
+            this.agreeListLabel.Text = "患者IDを入力して Enter を押すと既存の同意書が表示されます";
             // 
             // regAgreeButton
             // 
@@ -465,7 +462,7 @@ partial class Form1
             this.regAgreeButton.TabIndex = 4;
             this.regAgreeButton.Text = "登録";
             this.regAgreeButton.UseVisualStyleBackColor = false;
-            this.regAgreeButton.Click += new System.EventHandler(this.regPlanButton_Click);
+            this.regAgreeButton.Click += new System.EventHandler(this.regAgreeButton_Click);
             // 
             // closeButton
             // 
@@ -487,7 +484,7 @@ partial class Form1
             this.printAgreeButton.TabIndex = 6;
             this.printAgreeButton.Text = "印刷";
             this.printAgreeButton.UseVisualStyleBackColor = false;
-            this.printAgreeButton.Click += new System.EventHandler(this.printPlanButton_Click);
+            this.printAgreeButton.Click += new System.EventHandler(this.printAgreeButton_Click);
             // 
             // dr_name
             // 
@@ -525,7 +522,7 @@ partial class Form1
             this.tmpAgreeButton.TabIndex = 12;
             this.tmpAgreeButton.Text = "同意書テンプレート";
             this.tmpAgreeButton.UseVisualStyleBackColor = true;
-            this.tmpAgreeButton.Click += new System.EventHandler(this.tmpPlanButton_Click);
+            this.tmpAgreeButton.Click += new System.EventHandler(this.tmpAgreeButton_Click);
             // 
             // save_date
             // 
@@ -553,7 +550,7 @@ partial class Form1
             this.newAgreeButton.TabIndex = 10;
             this.newAgreeButton.Text = "新規作成";
             this.newAgreeButton.UseVisualStyleBackColor = true;
-            this.newAgreeButton.Click += new System.EventHandler(this.newPlanButton_Click);
+            this.newAgreeButton.Click += new System.EventHandler(this.newAgreeButton_Click);
             // 
             // Agree_id
             // 
@@ -619,7 +616,6 @@ partial class Form1
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(575, 536);
             this.panel1.TabIndex = 3;
-            this.panel1.Paint += new System.Windows.Forms.PaintEventHandler(this.panel1_Paint);
             // 
             // label11
             // 
@@ -816,7 +812,7 @@ partial class Form1
             this.Controls.Add(this.printAgreeButton);
             this.Controls.Add(this.closeButton);
             this.Controls.Add(this.regAgreeButton);
-            this.Controls.Add(this.agreePlanListLabel);
+            this.Controls.Add(this.agreeListLabel);
             this.Controls.Add(this.delAgreeButton);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.AgreeList);

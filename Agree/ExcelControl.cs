@@ -1,14 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
-using System.Text;
 using AgentlabUtilityLibrary;
 using Microsoft.Office.Interop.Excel;
 
-internal class ExcelControl
+namespace Agree;
+
+internal class ExcelControl : IDisposable
 {
 	private Application exApp;
 
@@ -28,9 +28,14 @@ internal class ExcelControl
 	// 既定値は EyeAgreeSettings.ini の [BARCODE_SETTINGS] DOCUMENT_CODE で上書きできる。
 	private string documentCode = "39911";
 
-	public void ReleaseExcel()
+	public void Dispose()
 	{
-		// Open() 失敗時は各 COM フィールドが null のため、finally から無条件に呼べるよう
+		ReleaseExcel();
+	}
+
+	private void ReleaseExcel()
+	{
+		// Open() 失敗時は各 COM フィールドが null のため、Dispose から無条件に呼べるよう
 		// null ガードする。解放漏れによる Excel プロセス残留を防ぐ。
 		if (exWorksheet != null)
 		{
@@ -51,7 +56,7 @@ internal class ExcelControl
 
 	// テンプレートを開き、指定シートを exWorksheet に設定する。
 	// ファイルが無い場合は FileNotFoundException（FileName に探したパス）、Excel の起動・シート取得の失敗は例外がそのまま伝播する。
-	public void Open(string fileName, string sheetName)
+	private void Open(string fileName, string sheetName)
 	{
 		if (!File.Exists(fileName))
 		{
@@ -72,7 +77,10 @@ internal class ExcelControl
 		exWorksheet = (_Worksheet)exWorkbook.Sheets[sheetName];
 	}
 
-	public void MakeEyeAgree(string sheetName, Dictionary<string, string> values)
+	/// <param name="values">共通情報シートの行番号→値（すべて B 列に書き込む）。</param>
+	/// <param name="patientId">バーコード値・保存ファイル名に使う患者ID。</param>
+	/// <param name="saveDate">バーコード値の日付に使う作成日（yyyyMMdd）。</param>
+	public void MakeEyeAgree(string sheetName, Dictionary<int, string> values, string patientId, string saveDate)
 	{
 		Open(Env.AGENT_HOME + "\\EyeAgree\\EyeAgree.xlsm", "共通情報");
 		// シート切替・セル書込み・バーコード挿入の途中経過を画面に見せないため、
@@ -83,16 +91,14 @@ internal class ExcelControl
 		{
 			activateAllSheets();
 			setValue(values);
-			// バーコード値の日付は作成日（B8、printAgree が save_date から設定済み）を使う。
-			// 時刻は印刷時刻を1回だけ取得し、セル・バーコード値・ファイル名で共用する。
+			// バーコード値の日付は作成日を使う。時刻は印刷時刻を1回だけ取得し、
+			// セル・バーコード値・ファイル名で共用する。
 			DateTime now = DateTime.Now;
-			string ymd = values["8, 2"];
 			string hms = now.ToString("HHmmss");
-			exWorksheet.Cells[9, 2] = hms;
+			exWorksheet.Cells[9, 2] = hms;   // B9: 作成時刻
 			// バーコード解像度と文書コードを INI から読み込む（文書コードはバーコード値構築で使う）。
 			loadBarcodeSettings();
-			string patientId = getCellText(1, 2);
-			string barcodeValue = buildBarcodeValue(patientId, ymd, hms);
+			string barcodeValue = buildBarcodeValue(patientId, saveDate, hms);
 			// B11 は入力者氏名に使うため、バーコード値は B10 へ出力する。
 			exWorksheet.Cells[10, 2] = barcodeValue;
 			insertBarcodeToFormSheets(barcodeValue);
@@ -131,13 +137,12 @@ internal class ExcelControl
 		Marshal.ReleaseComObject(sheets);
 	}
 
-	private void setValue(Dictionary<string, string> valueToCell)
+	private void setValue(Dictionary<int, string> rowToValue)
 	{
-		// キーは "行, 列" 形式（Form1.Plan.cs 側で構築）。
-		foreach (KeyValuePair<string, string> pair in valueToCell)
+		// キーは行番号（Form1.printAgree 側で構築）。すべて B 列（列2）に書き込む。
+		foreach (KeyValuePair<int, string> pair in rowToValue)
 		{
-			string[] rowCol = pair.Key.Split(',');
-			exWorksheet.Cells[int.Parse(rowCol[0]), int.Parse(rowCol[1])] = pair.Value;
+			exWorksheet.Cells[pair.Key, 2] = pair.Value;
 		}
 	}
 
@@ -206,68 +211,30 @@ internal class ExcelControl
 		return sheetName;
 	}
 
-	// EyeAgreeSettings.ini からバーコード解像度を読み込む。
-	// ファイルが無い・読めない・値が不正な場合は既定値を維持する。
+	// EyeAgreeSettings.ini からバーコード解像度と文書コードを読み込む。
+	// 値が無い・不正な場合は既定値を維持する。
 	private void loadBarcodeSettings()
 	{
-		try
+		float lineWidth = AppSettings.GetFloat("BARCODE_LINE_WIDTH", 0f);
+		if (lineWidth > 0f)
 		{
-			string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "EyeAgreeSettings.ini");
-			if (!File.Exists(configPath))
-			{
-				return;
-			}
-			string[] lines = File.ReadAllLines(configPath, Encoding.Default);
-			foreach (string line in lines)
-			{
-				if (string.IsNullOrWhiteSpace(line) || line.StartsWith(";"))
-				{
-					continue;
-				}
-				string[] parts = line.Split('=');
-				if (parts.Length != 2)
-				{
-					continue;
-				}
-				string key = parts[0].Trim();
-				string val = parts[1].Trim();
-				if (key == "BARCODE_LINE_WIDTH")
-				{
-					float f;
-					if (float.TryParse(val, NumberStyles.Float, CultureInfo.InvariantCulture, out f) && f > 0f)
-					{
-						barcodeLineWidth = f;
-					}
-				}
-				else if (key == "BARCODE_HEIGHT")
-				{
-					float f;
-					if (float.TryParse(val, NumberStyles.Float, CultureInfo.InvariantCulture, out f) && f > 0f)
-					{
-						barcodeHeight = f;
-					}
-				}
-				else if (key == "BARCODE_QUIET_MODULES")
-				{
-					int n;
-					if (int.TryParse(val, NumberStyles.Integer, CultureInfo.InvariantCulture, out n) && n >= 0)
-					{
-						barcodeQuietModules = n;
-					}
-				}
-				else if (key == "DOCUMENT_CODE")
-				{
-					// バーコードの桁数を保つため、数字のみ・空でない値だけ採用する。
-					if (!string.IsNullOrEmpty(val) && isAllDigits(val))
-					{
-						documentCode = val;
-					}
-				}
-			}
+			barcodeLineWidth = lineWidth;
 		}
-		catch (Exception)
+		float height = AppSettings.GetFloat("BARCODE_HEIGHT", 0f);
+		if (height > 0f)
 		{
-			// 読み込みに失敗した場合は既定値のまま続行する。
+			barcodeHeight = height;
+		}
+		int quietModules = AppSettings.GetInt("BARCODE_QUIET_MODULES", -1);
+		if (quietModules >= 0)
+		{
+			barcodeQuietModules = quietModules;
+		}
+		// バーコードの桁数を保つため、数字のみ・空でない値だけ採用する。
+		string code = AppSettings.Get("DOCUMENT_CODE", "");
+		if (code.Length > 0 && isAllDigits(code))
+		{
+			documentCode = code;
 		}
 	}
 
@@ -280,7 +247,7 @@ internal class ExcelControl
 		if (barcodeText.Length != 36 || !isAllDigits(barcodeText))
 		{
 			// バーコード値は患者IDを含むため値そのものは記録せず、桁数のみ残す。
-			Agree.Logger.Info("insertBarcode", "バーコード値が36桁の数字でないため挿入をスキップ（桁数=" + barcodeText.Length + "）");
+			Logger.Info("insertBarcode", "バーコード値が36桁の数字でないため挿入をスキップ（桁数=" + barcodeText.Length + "）");
 			return;
 		}
 		string tempPath = null;
@@ -301,7 +268,7 @@ internal class ExcelControl
 		}
 		catch (Exception ex)
 		{
-			Agree.Logger.Error("insertBarcode", ex);
+			Logger.Error("insertBarcode", ex);
 		}
 		finally
 		{

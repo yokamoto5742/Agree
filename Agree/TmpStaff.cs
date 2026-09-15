@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections;
-using System.ComponentModel;
 using System.Data;
 using System.Data.OleDb;
-using System.Drawing;
 using System.Windows.Forms;
 using AgentlabUtilityLibrary;
 
@@ -13,13 +10,10 @@ public partial class TmpStaff : Form
 {
 	private OleDbConnection oraConn;
 
-	private OleDbCommand oraCmd = new OleDbCommand();
-
 	public TmpStaff()
 	{
 		InitializeComponent();
 		oraConn = DBConn.GetOpenDBConn();
-		oraCmd.Connection = oraConn;
 		if (Program.OfflineMode)
 		{
 			saveButton.Enabled = false;
@@ -31,10 +25,8 @@ public partial class TmpStaff : Form
 
 	private void initList()
 	{
-		oraConn.Open();
-		oraCmd.CommandText = "Select ID, STAFF, Trim(NAME), CONT from AGREE_STAFF inner join M_USR" + Env.DB_LINK + " on AGREE_STAFF.STAFF = CODE";
-		OleDbDataAdapter oleDbDataAdapter = new OleDbDataAdapter(oraCmd);
-		oraConn.Close();
+		// DataAdapter.Fill は接続を自分で開閉するため、Open/Close は不要。
+		OleDbDataAdapter oleDbDataAdapter = new OleDbDataAdapter("Select ID, STAFF, Trim(NAME), CONT from AGREE_STAFF inner join M_USR" + Env.DB_LINK + " on AGREE_STAFF.STAFF = CODE", oraConn);
 		DataSet dataSet = new DataSet();
 		oleDbDataAdapter.Fill(dataSet, "担当者");
 		staffGridView.DataSource = dataSet.Tables["担当者"];
@@ -75,19 +67,16 @@ public partial class TmpStaff : Form
 
 	private void saveButton_Click(object sender, EventArgs e)
 	{
-		if (staff_id.Text.Length > 0)
+		if (int.TryParse(staff_id.Text.Trim(), out int staffId))
 		{
-			oraConn.Open();
-			if (id.Text.Length > 0)
+			if (int.TryParse(id.Text.Trim(), out int rowId))
 			{
-				oraCmd.CommandText = "update AGREE_STAFF set CONT = " + AgreeSql.SqlValue(cont.Text.Trim()) + " where ID = " + id.Text.Trim();
+				Db.Execute(oraConn, "update AGREE_STAFF set CONT = " + AgreeSql.SqlValue(cont.Text.Trim()) + " where ID = " + rowId);
 			}
 			else
 			{
-				oraCmd.CommandText = "insert into AGREE_STAFF (ID, STAFF, CONT) values (AGREE_STAFF_SEQ.nextval, " + staff_id.Text.Trim() + ", " + AgreeSql.SqlValue(cont.Text.Trim()) + ")";
+				Db.Execute(oraConn, "insert into AGREE_STAFF (ID, STAFF, CONT) values (AGREE_STAFF_SEQ.nextval, " + staffId + ", " + AgreeSql.SqlValue(cont.Text.Trim()) + ")");
 			}
-			oraCmd.ExecuteNonQuery();
-			oraConn.Close();
 			initList();
 			clearStaff(clearId: true, clearStaffId: true);
 			MessageBox.Show("登録完了しました");
@@ -100,7 +89,7 @@ public partial class TmpStaff : Form
 
 	private void deleteButton_Click(object sender, EventArgs e)
 	{
-		if (id.Text.Length <= 0)
+		if (!int.TryParse(id.Text.Trim(), out int rowId))
 		{
 			MessageBox.Show("削除する行を一覧から選択してください");
 			return;
@@ -109,10 +98,7 @@ public partial class TmpStaff : Form
 		{
 			return;
 		}
-		oraConn.Open();
-		oraCmd.CommandText = "delete from AGREE_STAFF where ID = " + id.Text.Trim();
-		oraCmd.ExecuteNonQuery();
-		oraConn.Close();
+		Db.Execute(oraConn, "delete from AGREE_STAFF where ID = " + rowId);
 		initList();
 		clearStaff(clearId: true, clearStaffId: true);
 		MessageBox.Show("削除完了しました");
@@ -145,7 +131,7 @@ public partial class TmpStaff : Form
 		if (Dict.StaffDict.ContainsKey(staff_id.Text))
 		{
 			staff_name.Text = Dict.StaffDict[staff_id.Text].Name;
-			foreach (DataGridViewRow item in (IEnumerable)staffGridView.Rows)
+			foreach (DataGridViewRow item in staffGridView.Rows)
 			{
 				if (staff_id.Text == item.Cells[1].Value.ToString())
 				{

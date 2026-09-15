@@ -80,7 +80,7 @@ WinForms 描画と Excel 帳票（COM）は自動テスト対象外。リリー�
 > 反映は別の変更として要否を判断してほしい。
 
 - **インライン SQL のエスケープ漏れ（高優先・医療データ）**:
-  `Form1.regPlan` / `Form1.getStaffRoom` / `TmpStaff.saveButton_Click` /
+  `Form1.regAgree` / `Form1.getStaffRoom` / `TmpStaff.saveButton_Click` /
   `TmpAgree`（テンプレート保存 368・379 行）は、`diag`/`staff`/`ope`/`cont`/`temp_name` 等の
   自由記述を **エスケープせずに** SQL へ直接連結している。
   一方 CSV インポート経路(`MergeRow`)は `AgreeSql.SqlValue`(=`'`→`''`)で正しく処理済み。

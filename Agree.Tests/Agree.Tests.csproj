@@ -27,10 +27,11 @@
   <!--
     本体の純粋ロジックをソースリンクして単体テストする。
     COM(Excel) / 外部DLL(AgentlabUtilityLibrary) を巻き込まないよう、
-    Agree.csproj 全体は参照せず AgreeSql.cs 1ファイルだけを取り込む。
+    Agree.csproj 全体は参照せず、依存の無いファイルだけを取り込む。
   -->
   <ItemGroup>
     <Compile Include="..\Agree\AgreeSql.cs" Link="Linked\AgreeSql.cs" />
+    <Compile Include="..\Agree\AppSettings.cs" Link="Linked\AppSettings.cs" />
   </ItemGroup>
 
   <ItemGroup>

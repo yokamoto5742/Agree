@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data.OleDb;
 using System.Drawing;
 using System.Windows.Forms;
@@ -11,36 +9,18 @@ namespace Agree;
 
 public partial class TmpAgree : Form
 {
-	private struct TmpNode
-	{
-		public int temp_id;
-
-		public int temp_level;
-
-		public int temp_parent;
-
-		public string temp_name;
-	}
-
 	private Form1 f1;
 
-	private Hashtable nodeTable = new Hashtable();
+	// 分類（TEMP_LEVEL = 0）の 名前→ID と ID→名前。名前→ID のキーは前後の空白を除いて登録する。
+	private Dictionary<string, int> parentIds = new Dictionary<string, int>();
 
-	private Hashtable nodeNameTable = new Hashtable();
-
-	private Hashtable parentTable = new Hashtable();
-
-	private List<TmpNode> tmpNodeList = new List<TmpNode>();
+	private Dictionary<int, string> parentNames = new Dictionary<int, string>();
 
 	private List<TextBox> tmpBoxList = new List<TextBox>();
 
 	private List<ComboBox> tmpComboList = new List<ComboBox>();
 
 	private OleDbConnection oraConn;
-
-	private OleDbCommand oraCmd = new OleDbCommand();
-
-	private OleDbDataReader oraReader;
 
 	private bool editingParent;
 
@@ -51,7 +31,7 @@ public partial class TmpAgree : Form
 		applyTmpButton.Visible = applyButtonVisible;
 	}
 
-	private void TmpPlan_Load(object sender, EventArgs e)
+	private void TmpAgree_Load(object sender, EventArgs e)
 	{
 		tmpBoxList.Add(temp_id);
 		tmpBoxList.Add(temp_name);
@@ -67,19 +47,13 @@ public partial class TmpAgree : Form
 		tmpBoxList.Add(anes);
 		if (Program.OfflineMode)
 		{
-			applyTmpButton.Enabled = false;
-			newTmpButton.Enabled = false;
-			editTmpButton.Enabled = false;
-			regTmpButton.Enabled = false;
-			delTmpButton.Enabled = false;
+			setButtons(apply: false, create: false, edit: false, register: false, delete: false, addParent: false);
 			upButton.Enabled = false;
 			downButton.Enabled = false;
-			addParentButton.Enabled = false;
 			temp_parent.Enabled = false;
 			return;
 		}
 		oraConn = DBConn.GetOpenDBConn();
-		oraCmd.Connection = oraConn;
 		loadParents();
 		initTree();
 	}
@@ -108,149 +82,93 @@ public partial class TmpAgree : Form
 		}
 	}
 
+	// 操作ボタンの押下可否をまとめて設定する。
+	private void setButtons(bool apply, bool create, bool edit, bool register, bool delete, bool addParent)
+	{
+		applyTmpButton.Enabled = apply;
+		newTmpButton.Enabled = create;
+		editTmpButton.Enabled = edit;
+		regTmpButton.Enabled = register;
+		delTmpButton.Enabled = delete;
+		addParentButton.Enabled = addParent;
+	}
+
+	// 分類コンボを空にして入力不可にする。
+	private void lockParentCombo()
+	{
+		temp_parent.Text = "";
+		temp_parent.BackColor = Color.LightGray;
+		temp_parent.Enabled = false;
+	}
+
 	private void loadParents()
 	{
 		temp_parent.Items.Clear();
-		parentTable.Clear();
-		try
+		parentIds.Clear();
+		parentNames.Clear();
+		Db.Read(oraConn, "Select TEMP_ID, TEMP_NAME from AGREE_TEMPLATE where TEMP_LEVEL = 0 and DELETE_FLAG != 1 order by DISP_ORDER", r =>
 		{
-			oraConn.Open();
-			oraCmd.CommandText = "Select TEMP_ID, TEMP_NAME from AGREE_TEMPLATE where TEMP_LEVEL = 0 and DELETE_FLAG != 1 order by DISP_ORDER";
-			oraReader = oraCmd.ExecuteReader();
-			while (oraReader.Read())
-			{
-				temp_parent.Items.Add(oraReader["TEMP_NAME"].ToString());
-				parentTable.Add(oraReader["TEMP_NAME"].ToString().Trim(), oraReader["TEMP_ID"].ToString());
-			}
-		}
-		finally
-		{
-			if (oraReader != null && !oraReader.IsClosed)
-			{
-				oraReader.Close();
-			}
-			if (oraConn.State != System.Data.ConnectionState.Closed)
-			{
-				oraConn.Close();
-			}
-		}
+			int id = int.Parse(r["TEMP_ID"].ToString());
+			string name = r["TEMP_NAME"].ToString();
+			temp_parent.Items.Add(name);
+			parentIds.Add(name.Trim(), id);
+			parentNames.Add(id, name);
+		});
 	}
 
 	private void initTree()
 	{
 		tmpAgreeTree.Nodes.Clear();
-		tmpNodeList.Clear();
-		nodeTable.Clear();
-		nodeNameTable.Clear();
-		try
+		// ノードの Name に TEMP_ID を持たせる（getTempIdFromNode で使う）。
+		Db.Read(oraConn, "Select TEMP_ID, TEMP_LEVEL, TEMP_NAME, TEMP_PARENT from AGREE_TEMPLATE where DELETE_FLAG != 1 order by TEMP_LEVEL , DISP_ORDER , TEMP_ID", r =>
 		{
-			oraConn.Open();
-			oraCmd.CommandText = "Select TEMP_ID, TEMP_LEVEL, TEMP_NAME, TEMP_PARENT from AGREE_TEMPLATE where DELETE_FLAG != 1 order by TEMP_LEVEL , DISP_ORDER , TEMP_ID";
-			oraReader = oraCmd.ExecuteReader();
-			while (oraReader.Read())
+			string id = r["TEMP_ID"].ToString();
+			string name = r["TEMP_NAME"].ToString();
+			string parentKey = r["TEMP_PARENT"].ToString();
+			if (r["TEMP_LEVEL"].ToString() == "0")
 			{
-				if (oraReader["TEMP_LEVEL"].ToString() == "0")
+				tmpAgreeTree.Nodes.Add(id, name);
+			}
+			else if (id != parentKey)
+			{
+				if (tmpAgreeTree.Nodes.ContainsKey(parentKey))
 				{
-					tmpAgreeTree.Nodes.Add(oraReader["TEMP_ID"].ToString(), oraReader["TEMP_NAME"].ToString());
-					TmpNode tmpNode = new TmpNode
-					{
-						temp_id = int.Parse(oraReader["TEMP_ID"].ToString()),
-						temp_level = int.Parse(oraReader["TEMP_LEVEL"].ToString()),
-						temp_parent = int.Parse(oraReader["TEMP_PARENT"].ToString()),
-						temp_name = oraReader["TEMP_NAME"].ToString()
-					};
-					tmpNodeList.Add(tmpNode);
-					nodeTable.Add(tmpNode.temp_id, tmpNode);
-					nodeNameTable.Add(tmpNode.temp_id, tmpNode.temp_name);
+					tmpAgreeTree.Nodes[parentKey].Nodes.Add(id, name);
 				}
-				else if (oraReader["TEMP_ID"].ToString() != oraReader["TEMP_PARENT"].ToString())
+				else
 				{
-					string parentKey = oraReader["TEMP_PARENT"].ToString();
-					if (tmpAgreeTree.Nodes.ContainsKey(parentKey))
-					{
-						tmpAgreeTree.Nodes[parentKey].Nodes.Add(oraReader["TEMP_ID"].ToString(), oraReader["TEMP_NAME"].ToString());
-					}
-					else
-					{
-						tmpAgreeTree.Nodes.Add(oraReader["TEMP_ID"].ToString(), oraReader["TEMP_NAME"].ToString());
-					}
-					TmpNode tmpNode2 = new TmpNode
-					{
-						temp_id = int.Parse(oraReader["TEMP_ID"].ToString()),
-						temp_level = int.Parse(oraReader["TEMP_LEVEL"].ToString()),
-						temp_parent = int.Parse(oraReader["TEMP_PARENT"].ToString()),
-						temp_name = oraReader["TEMP_NAME"].ToString()
-					};
-					if (!nodeTable.ContainsKey(tmpNode2.temp_id))
-					{
-						tmpNodeList.Add(tmpNode2);
-						nodeTable.Add(tmpNode2.temp_id, tmpNode2);
-						nodeNameTable.Add(tmpNode2.temp_id, tmpNode2.temp_name);
-					}
+					tmpAgreeTree.Nodes.Add(id, name);
 				}
 			}
-		}
-		finally
-		{
-			if (oraReader != null && !oraReader.IsClosed)
-			{
-				oraReader.Close();
-			}
-			if (oraConn.State != System.Data.ConnectionState.Closed)
-			{
-				oraConn.Close();
-			}
-		}
+		});
 		editingParent = false;
 		panel2.Enabled = true;
-		addParentButton.Enabled = true;
-		applyTmpButton.Enabled = false;
-		newTmpButton.Enabled = false;
-		editTmpButton.Enabled = false;
-		regTmpButton.Enabled = false;
-		delTmpButton.Enabled = false;
+		setButtons(apply: false, create: false, edit: false, register: false, delete: false, addParent: true);
 		setTmpFields(Color.LightGray, clearText: false);
 		temp_parent.Enabled = false;
 	}
 
 	private void showTemplate(int temp_id)
 	{
-		try
+		Db.Read(oraConn, "Select TEMP_ID, TEMP_LEVEL, TEMP_PARENT, TEMP_NAME,EYE , DIAG, ANES ,OPE, EXPLANATION, ITEM1, ITEM2, ITEM3, ITEM4 , SHEET_NAME from AGREE_TEMPLATE where TEMP_ID = " + temp_id, r =>
 		{
-			oraConn.Open();
-			oraCmd.CommandText = "Select TEMP_ID, TEMP_LEVEL, TEMP_PARENT, TEMP_NAME,EYE , DIAG, ANES ,OPE, EXPLANATION, ITEM1, ITEM2, ITEM3, ITEM4 , SHEET_NAME from AGREE_TEMPLATE where TEMP_ID = " + temp_id;
-			oraReader = oraCmd.ExecuteReader();
-			if (oraReader.Read())
+			this.temp_id.Text = r["TEMP_ID"].ToString();
+			temp_name.Text = r["TEMP_NAME"].ToString();
+			if (r["TEMP_LEVEL"].ToString() == "1")
 			{
-				this.temp_id.Text = oraReader["TEMP_ID"].ToString();
-				temp_name.Text = oraReader["TEMP_NAME"].ToString();
-				if (oraReader["TEMP_LEVEL"].ToString() == "1")
-				{
-					temp_parent.Text = nodeNameTable[int.Parse(oraReader["TEMP_PARENT"].ToString())].ToString();
-				}
-				eye.Text = oraReader["EYE"].ToString();
-				sheetName.Text = oraReader["SHEET_NAME"].ToString();
-				diag.Text = oraReader["DIAG"].ToString();
-				anes.Text = oraReader["ANES"].ToString();
-				ope.Text = oraReader["OPE"].ToString();
-				explanation.Text = oraReader["EXPLANATION"].ToString();
-				item1.Text = oraReader["ITEM1"].ToString();
-				item2.Text = oraReader["ITEM2"].ToString();
-				item3.Text = oraReader["ITEM3"].ToString();
-				item4.Text = oraReader["ITEM4"].ToString();
+				temp_parent.Text = parentNames[int.Parse(r["TEMP_PARENT"].ToString())];
 			}
-		}
-		finally
-		{
-			if (oraReader != null && !oraReader.IsClosed)
-			{
-				oraReader.Close();
-			}
-			if (oraConn.State != System.Data.ConnectionState.Closed)
-			{
-				oraConn.Close();
-			}
-		}
+			eye.Text = r["EYE"].ToString();
+			sheetName.Text = r["SHEET_NAME"].ToString();
+			diag.Text = r["DIAG"].ToString();
+			anes.Text = r["ANES"].ToString();
+			ope.Text = r["OPE"].ToString();
+			explanation.Text = r["EXPLANATION"].ToString();
+			item1.Text = r["ITEM1"].ToString();
+			item2.Text = r["ITEM2"].ToString();
+			item3.Text = r["ITEM3"].ToString();
+			item4.Text = r["ITEM4"].ToString();
+		});
 	}
 
 	private void showTemplate(TreeNode tnode)
@@ -261,9 +179,7 @@ public partial class TmpAgree : Form
 			setTmpFields(Color.LightGray, clearText: true);
 			this.temp_id.Text = tnode.Name;
 			temp_name.Text = tnode.Text;
-			temp_parent.Text = "";
-			temp_parent.BackColor = Color.LightGray;
-			temp_parent.Enabled = false;
+			lockParentCombo();
 		}
 		else
 		{
@@ -272,61 +188,48 @@ public partial class TmpAgree : Form
 		}
 	}
 
-	private void regPlanTemplate()
+	/// <summary>
+	/// 入力内容を AGREE_TEMPLATE に登録する。入力チェックで中断した場合は false を返す。
+	/// </summary>
+	private bool regAgreeTemplate()
 	{
 		if (temp_name.Text.Length == 0)
 		{
 			MessageBox.Show(editingParent ? "分類名を入力してください" : "テンプレート名を入力してください");
-			return;
+			return false;
 		}
-		string text;
+		string sql;
 		if (editingParent)
 		{
-			object duplicateParent = parentTable[temp_name.Text.Trim()];
-			if (duplicateParent != null && (temp_id.Text.Length == 0 || duplicateParent.ToString() != temp_id.Text))
+			if (parentIds.TryGetValue(temp_name.Text.Trim(), out int duplicateId) && (temp_id.Text.Length == 0 || duplicateId.ToString() != temp_id.Text))
 			{
 				MessageBox.Show("同じ名前の分類が既に存在します");
-				return;
+				return false;
 			}
-			text = ((temp_id.Text.Length <= 0) ? ("insert into AGREE_TEMPLATE (TEMP_ID, TEMP_LEVEL, TEMP_PARENT, TEMP_NAME, DELETE_FLAG) values (AGREE_TEMPLATE_SEQ.nextval, 0, 0, " + AgreeSql.SqlValue(temp_name.Text) + ", 0)") : ("update AGREE_TEMPLATE set TEMP_NAME = " + AgreeSql.SqlValue(temp_name.Text) + " where TEMP_ID = " + temp_id.Text));
+			sql = ((temp_id.Text.Length <= 0) ? ("insert into AGREE_TEMPLATE (TEMP_ID, TEMP_LEVEL, TEMP_PARENT, TEMP_NAME, DELETE_FLAG) values (AGREE_TEMPLATE_SEQ.nextval, 0, 0, " + AgreeSql.SqlValue(temp_name.Text) + ", 0)") : ("update AGREE_TEMPLATE set TEMP_NAME = " + AgreeSql.SqlValue(temp_name.Text) + " where TEMP_ID = " + temp_id.Text));
 		}
 		else
 		{
-			object parentValue = parentTable[temp_parent.Text.Trim()];
-			if (parentValue == null)
+			if (!parentIds.TryGetValue(temp_parent.Text.Trim(), out int parentId))
 			{
 				MessageBox.Show("分類をリストから選んでください");
-				return;
+				return false;
 			}
-			string text2 = parentValue.ToString();
-			text = ((temp_id.Text.Length <= 0) ? ("insert into AGREE_TEMPLATE (TEMP_ID, TEMP_LEVEL, TEMP_PARENT, TEMP_NAME, EYE , DIAG, ANES ,OPE, EXPLANATION, ITEM1, ITEM2, ITEM3, ITEM4,SHEET_NAME, DELETE_FLAG) values (AGREE_TEMPLATE_SEQ.nextval, 1, " + text2 + ", " + AgreeSql.SqlValue(temp_name.Text) + ", " + AgreeSql.SqlValue(eye.Text) + ", " + AgreeSql.SqlValue(diag.Text) + ", " + AgreeSql.SqlValue(anes.Text) + ", " + AgreeSql.SqlValue(ope.Text) + ", " + AgreeSql.SqlValue(explanation.Text) + ", " + AgreeSql.SqlValue(item1.Text) + ", " + AgreeSql.SqlValue(item2.Text) + ", " + AgreeSql.SqlValue(item3.Text) + ", " + AgreeSql.SqlValue(item4.Text) + ", " + AgreeSql.SqlValue(sheetName.Text) + ", 0)") : ("update AGREE_TEMPLATE set TEMP_NAME = " + AgreeSql.SqlValue(temp_name.Text) + ", TEMP_PARENT = " + text2 + ", EYE = " + AgreeSql.SqlValue(eye.Text) + ", DIAG = " + AgreeSql.SqlValue(diag.Text) + ", ANES = " + AgreeSql.SqlValue(anes.Text) + ", OPE = " + AgreeSql.SqlValue(ope.Text) + ", EXPLANATION = " + AgreeSql.SqlValue(explanation.Text) + ", ITEM1 = " + AgreeSql.SqlValue(item1.Text) + ", ITEM2 = " + AgreeSql.SqlValue(item2.Text) + ", ITEM3 = " + AgreeSql.SqlValue(item3.Text) + ", ITEM4 = " + AgreeSql.SqlValue(item4.Text) + ", SHEET_NAME = " + AgreeSql.SqlValue(sheetName.Text) + " where TEMP_ID = " + temp_id.Text));
+			sql = ((temp_id.Text.Length <= 0) ? ("insert into AGREE_TEMPLATE (TEMP_ID, TEMP_LEVEL, TEMP_PARENT, TEMP_NAME, EYE , DIAG, ANES ,OPE, EXPLANATION, ITEM1, ITEM2, ITEM3, ITEM4,SHEET_NAME, DELETE_FLAG) values (AGREE_TEMPLATE_SEQ.nextval, 1, " + parentId + ", " + AgreeSql.SqlValue(temp_name.Text) + ", " + AgreeSql.SqlValue(eye.Text) + ", " + AgreeSql.SqlValue(diag.Text) + ", " + AgreeSql.SqlValue(anes.Text) + ", " + AgreeSql.SqlValue(ope.Text) + ", " + AgreeSql.SqlValue(explanation.Text) + ", " + AgreeSql.SqlValue(item1.Text) + ", " + AgreeSql.SqlValue(item2.Text) + ", " + AgreeSql.SqlValue(item3.Text) + ", " + AgreeSql.SqlValue(item4.Text) + ", " + AgreeSql.SqlValue(sheetName.Text) + ", 0)") : ("update AGREE_TEMPLATE set TEMP_NAME = " + AgreeSql.SqlValue(temp_name.Text) + ", TEMP_PARENT = " + parentId + ", EYE = " + AgreeSql.SqlValue(eye.Text) + ", DIAG = " + AgreeSql.SqlValue(diag.Text) + ", ANES = " + AgreeSql.SqlValue(anes.Text) + ", OPE = " + AgreeSql.SqlValue(ope.Text) + ", EXPLANATION = " + AgreeSql.SqlValue(explanation.Text) + ", ITEM1 = " + AgreeSql.SqlValue(item1.Text) + ", ITEM2 = " + AgreeSql.SqlValue(item2.Text) + ", ITEM3 = " + AgreeSql.SqlValue(item3.Text) + ", ITEM4 = " + AgreeSql.SqlValue(item4.Text) + ", SHEET_NAME = " + AgreeSql.SqlValue(sheetName.Text) + " where TEMP_ID = " + temp_id.Text));
 		}
-		try
-		{
-			oraConn.Open();
-			oraCmd.CommandText = text;
-			oraCmd.ExecuteNonQuery();
-		}
-		finally
-		{
-			if (oraConn.State != System.Data.ConnectionState.Closed)
-			{
-				oraConn.Close();
-			}
-		}
+		Db.Execute(oraConn, sql);
 		setTmpFields(Color.LightGray, clearText: true);
-		temp_parent.Text = "";
-		temp_parent.BackColor = Color.LightGray;
-		temp_parent.Enabled = false;
+		lockParentCombo();
 		if (editingParent)
 		{
 			loadParents();
 		}
 		MessageBox.Show("登録しました");
 		initTree();
+		return true;
 	}
 
-	private void delPlanTemplate()
+	private void delAgreeTemplate()
 	{
 		if (editingParent && temp_id.Text.Length > 0 && countChildTemplates(temp_id.Text) > 0)
 		{
@@ -339,24 +242,10 @@ public partial class TmpAgree : Form
 		}
 		if (temp_id.Text.Length > 0)
 		{
-			try
-			{
-				oraConn.Open();
-				oraCmd.CommandText = "update AGREE_TEMPLATE set DELETE_FLAG = 1 where TEMP_ID = " + temp_id.Text;
-				oraCmd.ExecuteNonQuery();
-			}
-			finally
-			{
-				if (oraConn.State != System.Data.ConnectionState.Closed)
-				{
-					oraConn.Close();
-				}
-			}
+			Db.Execute(oraConn, "update AGREE_TEMPLATE set DELETE_FLAG = 1 where TEMP_ID = " + temp_id.Text);
 		}
 		setTmpFields(Color.LightGray, clearText: true);
-		temp_parent.Text = "";
-		temp_parent.BackColor = Color.LightGray;
-		temp_parent.Enabled = false;
+		lockParentCombo();
 		if (editingParent)
 		{
 			loadParents();
@@ -367,19 +256,7 @@ public partial class TmpAgree : Form
 
 	private int countChildTemplates(string parentId)
 	{
-		try
-		{
-			oraConn.Open();
-			oraCmd.CommandText = "Select count(*) from AGREE_TEMPLATE where TEMP_PARENT = " + parentId + " and TEMP_LEVEL = 1 and DELETE_FLAG != 1";
-			return Convert.ToInt32(oraCmd.ExecuteScalar());
-		}
-		finally
-		{
-			if (oraConn.State != System.Data.ConnectionState.Closed)
-			{
-				oraConn.Close();
-			}
-		}
+		return Convert.ToInt32(Db.Scalar(oraConn, "Select count(*) from AGREE_TEMPLATE where TEMP_PARENT = " + parentId + " and TEMP_LEVEL = 1 and DELETE_FLAG != 1"));
 	}
 
 	private void applyTmpButton_Click(object sender, EventArgs e)
@@ -390,12 +267,12 @@ public partial class TmpAgree : Form
 
 	private void regTmpButton_Click(object sender, EventArgs e)
 	{
-		regPlanTemplate();
+		regAgreeTemplate();
 	}
 
 	private void delTmpButton_Click(object sender, EventArgs e)
 	{
-		delPlanTemplate();
+		delAgreeTemplate();
 	}
 
 	private void closeButton_Click(object sender, EventArgs e)
@@ -403,48 +280,29 @@ public partial class TmpAgree : Form
 		Dispose();
 	}
 
-	private void tmpPlanTree_NodeMouseClick(object sender, TreeNodeMouseClickEventArgs e)
+	private void tmpAgreeTree_NodeMouseClick(object sender, TreeNodeMouseClickEventArgs e)
 	{
-		bool proceed = true;
 		if (regTmpButton.Enabled)
 		{
 			switch (MessageBox.Show("編集中のテンプレートがあります。保存しますか？", "テンプレート編集中", MessageBoxButtons.YesNoCancel))
 			{
 			case DialogResult.Yes:
-				regPlanTemplate();
-				proceed = true;
+				// 保存が入力チェックで中断した場合は、編集内容を残すため切り替えない。
+				if (!regAgreeTemplate())
+				{
+					return;
+				}
 				break;
 			case DialogResult.No:
-				proceed = true;
 				break;
 			default:
-				proceed = false;
-				break;
+				return;
 			}
-		}
-		if (!proceed)
-		{
-			return;
 		}
 		editingParent = false;
 		panel2.Enabled = true;
-		addParentButton.Enabled = true;
-		if (e.Node.Level == 0)
-		{
-			applyTmpButton.Enabled = false;
-			newTmpButton.Enabled = true;
-			editTmpButton.Enabled = true;
-			regTmpButton.Enabled = false;
-			delTmpButton.Enabled = false;
-		}
-		else
-		{
-			applyTmpButton.Enabled = true;
-			newTmpButton.Enabled = false;
-			editTmpButton.Enabled = true;
-			regTmpButton.Enabled = false;
-			delTmpButton.Enabled = false;
-		}
+		bool isParent = e.Node.Level == 0;
+		setButtons(apply: !isParent, create: isParent, edit: true, register: false, delete: false, addParent: true);
 		setTmpFields(Color.LightGray, clearText: false);
 		temp_parent.BackColor = Color.LightGray;
 		temp_parent.Enabled = false;
@@ -463,12 +321,7 @@ public partial class TmpAgree : Form
 		temp_parent.Text = tmpAgreeTree.SelectedNode.Text;
 		temp_parent.BackColor = Color.White;
 		temp_parent.Enabled = true;
-		addParentButton.Enabled = false;
-		applyTmpButton.Enabled = false;
-		newTmpButton.Enabled = false;
-		editTmpButton.Enabled = false;
-		regTmpButton.Enabled = true;
-		delTmpButton.Enabled = true;
+		setButtons(apply: false, create: false, edit: false, register: true, delete: true, addParent: false);
 	}
 
 	private void editTmpButton_Click(object sender, EventArgs e)
@@ -479,9 +332,7 @@ public partial class TmpAgree : Form
 		{
 			setTmpFields(Color.LightGray, clearText: false);
 			temp_name.BackColor = Color.White;
-			temp_parent.Text = "";
-			temp_parent.BackColor = Color.LightGray;
-			temp_parent.Enabled = false;
+			lockParentCombo();
 			panel2.Enabled = false;
 		}
 		else
@@ -491,12 +342,7 @@ public partial class TmpAgree : Form
 			temp_parent.Enabled = true;
 			panel2.Enabled = true;
 		}
-		addParentButton.Enabled = false;
-		applyTmpButton.Enabled = false;
-		newTmpButton.Enabled = false;
-		editTmpButton.Enabled = false;
-		regTmpButton.Enabled = true;
-		delTmpButton.Enabled = true;
+		setButtons(apply: false, create: false, edit: false, register: true, delete: true, addParent: false);
 	}
 
 	private void addParentButton_Click(object sender, EventArgs e)
@@ -504,16 +350,9 @@ public partial class TmpAgree : Form
 		editingParent = true;
 		setTmpFields(Color.LightGray, clearText: true);
 		temp_name.BackColor = Color.White;
-		temp_parent.Text = "";
-		temp_parent.BackColor = Color.LightGray;
-		temp_parent.Enabled = false;
+		lockParentCombo();
 		panel2.Enabled = false;
-		addParentButton.Enabled = false;
-		applyTmpButton.Enabled = false;
-		newTmpButton.Enabled = false;
-		editTmpButton.Enabled = false;
-		regTmpButton.Enabled = true;
-		delTmpButton.Enabled = false;
+		setButtons(apply: false, create: false, edit: false, register: true, delete: false, addParent: false);
 		temp_name.Focus();
 	}
 
@@ -548,21 +387,9 @@ public partial class TmpAgree : Form
 		string movingId = ids[selectedNode.Index];
 		ids.RemoveAt(selectedNode.Index);
 		ids.Insert(target, movingId);
-		try
+		for (int i = 0; i < ids.Count; i++)
 		{
-			oraConn.Open();
-			for (int i = 0; i < ids.Count; i++)
-			{
-				oraCmd.CommandText = "update AGREE_TEMPLATE set DISP_ORDER = " + i + " where TEMP_ID = " + ids[i];
-				oraCmd.ExecuteNonQuery();
-			}
-		}
-		finally
-		{
-			if (oraConn.State != System.Data.ConnectionState.Closed)
-			{
-				oraConn.Close();
-			}
+			Db.Execute(oraConn, "update AGREE_TEMPLATE set DISP_ORDER = " + i + " where TEMP_ID = " + ids[i]);
 		}
 		initTree();
 		TreeNode[] movedNodes = tmpAgreeTree.Nodes.Find(movingId, searchAllChildren: true);
@@ -573,25 +400,9 @@ public partial class TmpAgree : Form
 		}
 	}
 
+	// ノードの Name には initTree で TEMP_ID を入れている。表示名で探すと同名テンプレートを取り違えるため使わない。
 	private int getTempIdFromNode(TreeNode tnode)
 	{
-		int result = -1;
-		if (tnode.Level == 0)
-		{
-			result = int.Parse(parentTable[tnode.Text].ToString());
-		}
-		else
-		{
-			int num = int.Parse(parentTable[tnode.Parent.Text].ToString());
-			for (int i = 0; i < tmpNodeList.Count; i++)
-			{
-				if (tnode.Text == tmpNodeList[i].temp_name && num == tmpNodeList[i].temp_parent)
-				{
-					result = tmpNodeList[i].temp_id;
-					break;
-				}
-			}
-		}
-		return result;
+		return int.Parse(tnode.Name);
 	}
 }

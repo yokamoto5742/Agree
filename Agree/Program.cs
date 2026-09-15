@@ -34,8 +34,7 @@ internal static class Program
 			{
 				return;
 			}
-			Process[] array = processesByName;
-			foreach (Process process in array)
+			foreach (Process process in processesByName)
 			{
 				if (process.Id != currentProcess.Id)
 				{

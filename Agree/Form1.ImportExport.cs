@@ -1,13 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
 using System.Data.OleDb;
-using System.Drawing;
 using System.IO;
 using System.Text;
 using System.Windows.Forms;
-using AgentlabUtilityLibrary;
 using Microsoft.VisualBasic.FileIO;
 
 namespace Agree;
@@ -38,6 +34,7 @@ public partial class Form1
 				}
 				catch (Exception ex)
 				{
+					Logger.Error("export", ex);
 					MessageBox.Show("データ出力中にエラーが発生しました:\n" + ex.Message, "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
 				}
 			}
@@ -74,6 +71,7 @@ public partial class Form1
 				}
 				catch (Exception ex)
 				{
+					Logger.Error("import", ex);
 					MessageBox.Show("データ取り込み中にエラーが発生しました:\n" + ex.Message, "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
 				}
 			}
@@ -160,7 +158,7 @@ public partial class Form1
 				int keyIndex = Array.FindIndex(columns, (string c) => c.Equals(keyColumn, StringComparison.OrdinalIgnoreCase));
 				if (keyIndex < 0)
 				{
-					throw new Exception(tableName + " のCSVに " + keyColumn + " 列がありません。");
+					throw new InvalidDataException(tableName + " のCSVに " + keyColumn + " 列がありません。");
 				}
 				while (!parser.EndOfData)
 				{
