@@ -30,9 +30,10 @@ public partial class Form1
 				pt_sex.Text = r["P_SEX"].ToString() == "2" ? "女" : "男";
 			});
 			// 一覧の列は列名・別名で参照する（showAgree も同じ名前を使う）。
+			// 入力者が職員マスタ(M_USR)に無い同意書（Pat.csv 由来の医師コード等）も一覧から欠落させないよう外部結合にする。
 			string sql = "select AGREE_ID, SAVE_DATE, AGREE.DEPT, Trim(M_DEPT.S_NAME) as DEPT_NAME, AGREE.DR, Trim(M_USR.NAME) as DR_NAME,"
 				+ " STAFF, EYE, DIAG, OPE, EXPLANATION, ITEM1, ITEM2, ITEM3, ITEM4, DR_OK, SHEET_NAME, ANES"
-				+ " from AGREE inner join M_DEPT" + Env.DB_LINK + " on AGREE.DEPT = M_DEPT.CODE inner join M_USR" + Env.DB_LINK + " on AGREE.DR = M_USR.CODE"
+				+ " from AGREE inner join M_DEPT" + Env.DB_LINK + " on AGREE.DEPT = M_DEPT.CODE left join M_USR" + Env.DB_LINK + " on AGREE.DR = M_USR.CODE"
 				+ " where PATIENT_ID = " + ptId + " and DELETE_FLAG = 0 order by SAVE_DATE desc";
 			DataSet dataSet = new DataSet();
 			using (OleDbDataAdapter adapter = new OleDbDataAdapter(sql, oraConn))
