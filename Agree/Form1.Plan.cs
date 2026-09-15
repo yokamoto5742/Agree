@@ -313,14 +313,7 @@ public partial class Form1
 		dictionary["1, 2"] = pt_id.Text;      // B1: 患者ID
 		dictionary["2, 2"] = pt_kana.Text;    // B2: 患者カナ氏名
 		dictionary["3, 2"] = pt_name.Text;    // B3: 患者氏名
-		if (pt_sex.Equals("2"))
-		{
-			dictionary["4, 2"] = "女";        // B4: 性別（女）
-		}
-		else
-		{
-			dictionary["4, 2"] = "男";        // B4: 性別（男）
-		}
+		dictionary["4, 2"] = pt_sex.Text;     // B4: 性別（showList / readPatCsv で「女」「男」に変換済み）
 		dictionary["5, 2"] = dept.Text.Split(' ')[0];   // B5: 診療科コード（"コード 科名" の前半）
 		dictionary["6, 2"] = dept.Text.Split(' ')[1];   // B6: 診療科名（"コード 科名" の後半）
 		// 入力者はDBに保存された値（AGREE.DR）を出力する。一覧選択時に showPlan が
