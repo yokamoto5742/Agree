@@ -59,10 +59,10 @@ public partial class Form1
 			fbd.Description = "取り込むCSVファイルがあるフォルダを選択してください";
 			if (fbd.ShowDialog() == DialogResult.OK)
 			{
+				StringBuilder report = new StringBuilder();
 				try
 				{
 					string folder = fbd.SelectedPath;
-					StringBuilder report = new StringBuilder();
 					ImportTable(folder, "AGREE.csv", "AGREE", "AGREE_ID", "AGREE_SEQ", report);
 					ImportTable(folder, "AGREE_TEMPLATE.csv", "AGREE_TEMPLATE", "TEMP_ID", "AGREE_TEMPLATE_SEQ", report);
 					ImportTable(folder, "AGREE_STAFF.csv", "AGREE_STAFF", "ID", "AGREE_STAFF_SEQ", report);
@@ -72,7 +72,7 @@ public partial class Form1
 				catch (Exception ex)
 				{
 					Logger.Error("import", ex);
-					MessageBox.Show("データ取り込み中にエラーが発生しました:\n" + ex.Message, "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
+					MessageBox.Show("データ取り込み中にエラーが発生しました:\n" + ex.Message + "\n\n失敗前に取り込み済みのデータ（ロールバックされません）:\n" + (report.Length > 0 ? report.ToString() : "なし\n"), "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
 				}
 			}
 		}
