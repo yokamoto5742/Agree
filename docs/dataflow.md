@@ -8,7 +8,7 @@
 ```
 【起動時】Form1 コンストラクタ → initShow
 1. Pat.csv 読込（起点）        → 患者ID・氏名・性別を取得        Form1.readPatCsv
-2. その患者IDでOracle照会      → 氏名(正式値)・既存同意書一覧    Form1.showList
+2. その患者IDでOracle照会      → 既存同意書一覧（手入力の別患者は氏名も）  Form1.showList
 
 【印刷時】"印刷"ボタン or 登録後  Form1.printAgree
 3. 画面の入力内容を 行番号→値 の Dictionary に集約
@@ -24,18 +24,18 @@
 
 ### 1. Pat.csv の読込が起点 (`Form1.readPatCsv`)
 
-`Env.LEGACY_HOME\Pat.csv` の先頭行をカンマ分割し `patCont[]` へ格納する（`loadPatCsvFields`）。`patCont[2]`=患者ID、`[3]`=氏名、`[5]`=カナ、`[6]`=性別。**このCSVが患者IDの供給源**で、電子カルテ側が書き出したファイルを介して連携する。患者IDが数字でない場合は読み飛ばす。
+`Env.LEGACY_HOME\Pat.csv` の先頭行をカンマ分割し、**使う項目だけ**を `patCsv`（`PatCsvFields`）へ格納する（`loadPatCsvFields`）。`[2]`=患者ID、`[3]`=氏名、`[5]`=カナ、`[6]`=性別。**このCSVが患者IDと患者氏名の供給源**で、電子カルテ側が書き出したファイルを介して連携する。患者IDが数字でない場合は読み飛ばす。
 
-新規作成時は `Form1.applyDoctorFromPatCsv` が同じCSVの医師情報（`[9]`=入力者ID、`[10]`=氏名、`[13]`=診療科コード）を画面に反映する。
+新規作成時は `Form1.applyDoctorFromPatCsv` が同じCSVの医師情報（`[9]`=入力者ID、`[10]`=氏名、`[13]`=診療科コード）を画面に反映する。`[14]`・`[27]` は用途不明だが反映条件の判定に使うため保持する。
 
 ### 2. Oracle照会 (`Form1.showList`)
 
 CSVで得た患者IDをキーに、`AgentlabUtilityLibrary.DBConn.GetOpenDBConn()`（`Form1` コンストラクタ）で取得したOleDb接続を使う。接続の Open/Close は `Db` ヘルパー（`Db.Execute` / `Scalar` / `Read`）が行い、例外時も必ず閉じる。
 
-- `M_PATIENT` から氏名・カナ・性別を取得し、CSV値を**正式値で上書き**する
+- 患者IDが Pat.csv と同じなら氏名・カナ・性別は CSV の値を使い、`M_PATIENT` には問い合わせない。**手入力で別の患者IDを検索したときだけ** `M_PATIENT` から氏名・カナ・性別を取得する（取り違え防止のため、取得前に氏名欄を空にする）
 - `AGREE`（`M_DEPT`/`M_USR`結合）から既存同意書一覧を取得しグリッド表示する。グリッドの列はSELECTの列名・別名（`DEPT_NAME` / `DR_NAME` など）で参照する（`Form1.showAgree`）
 
-Oracleは患者情報だけでなく、**診療科マスタ**（`Dict.DeptDict`、`Form1` コンストラクタ）、**担当者文例**（`AGREE_STAFF`、`Form1.getStaffRoom`）、同意書レコードのCRUD（`Form1.regAgree` / `delAgree`）にも使われる。接続失敗時はオフラインモード（画面確認用、DB読込スキップ）になる。
+Oracleは患者情報だけでなく、**診療科マスタ**（`M_DEPT` の CODE・S_NAME のみ、`Form1` コンストラクタ）、**入力者氏名**（`M_USR` から該当1人の NAME のみ、`Db.StaffName`）、**担当者文例**（`AGREE_STAFF`、`Form1.getStaffRoom`）、同意書レコードのCRUD（`Form1.regAgree` / `delAgree`）にも使われる。接続失敗時はオフラインモード（画面確認用、DB読込スキップ）になる。
 
 ### 3. 共通情報シートへの書込データ準備 (`Form1.printAgree`)
 

@@ -1,5 +1,6 @@
 using System;
 using System.Data.OleDb;
+using AgentlabUtilityLibrary;
 
 namespace Agree;
 
@@ -41,6 +42,16 @@ internal static class Db
 		{
 			con.Close();
 		}
+	}
+
+	/// <summary>職員マスタ(M_USR)から指定コード1人分の氏名だけを取得する。数字でない・該当なしは null。</summary>
+	public static string StaffName(OleDbConnection con, string code)
+	{
+		if (!int.TryParse(code.Trim(), out int staffCode))
+		{
+			return null;
+		}
+		return Scalar(con, "select Trim(NAME) from M_USR" + Env.DB_LINK + " where CODE = " + staffCode)?.ToString();
 	}
 
 	public static void Read(OleDbConnection con, string sql, Action<OleDbDataReader> onRow)

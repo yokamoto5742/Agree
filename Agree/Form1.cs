@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data.OleDb;
 using System.Drawing;
 using System.IO;
@@ -14,7 +15,24 @@ public partial class Form1 : Form
 	// 医師完了フラグ（AGREE.DR_OK）。true のとき登録完了後に印刷を促す。
 	private bool doctorConfirmed = true;
 
-	private string[] patCont = new string[50];
+	// Pat.csv（電子カルテが書き出すファイル）のうち、本アプリで使う項目だけを保持する。
+	private sealed class PatCsvFields
+	{
+		public int? PtId;       // [2] 患者ID（数字でなければ null）
+		public string PtName;   // [3] 氏名
+		public string PtKana;   // [5] カナ
+		public string PtSex;    // [6] 性別（1=男, 2=女）
+		public string DrId;     // [9] 入力者ID
+		public string DrName;   // [10] 入力者氏名
+		public string DeptCode; // [13] 診療科コード
+		public string Field14;  // [14] 用途不明（空でなければ診療科を反映する）
+		public string Field27;  // [27] 用途不明（"1" のとき医師情報を反映する）
+	}
+
+	private PatCsvFields patCsv = new PatCsvFields();
+
+	// 診療科コード → 略称。M_DEPT から必要な2列だけを起動時に読む。
+	private readonly Dictionary<string, string> deptNames = new Dictionary<string, string>();
 
 	private OleDbConnection oraConn;
 
@@ -27,13 +45,15 @@ public partial class Form1 : Form
 		oraConn = DBConn.GetOpenDBConn();
 		try
 		{
-			foreach (string key in Dict.DeptDict.Keys)
+			Db.Read(oraConn, "select CODE, Trim(S_NAME) from M_DEPT" + Env.DB_LINK + " order by CODE", r =>
 			{
-				if (!key.Equals("0"))
+				string code = r[0].ToString();
+				deptNames[code] = r[1].ToString();
+				if (!code.Equals("0"))
 				{
-					dept.Items.Add(key + " " + Dict.DeptDict[key].ShortName);
+					dept.Items.Add(code + " " + deptNames[code]);
 				}
-			}
+			});
 		}
 		catch (Exception ex)
 		{
@@ -92,8 +112,8 @@ public partial class Form1 : Form
 	}
 
 	/// <summary>
-	/// Pat.csv の先頭行を patCont に読み込む。ファイルが無い／空の場合は false を返し、
-	/// patCont は変更しない（呼び出し側はその場合 patCont を参照しない）。
+	/// Pat.csv の先頭行から使う項目だけを patCsv に読み込む。ファイルが無い／空の場合は false を返し、
+	/// patCsv は変更しない（呼び出し側はその場合 patCsv を参照しない）。
 	/// </summary>
 	private bool loadPatCsvFields()
 	{
@@ -110,10 +130,19 @@ public partial class Form1 : Form
 				return false;
 			}
 			string[] fields = line.Split(',');
-			for (int i = 0; i < fields.Length && i < 50; i++)
+			string field(int i) => i < fields.Length ? fields[i] : null;
+			patCsv = new PatCsvFields
 			{
-				patCont[i] = fields[i];
-			}
+				PtId = int.TryParse(field(2), out int ptId) ? ptId : (int?)null,
+				PtName = field(3),
+				PtKana = field(5),
+				PtSex = field(6),
+				DrId = field(9),
+				DrName = field(10),
+				DeptCode = field(13),
+				Field14 = field(14),
+				Field27 = field(27),
+			};
 		}
 		return true;
 	}
@@ -121,26 +150,25 @@ public partial class Form1 : Form
 	private void readPatCsv()
 	{
 		// コンストラクタから呼ばれるため、患者IDが数字でない Pat.csv は例外にせず読み飛ばす。
-		if (!loadPatCsvFields() || !int.TryParse(patCont[2], out int ptId))
+		if (!loadPatCsvFields() || patCsv.PtId == null)
 		{
 			return;
 		}
 		clearAgree();
-		pt_id.Text = ptId.ToString();
-		pt_name.Text = patCont[3];
-		pt_kana.Text = patCont[5];
-		if (patCont[6] == "2")
-		{
-			pt_sex.Text = "女";
-		}
-		else if (patCont[6] == "1")
-		{
-			pt_sex.Text = "男";
-		}
-		if (ptId > 0)
+		pt_id.Text = patCsv.PtId.ToString();
+		applyPatientFromCsv();
+		if (patCsv.PtId > 0)
 		{
 			showList();
 		}
+	}
+
+	// Pat.csv の患者情報（氏名・カナ・性別）を画面に反映する。
+	private void applyPatientFromCsv()
+	{
+		pt_name.Text = patCsv.PtName;
+		pt_kana.Text = patCsv.PtKana;
+		pt_sex.Text = patCsv.PtSex == "2" ? "女" : patCsv.PtSex == "1" ? "男" : "";
 	}
 
 	// Pat.csv の医師情報（入力者・診療科）を画面に反映する。
@@ -150,15 +178,15 @@ public partial class Form1 : Form
 		{
 			return;
 		}
-		if (patCont[27] == "1")
+		if (patCsv.Field27 == "1")
 		{
-			dr_id.Text = int.Parse(patCont[9]).ToString();
-			dr_name.Text = patCont[10];
+			dr_id.Text = int.Parse(patCsv.DrId).ToString();
+			dr_name.Text = patCsv.DrName;
 			if (!Program.OfflineMode)
 			{
-				if (tryParseDeptCode(patCont[13], out short deptCode) && patCont[14].Length > 0 && Dict.DeptDict.ContainsKey(deptCode.ToString()))
+				if (tryParseDeptCode(patCsv.DeptCode, out short deptCode) && patCsv.Field14.Length > 0 && deptNames.ContainsKey(deptCode.ToString()))
 				{
-					dept.Text = deptCode + " " + Dict.DeptDict[deptCode.ToString()].ShortName;
+					dept.Text = deptCode + " " + deptNames[deptCode.ToString()];
 				}
 				getStaffRoom();
 			}
@@ -216,9 +244,10 @@ public partial class Form1 : Form
 		}
 		if (dr_id.Text.Length > 0)
 		{
-			if (Dict.StaffDict.ContainsKey(dr_id.Text.Trim()))
+			string name = Db.StaffName(oraConn, dr_id.Text);
+			if (name != null)
 			{
-				dr_name.Text = Dict.StaffDict[dr_id.Text.Trim()].Name;
+				dr_name.Text = name;
 				getStaffRoom();
 			}
 			else

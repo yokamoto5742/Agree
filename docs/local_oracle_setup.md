@@ -23,9 +23,9 @@
 sqlplus TEST_USER/TEST_PWD@localhost:1521/FREEPDB1 @docs\test_db_schema.sql
 ```
 
-`AGREE` / `AGREE_TEMPLATE` / `AGREE_STAFF` と、起動時 `Dict.InitDict()` が読む
-7つのマスタ（`M_DEPT` 等）＋最小初期データが作成される。マスタが読めないと
-アプリは起動時に**オフラインモード**へ落ち、登録・削除ができなくなる。
+`AGREE` / `AGREE_TEMPLATE` / `AGREE_STAFF` と、マスタ（`M_DEPT` / `M_USR` 等）
+＋最小初期データが作成される。起動時に `M_DEPT` が読めないと
+アプリは**オフラインモード**へ落ち、登録・削除ができなくなる。
 
 > `DB_LINK` を空にしているため、本アプリは `M_xxx` を「テーブル名 + DB_LINK」=
 > ローカル同名表として直接参照する（`docs/test_db_schema.sql` 冒頭の注記参照）。

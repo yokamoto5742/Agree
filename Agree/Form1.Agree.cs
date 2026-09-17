@@ -23,12 +23,24 @@ public partial class Form1
 				MessageBox.Show("患者IDは数字で入力してください");
 				return;
 			}
-			Db.Read(oraConn, "select P_NAME, P_KANA, P_SEX from M_PATIENT" + Env.DB_LINK + " where P_ID = " + ptId, r =>
+			// Pat.csv の患者は CSV の値を使い、電子カルテ(M_PATIENT)へは手入力された別患者のときだけ問い合わせる。
+			if (ptId == patCsv.PtId)
 			{
-				pt_name.Text = r["P_NAME"].ToString();
-				pt_kana.Text = r["P_KANA"].ToString();
-				pt_sex.Text = r["P_SEX"].ToString() == "2" ? "女" : "男";
-			});
+				applyPatientFromCsv();
+			}
+			else
+			{
+				// 該当患者が無い場合に前の患者の氏名が残らないよう、先に空にする。
+				pt_name.Text = "";
+				pt_kana.Text = "";
+				pt_sex.Text = "";
+				Db.Read(oraConn, "select P_NAME, P_KANA, P_SEX from M_PATIENT" + Env.DB_LINK + " where P_ID = " + ptId, r =>
+				{
+					pt_name.Text = r["P_NAME"].ToString();
+					pt_kana.Text = r["P_KANA"].ToString();
+					pt_sex.Text = r["P_SEX"].ToString() == "2" ? "女" : "男";
+				});
+			}
 			// 一覧の列は列名・別名で参照する（showAgree も同じ名前を使う）。
 			// 入力者が職員マスタ(M_USR)に無い同意書（Pat.csv 由来の医師コード等）も一覧から欠落させないよう外部結合にする。
 			string sql = "select AGREE_ID, SAVE_DATE, AGREE.DEPT, Trim(M_DEPT.S_NAME) as DEPT_NAME, AGREE.DR, Trim(M_USR.NAME) as DR_NAME,"
@@ -98,8 +110,8 @@ public partial class Form1
 				string cell(string name) => row.Cells[name].Value.ToString().Trim();
 				Agree_id.Text = cell("AGREE_ID");
 				dr_id.Text = cell("DR");
-				// 職員マスタに無いコード（退職者等）でも、DBに保存された入力者を欠落させない。
-				dr_name.Text = Dict.StaffDict.ContainsKey(dr_id.Text) ? Dict.StaffDict[dr_id.Text].Name : cell("DR_NAME");
+				// 一覧のSQLで M_USR から結合済みの氏名を使う（職員マスタに無いコードは空）。
+				dr_name.Text = cell("DR_NAME");
 				string saveDate = cell("SAVE_DATE");
 				if (saveDate.Length == 8)
 				{
@@ -166,10 +178,10 @@ public partial class Form1
 		showAgree(rowIndex);
 		Agree_id.Text = "";
 		doctorConfirmed = true;
-		if (int.TryParse(patCont[9], out int drCode))
+		if (int.TryParse(patCsv.DrId, out int drCode))
 		{
 			dr_id.Text = drCode.ToString();
-			dr_name.Text = patCont[10];
+			dr_name.Text = patCsv.DrName;
 		}
 		else
 		{

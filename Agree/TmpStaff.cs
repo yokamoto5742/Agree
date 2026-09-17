@@ -128,9 +128,10 @@ public partial class TmpStaff : Form
 		{
 			return;
 		}
-		if (Dict.StaffDict.ContainsKey(staff_id.Text))
+		string name = Db.StaffName(oraConn, staff_id.Text);
+		if (name != null)
 		{
-			staff_name.Text = Dict.StaffDict[staff_id.Text].Name;
+			staff_name.Text = name;
 			foreach (DataGridViewRow item in staffGridView.Rows)
 			{
 				if (staff_id.Text == item.Cells[1].Value.ToString())
