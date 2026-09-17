@@ -190,7 +190,7 @@ partial class Form1
             this.pt_id.ImeMode = System.Windows.Forms.ImeMode.Disable;
             this.pt_id.Location = new System.Drawing.Point(75, 11);
             this.pt_id.Name = "pt_id";
-            this.pt_id.Size = new System.Drawing.Size(77, 19);
+            this.pt_id.Size = new System.Drawing.Size(77, 22);
             this.pt_id.TabIndex = 0;
             this.pt_id.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             this.pt_id.KeyDown += new System.Windows.Forms.KeyEventHandler(this.pt_id_KeyDown);
@@ -200,7 +200,7 @@ partial class Form1
             this.label1.AutoSize = true;
             this.label1.Location = new System.Drawing.Point(18, 14);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(40, 12);
+            this.label1.Size = new System.Drawing.Size(51, 15);
             this.label1.TabIndex = 15;
             this.label1.Text = "患者ID";
             // 
@@ -210,7 +210,7 @@ partial class Form1
             this.pt_name.Location = new System.Drawing.Point(158, 11);
             this.pt_name.Name = "pt_name";
             this.pt_name.ReadOnly = true;
-            this.pt_name.Size = new System.Drawing.Size(100, 19);
+            this.pt_name.Size = new System.Drawing.Size(100, 22);
             this.pt_name.TabIndex = 15;
             // 
             // AgreeList
@@ -246,12 +246,12 @@ partial class Form1
             this.agreeListMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.copyNewMenuItem});
             this.agreeListMenu.Name = "agreeListMenu";
-            this.agreeListMenu.Size = new System.Drawing.Size(157, 26);
+            this.agreeListMenu.Size = new System.Drawing.Size(184, 32);
             // 
             // copyNewMenuItem
             // 
             this.copyNewMenuItem.Name = "copyNewMenuItem";
-            this.copyNewMenuItem.Size = new System.Drawing.Size(156, 22);
+            this.copyNewMenuItem.Size = new System.Drawing.Size(183, 28);
             this.copyNewMenuItem.Text = "コピーして作成";
             this.copyNewMenuItem.Click += new System.EventHandler(this.copyNewMenuItem_Click);
             // 
@@ -260,7 +260,7 @@ partial class Form1
             this.label2.AutoSize = true;
             this.label2.Location = new System.Drawing.Point(18, 66);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(65, 12);
+            this.label2.Size = new System.Drawing.Size(82, 15);
             this.label2.TabIndex = 15;
             this.label2.Text = "同意書一覧";
             // 
@@ -280,7 +280,7 @@ partial class Form1
             this.label4.AutoSize = true;
             this.label4.Location = new System.Drawing.Point(8, 82);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(17, 12);
+            this.label4.Size = new System.Drawing.Size(22, 15);
             this.label4.TabIndex = 29;
             this.label4.Text = "眼";
             // 
@@ -289,7 +289,7 @@ partial class Form1
             this.label5.AutoSize = true;
             this.label5.Location = new System.Drawing.Point(163, 6);
             this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(41, 12);
+            this.label5.Size = new System.Drawing.Size(52, 15);
             this.label5.TabIndex = 21;
             this.label5.Text = "入力者";
             // 
@@ -298,7 +298,7 @@ partial class Form1
             this.label6.AutoSize = true;
             this.label6.Location = new System.Drawing.Point(273, 61);
             this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(41, 12);
+            this.label6.Size = new System.Drawing.Size(52, 15);
             this.label6.TabIndex = 26;
             this.label6.Text = "担当者";
             // 
@@ -308,7 +308,7 @@ partial class Form1
             this.dr_id.Location = new System.Drawing.Point(210, 3);
             this.dr_id.MaxLength = 5;
             this.dr_id.Name = "dr_id";
-            this.dr_id.Size = new System.Drawing.Size(48, 19);
+            this.dr_id.Size = new System.Drawing.Size(48, 22);
             this.dr_id.TabIndex = 1;
             this.dr_id.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             this.dr_id.KeyDown += new System.Windows.Forms.KeyEventHandler(this.dr_id_KeyDown);
@@ -319,7 +319,7 @@ partial class Form1
             this.staff.Location = new System.Drawing.Point(275, 79);
             this.staff.MaxLength = 120;
             this.staff.Name = "staff";
-            this.staff.Size = new System.Drawing.Size(277, 19);
+            this.staff.Size = new System.Drawing.Size(277, 22);
             this.staff.TabIndex = 5;
             // 
             // label7
@@ -327,7 +327,7 @@ partial class Form1
             this.label7.AutoSize = true;
             this.label7.Location = new System.Drawing.Point(8, 108);
             this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(29, 12);
+            this.label7.Size = new System.Drawing.Size(37, 15);
             this.label7.TabIndex = 30;
             this.label7.Text = "病名";
             // 
@@ -336,7 +336,7 @@ partial class Form1
             this.diag.Location = new System.Drawing.Point(88, 104);
             this.diag.MaxLength = 200;
             this.diag.Name = "diag";
-            this.diag.Size = new System.Drawing.Size(464, 19);
+            this.diag.Size = new System.Drawing.Size(464, 22);
             this.diag.TabIndex = 6;
             // 
             // label8
@@ -344,7 +344,7 @@ partial class Form1
             this.label8.AutoSize = true;
             this.label8.Location = new System.Drawing.Point(8, 157);
             this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(71, 12);
+            this.label8.Size = new System.Drawing.Size(90, 15);
             this.label8.TabIndex = 31;
             this.label8.Text = "手術・検査名";
             // 
@@ -362,7 +362,7 @@ partial class Form1
             this.label9.AutoSize = true;
             this.label9.Location = new System.Drawing.Point(10, 179);
             this.label9.Name = "label9";
-            this.label9.Size = new System.Drawing.Size(29, 12);
+            this.label9.Size = new System.Drawing.Size(37, 15);
             this.label9.TabIndex = 32;
             this.label9.Text = "説明";
             // 
@@ -381,7 +381,7 @@ partial class Form1
             this.label10.AutoSize = true;
             this.label10.Location = new System.Drawing.Point(7, 405);
             this.label10.Name = "label10";
-            this.label10.Size = new System.Drawing.Size(29, 12);
+            this.label10.Size = new System.Drawing.Size(37, 15);
             this.label10.TabIndex = 6;
             this.label10.Text = "症状";
             // 
@@ -400,7 +400,7 @@ partial class Form1
             this.label12.AutoSize = true;
             this.label12.Location = new System.Drawing.Point(8, 443);
             this.label12.Name = "label12";
-            this.label12.Size = new System.Drawing.Size(53, 12);
+            this.label12.Size = new System.Drawing.Size(67, 15);
             this.label12.TabIndex = 3;
             this.label12.Text = "治療計画";
             // 
@@ -419,7 +419,7 @@ partial class Form1
             this.label15.AutoSize = true;
             this.label15.Location = new System.Drawing.Point(8, 482);
             this.label15.Name = "label15";
-            this.label15.Size = new System.Drawing.Size(53, 12);
+            this.label15.Size = new System.Drawing.Size(67, 15);
             this.label15.TabIndex = 7;
             this.label15.Text = "検査内容";
             this.label15.Visible = false;
@@ -440,7 +440,7 @@ partial class Form1
             this.agreeListLabel.AutoSize = true;
             this.agreeListLabel.Location = new System.Drawing.Point(130, 67);
             this.agreeListLabel.Name = "agreeListLabel";
-            this.agreeListLabel.Size = new System.Drawing.Size(307, 12);
+            this.agreeListLabel.Size = new System.Drawing.Size(383, 15);
             this.agreeListLabel.TabIndex = 15;
             this.agreeListLabel.Text = "患者IDを入力して Enter を押すと既存の同意書が表示されます";
             // 
@@ -483,7 +483,7 @@ partial class Form1
             this.dr_name.Location = new System.Drawing.Point(275, 5);
             this.dr_name.Name = "dr_name";
             this.dr_name.ReadOnly = true;
-            this.dr_name.Size = new System.Drawing.Size(80, 19);
+            this.dr_name.Size = new System.Drawing.Size(80, 22);
             this.dr_name.TabIndex = 22;
             this.dr_name.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             // 
@@ -492,7 +492,7 @@ partial class Form1
             this.dept.FormattingEnabled = true;
             this.dept.Location = new System.Drawing.Point(88, 53);
             this.dept.Name = "dept";
-            this.dept.Size = new System.Drawing.Size(109, 20);
+            this.dept.Size = new System.Drawing.Size(109, 23);
             this.dept.TabIndex = 3;
             this.dept.Leave += new System.EventHandler(this.dept_Leave);
             // 
@@ -501,7 +501,7 @@ partial class Form1
             this.label19.AutoSize = true;
             this.label19.Location = new System.Drawing.Point(8, 56);
             this.label19.Name = "label19";
-            this.label19.Size = new System.Drawing.Size(41, 12);
+            this.label19.Size = new System.Drawing.Size(52, 15);
             this.label19.TabIndex = 28;
             this.label19.Text = "診療科";
             // 
@@ -520,7 +520,7 @@ partial class Form1
             this.save_date.Format = System.Windows.Forms.DateTimePickerFormat.Short;
             this.save_date.Location = new System.Drawing.Point(88, 28);
             this.save_date.Name = "save_date";
-            this.save_date.Size = new System.Drawing.Size(109, 19);
+            this.save_date.Size = new System.Drawing.Size(109, 22);
             this.save_date.TabIndex = 2;
             this.save_date.Value = new System.DateTime(2007, 6, 6, 0, 0, 0, 0);
             // 
@@ -529,7 +529,7 @@ partial class Form1
             this.label3.AutoSize = true;
             this.label3.Location = new System.Drawing.Point(8, 31);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(41, 12);
+            this.label3.Size = new System.Drawing.Size(52, 15);
             this.label3.TabIndex = 27;
             this.label3.Text = "作成日";
             // 
@@ -549,7 +549,7 @@ partial class Form1
             this.Agree_id.Location = new System.Drawing.Point(444, 8);
             this.Agree_id.Name = "Agree_id";
             this.Agree_id.ReadOnly = true;
-            this.Agree_id.Size = new System.Drawing.Size(43, 19);
+            this.Agree_id.Size = new System.Drawing.Size(43, 22);
             this.Agree_id.TabIndex = 24;
             this.Agree_id.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             this.Agree_id.Visible = false;
@@ -559,7 +559,7 @@ partial class Form1
             this.label20.AutoSize = true;
             this.label20.Location = new System.Drawing.Point(410, 11);
             this.label20.Name = "label20";
-            this.label20.Size = new System.Drawing.Size(29, 12);
+            this.label20.Size = new System.Drawing.Size(37, 15);
             this.label20.TabIndex = 23;
             this.label20.Text = "番号";
             this.label20.Visible = false;
@@ -610,7 +610,7 @@ partial class Form1
             this.label11.AutoSize = true;
             this.label11.Location = new System.Drawing.Point(8, 132);
             this.label11.Name = "label11";
-            this.label11.Size = new System.Drawing.Size(63, 12);
+            this.label11.Size = new System.Drawing.Size(79, 15);
             this.label11.TabIndex = 67;
             this.label11.Text = "麻酔の形式";
             // 
@@ -619,7 +619,7 @@ partial class Form1
             this.anes.Location = new System.Drawing.Point(88, 129);
             this.anes.MaxLength = 200;
             this.anes.Name = "anes";
-            this.anes.Size = new System.Drawing.Size(464, 19);
+            this.anes.Size = new System.Drawing.Size(464, 22);
             this.anes.TabIndex = 66;
             // 
             // label13
@@ -627,7 +627,7 @@ partial class Form1
             this.label13.AutoSize = true;
             this.label13.Location = new System.Drawing.Point(225, 35);
             this.label13.Name = "label13";
-            this.label13.Size = new System.Drawing.Size(33, 12);
+            this.label13.Size = new System.Drawing.Size(42, 15);
             this.label13.TabIndex = 62;
             this.label13.Text = "シート";
             // 
@@ -642,7 +642,7 @@ partial class Form1
             this.sheetName.Location = new System.Drawing.Point(275, 31);
             this.sheetName.MaxLength = 50;
             this.sheetName.Name = "sheetName";
-            this.sheetName.Size = new System.Drawing.Size(160, 20);
+            this.sheetName.Size = new System.Drawing.Size(160, 23);
             this.sheetName.TabIndex = 33;
             // 
             // label14
@@ -651,7 +651,7 @@ partial class Form1
             this.label14.Location = new System.Drawing.Point(7, 481);
             this.label14.Name = "label14";
             this.label14.RightToLeft = System.Windows.Forms.RightToLeft.No;
-            this.label14.Size = new System.Drawing.Size(53, 12);
+            this.label14.Size = new System.Drawing.Size(67, 15);
             this.label14.TabIndex = 8;
             this.label14.Text = "手術内容";
             // 
@@ -665,7 +665,7 @@ partial class Form1
             this.eye.Location = new System.Drawing.Point(87, 79);
             this.eye.MaxLength = 40;
             this.eye.Name = "eye";
-            this.eye.Size = new System.Drawing.Size(109, 20);
+            this.eye.Size = new System.Drawing.Size(109, 23);
             this.eye.TabIndex = 4;
             // 
             // item4
@@ -684,7 +684,7 @@ partial class Form1
             this.label22.Font = new System.Drawing.Font("MS UI Gothic", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
             this.label22.Location = new System.Drawing.Point(9, 8);
             this.label22.Name = "label22";
-            this.label22.Size = new System.Drawing.Size(77, 14);
+            this.label22.Size = new System.Drawing.Size(93, 17);
             this.label22.TabIndex = 20;
             this.label22.Text = "医師記入欄";
             // 
@@ -738,7 +738,7 @@ partial class Form1
             this.pt_kana.Location = new System.Drawing.Point(270, 11);
             this.pt_kana.Name = "pt_kana";
             this.pt_kana.ReadOnly = true;
-            this.pt_kana.Size = new System.Drawing.Size(100, 19);
+            this.pt_kana.Size = new System.Drawing.Size(100, 22);
             this.pt_kana.TabIndex = 60;
             // 
             // pt_sex
@@ -747,7 +747,7 @@ partial class Form1
             this.pt_sex.Location = new System.Drawing.Point(376, 11);
             this.pt_sex.Name = "pt_sex";
             this.pt_sex.ReadOnly = true;
-            this.pt_sex.Size = new System.Drawing.Size(26, 19);
+            this.pt_sex.Size = new System.Drawing.Size(26, 22);
             this.pt_sex.TabIndex = 61;
             // 
             // Form1
