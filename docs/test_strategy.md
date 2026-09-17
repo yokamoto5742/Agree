@@ -58,9 +58,9 @@ dotnet test Agree.Tests/Agree.Tests.csproj
 ```
 
 - テストホストは 32bit OraOLEDB をロードするため **x86 固定**（`x86.runsettings`）。
-- 本体 `Agree.csproj` は COM 参照(`ResolveComReference`)を含むため
-  **.NET Framework 版 MSBuild（Visual Studio）でビルドする**。`dotnet build` は
-  COM 参照を解決できず失敗する（テストプロジェクトは SDK 形式なので `dotnet test` で動く）。
+- 本体 `Agree.csproj` の COM 参照は `$(MSBuildRuntimeType)` で分岐する。Visual Studio（フル版 MSBuild）は
+  登録済み Excel の COM 参照を、`dotnet build` は同梱の Excel PIA を使うため、どちらでもビルドできる
+  （テストプロジェクトは SDK 形式なので `dotnet test` で動く）。
 
 ## 5. L3 — 手動スモークチェックリスト（自動化対象外）
 
@@ -69,27 +69,20 @@ WinForms 描画と Excel 帳票（COM）は自動テスト対象外。リリー�
 1. 患者番号入力 → Enter で既存同意書一覧が表示される。
 2. 新規作成 → 必須（患者/主治医/診療科）未入力時に各ガードが出る。
 3. 登録 → 一覧へ反映、再度開いて内容一致。
-4. **`病名`や`説明`に `'`（アポストロフィ）を含めて登録できる**（§6 の未対応項目）。
+4. **`病名`や`説明`に `'`（アポストロフィ）を含めて登録できる**（§6 の対応済み項目の回帰確認）。
 5. 印刷 → Excel 帳票が生成され、プロセスが残らない（`ReleaseExcel`）。
 6. CSV エクスポート/インポート（設定ボタンで表示）が往復する。
 7. オフラインモード（DB 不通）で起動し、登録系が抑止される。
 
-## 6. テストで判明した未対応の不具合（要・別対応）
+## 6. テストで判明した不具合（対応済み）
 
-> 本タスクは「テスト戦略の策定と実装」のため、以下は**修正せず指摘に留める**。
-> 反映は別の変更として要否を判断してほしい。
-
-- **インライン SQL のエスケープ漏れ（高優先・医療データ）**:
-  `Form1.regAgree` / `Form1.getStaffRoom` / `TmpStaff.saveButton_Click` /
-  `TmpAgree`（テンプレート保存 368・379 行）は、`diag`/`staff`/`ope`/`cont`/`temp_name` 等の
-  自由記述を **エスケープせずに** SQL へ直接連結している。
-  一方 CSV インポート経路(`MergeRow`)は `AgreeSql.SqlValue`(=`'`→`''`)で正しく処理済み。
-  → 例:「加齢黄斑変性（O'Brien法）」のように `'` を含む入力で登録が壊れる/注入余地が生じる。
-  - **推奨**: 上記の保存系経路の文字列値を `AgreeSql.SqlValue(...)` 経由に統一する。
+- **インライン SQL のエスケープ漏れ**: `Form1.regAgree` / `TmpStaff.saveButton_Click` /
+  `TmpAgree.regAgreeTemplate` の自由記述（`diag`/`staff`/`ope`/`cont`/`temp_name` 等）は、
+  CSV インポート経路（`MergeRow`）と同じく `AgreeSql.SqlValue`（`'`→`''`）経由で SQL に埋め込むよう修正済み。
+  `Form1.getStaffRoom` は整数に変換した医師コードだけを連結する。
   - L1 の `SqlValue` テストと L2 の `Agree_StoresApostropheAndJapanese_RoundTrips` が
-    「正しいエスケープなら無損失で往復する」契約を固定済み。修正時の回帰検出に使える。
-  - 注意: この不具合自体は、上記の SqlValue 経由化（または UI テスト）無しには自動検出できない。
+    「正しいエスケープなら無損失で往復する」契約を固定している。
+  - 画面経路が `SqlValue` を通っていることは自動テストでは検出できないため、§5 の手順 4 で確認する。
 
-- **重複した stale な csproj**: リポジトリ直下の `Agree.Tests.csproj` は
-  `.slnx` に含まれず（採用は `Agree.Tests/Agree.Tests.csproj`）、リンク設定も古い。
-  混乱の元なので整理候補（本タスクでは削除しない）。
+- **重複した古い csproj**: リポジトリ直下にあった `Agree.Tests.csproj` は削除済み
+  （テストプロジェクトは `Agree.Tests/Agree.Tests.csproj` のみ）。

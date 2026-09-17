@@ -109,7 +109,7 @@ SHOW_SETTING_BUTTON=0
 
 - 技術スタック: C# / .NET Framework 4.8 / Windows Forms（**x86 専用ビルド**）
 - エントリポイント: `Agree/Program.cs` → `Form1`
-- UI フォーム: `Form1` は複数ファイルに分割済み（`Form1.Designer.cs` / `Form1.ImportExport.cs` / `Form1.Plan.cs`）。
+- UI フォーム: `Form1` は複数ファイルに分割済み（`Form1.cs` / `Form1.Agree.cs` / `Form1.ImportExport.cs` / `Form1.Designer.cs`）。設計ドキュメントは [docs/design/](docs/design/architecture.md) を参照。
 - DB アクセス: `AgentlabUtilityLibrary.DBConn.GetOpenDBConn()`（OleDb）。主なテーブルは `AGREE` / `AGREE_TEMPLATE` / `AGREE_STAFF` / `M_PATIENT` / `M_DEPT` / `M_USR`。
 - Excel 生成: `Microsoft.Office.Interop.Excel`（COM）。使用後は `ExcelControl.ReleaseExcel` で必ず解放します。
 - バーコード設定: `EyeAgreeSettings.ini` の `BARCODE_SETTINGS` セクションから取得します。

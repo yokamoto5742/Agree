@@ -363,3 +363,4 @@ MigrationBackup/
 FodyWeavers.xsd
 # --- ��������Oracle�ǥХå��� (���֤غ��������ʤ�) ---
 *.orig
+AgentlabUtilityLibrary.ini

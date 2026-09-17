@@ -77,9 +77,11 @@ CREATE SEQUENCE AGREE_STAFF_SEQ    START WITH 1 INCREMENT BY 1 NOCACHE;
 
 -- ---------------------------------------------------------------------
 -- 2. 電子カルテ側マスタ（本来は DB_LINK 経由。DB_LINK を空にしローカルで代替）
---    起動時 Dict.InitDict() が下記 7 表を順次 SELECT する。1 つでも欠けると
---    例外 → オフラインモードに落ちる。列は SELECT で参照される分のみ定義。
---    (TM01RC は HolidayDict 専用で本アプリ未使用のため不要)
+--    アプリが参照するのは M_PATIENT / M_DEPT / M_USR の 3 表のみ。
+--    起動時に M_DEPT を SELECT し、失敗するとオフラインモードに落ちる。
+--    M_DR / M_SYOZOKU / M_SHIKAKU / M_SHINKU / M_SEKOU は旧実装（Dict.InitDict）の
+--    名残で現在のアプリは参照しないが、test_db_seed.sql / fix_corrupt_master_data.sql
+--    が M_DR を使うため残している。
 -- ---------------------------------------------------------------------
 
 -- 患者マスタ（Form1.showList: P_NAME,P_KANA,P_SEX を P_ID で取得）
@@ -91,7 +93,7 @@ CREATE TABLE M_PATIENT (
     CONSTRAINT PK_M_PATIENT PRIMARY KEY (P_ID)
 );
 
--- 診療科マスタ（Dict 481行: CODE,NAME,S_NAME / アプリ: S_NAME, CODE 参照）
+-- 診療科マスタ（アプリ: CODE, S_NAME 参照。Form1 コンストラクタ / showList）
 CREATE TABLE M_DEPT (
     CODE    NUMBER          NOT NULL,
     NAME    VARCHAR2(100 CHAR),
@@ -99,7 +101,7 @@ CREATE TABLE M_DEPT (
     CONSTRAINT PK_M_DEPT PRIMARY KEY (CODE)
 );
 
--- 職員マスタ（Dict 504行: CODE,NAME,KANA,SYOZOKU,SHIKAKU,DEPT,DR / アプリ: NAME,CODE）
+-- 職員マスタ（アプリ: CODE, NAME 参照。Db.StaffName / showList / TmpStaff。他の列は旧実装の名残）
 CREATE TABLE M_USR (
     CODE     NUMBER         NOT NULL,
     NAME     VARCHAR2(100 CHAR),
@@ -111,11 +113,7 @@ CREATE TABLE M_USR (
     CONSTRAINT PK_M_USR PRIMARY KEY (CODE)
 );
 
--- 医師マスタ（Dict 489行: t1=M_DR の CODE,NAME,CATEGORY,VAL_4 を参照）
--- 注意: 489行の "where SYOZOKU = 1" は無修飾。SYOZOKU は M_USR(t2) 側の列
---       (504行で M_USR から単独SELECTされ確定)。M_DR に SYOZOKU を持たせると
---       ORA-00918(列が一義的でない)で InitDict が落ち、オフラインに転落するため
---       ここには SYOZOKU を置かない。
+-- 医師マスタ（現在のアプリは未参照。test_db_seed.sql / fix_corrupt_master_data.sql が使用）
 CREATE TABLE M_DR (
     CODE      NUMBER         NOT NULL,
     NAME      VARCHAR2(100 CHAR),
@@ -124,7 +122,7 @@ CREATE TABLE M_DR (
     CONSTRAINT PK_M_DR PRIMARY KEY (CODE)
 );
 
--- 所属マスタ（Dict 537行: CODE,NAME,S_NAME,CATEGORY）
+-- 所属マスタ（現在のアプリは未参照）
 CREATE TABLE M_SYOZOKU (
     CODE      NUMBER         NOT NULL,
     NAME      VARCHAR2(100 CHAR),
@@ -133,7 +131,7 @@ CREATE TABLE M_SYOZOKU (
     CONSTRAINT PK_M_SYOZOKU PRIMARY KEY (CODE)
 );
 
--- 資格マスタ（Dict 545行: CODE,NAME,S_NAME,CATEGORY）
+-- 資格マスタ（現在のアプリは未参照）
 CREATE TABLE M_SHIKAKU (
     CODE      NUMBER         NOT NULL,
     NAME      VARCHAR2(100 CHAR),
@@ -142,14 +140,14 @@ CREATE TABLE M_SHIKAKU (
     CONSTRAINT PK_M_SHIKAKU PRIMARY KEY (CODE)
 );
 
--- 診療区分マスタ（Dict 466行: CODE,NAME）
+-- 診療区分マスタ（現在のアプリは未参照）
 CREATE TABLE M_SHINKU (
     CODE    NUMBER          NOT NULL,
     NAME    VARCHAR2(100 CHAR),
     CONSTRAINT PK_M_SHINKU PRIMARY KEY (CODE)
 );
 
--- 施行マスタ（Dict 473行: CODE,NAME,S_NAME）
+-- 施行マスタ（現在のアプリは未参照）
 CREATE TABLE M_SEKOU (
     CODE    NUMBER          NOT NULL,
     NAME    VARCHAR2(100 CHAR),
@@ -160,7 +158,7 @@ CREATE TABLE M_SEKOU (
 
 -- ---------------------------------------------------------------------
 -- 3. 起動と最小動作に必要な初期データ（例）
---    InitDict() は各表を SELECT するだけなので空でも起動はするが、
+--    マスタが空でも起動はするが、
 --    診療科コンボや一覧結合(INNER JOIN)のため最低限のマスタを投入しておく。
 -- ---------------------------------------------------------------------
 INSERT INTO M_DEPT (CODE, NAME, S_NAME) VALUES (1, '眼科', '眼科');

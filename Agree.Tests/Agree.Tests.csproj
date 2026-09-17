@@ -19,7 +19,8 @@
     <None Remove="x86.runsettings" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="AgentlabUtilityLibrary.ini">
+    <!-- 認証情報を含むため git 管理外。無い環境（クローン直後など）でもビルドできるようにする。 -->
+    <Content Include="AgentlabUtilityLibrary.ini" Condition="Exists('AgentlabUtilityLibrary.ini')">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
