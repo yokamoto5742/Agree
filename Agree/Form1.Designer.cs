@@ -109,12 +109,6 @@ partial class Form1
 
 	private ComboBox sheetName;
 
-	private CheckBox bothEye;
-
-	private CheckBox leftEye;
-
-	private CheckBox rightEye;
-
 	private Label label11;
 
 	private TextBox anes;
@@ -174,9 +168,6 @@ partial class Form1
             this.panel1 = new System.Windows.Forms.Panel();
             this.label11 = new System.Windows.Forms.Label();
             this.anes = new System.Windows.Forms.TextBox();
-            this.bothEye = new System.Windows.Forms.CheckBox();
-            this.leftEye = new System.Windows.Forms.CheckBox();
-            this.rightEye = new System.Windows.Forms.CheckBox();
             this.label13 = new System.Windows.Forms.Label();
             this.sheetName = new System.Windows.Forms.ComboBox();
             this.label14 = new System.Windows.Forms.Label();
@@ -579,9 +570,6 @@ partial class Form1
             this.panel1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
             this.panel1.Controls.Add(this.label11);
             this.panel1.Controls.Add(this.anes);
-            this.panel1.Controls.Add(this.bothEye);
-            this.panel1.Controls.Add(this.leftEye);
-            this.panel1.Controls.Add(this.rightEye);
             this.panel1.Controls.Add(this.label13);
             this.panel1.Controls.Add(this.sheetName);
             this.panel1.Controls.Add(this.label14);
@@ -633,39 +621,6 @@ partial class Form1
             this.anes.Name = "anes";
             this.anes.Size = new System.Drawing.Size(464, 19);
             this.anes.TabIndex = 66;
-            // 
-            // bothEye
-            // 
-            this.bothEye.AutoSize = true;
-            this.bothEye.Location = new System.Drawing.Point(526, 35);
-            this.bothEye.Name = "bothEye";
-            this.bothEye.Size = new System.Drawing.Size(36, 16);
-            this.bothEye.TabIndex = 65;
-            this.bothEye.Text = "両";
-            this.bothEye.UseVisualStyleBackColor = true;
-            this.bothEye.Visible = false;
-            // 
-            // leftEye
-            // 
-            this.leftEye.AutoSize = true;
-            this.leftEye.Location = new System.Drawing.Point(526, 55);
-            this.leftEye.Name = "leftEye";
-            this.leftEye.Size = new System.Drawing.Size(36, 16);
-            this.leftEye.TabIndex = 64;
-            this.leftEye.Text = "左";
-            this.leftEye.UseVisualStyleBackColor = true;
-            this.leftEye.Visible = false;
-            // 
-            // rightEye
-            // 
-            this.rightEye.AutoSize = true;
-            this.rightEye.Location = new System.Drawing.Point(485, 56);
-            this.rightEye.Name = "rightEye";
-            this.rightEye.Size = new System.Drawing.Size(36, 16);
-            this.rightEye.TabIndex = 63;
-            this.rightEye.Text = "右";
-            this.rightEye.UseVisualStyleBackColor = true;
-            this.rightEye.Visible = false;
             // 
             // label13
             // 
