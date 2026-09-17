@@ -364,3 +364,5 @@ FodyWeavers.xsd
 # --- ��������Oracle�ǥХå��� (���֤غ��������ʤ�) ---
 *.orig
 AgentlabUtilityLibrary.ini
+# ローカルテスト用の接続文字列（認証情報を含む）
+test.udl
