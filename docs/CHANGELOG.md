@@ -7,6 +7,16 @@
 
 ## [Unreleased]
 
+## [1.1.2] - 2026-09-17
+
+### 削除
+- 使われていないアセンブリ参照（System.Net.Http / System.Deployment / System.Xml.Linq / System.Data.DataSetExtensions / System.Xml）と COM 参照（Microsoft.Office.Core / VBIDE）を削除
+- 中身が空で使われていない Properties の Settings.settings / Resources.resx と、その自動生成コードを削除
+- Form1 の常に非表示で使われていない眼の選択チェックボックス（両・左・右）を削除（画面の見た目・操作は変更なし）
+
+### 変更
+- ローカルテスト用の接続設定ファイル test.udl（認証情報を含む）を git の管理対象から外し、.gitignore に追加
+
 ## [1.1.1] - 2026-09-17
 
 ### 変更
