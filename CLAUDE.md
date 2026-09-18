@@ -28,7 +28,8 @@
 
 - **`AgentlabUtilityLibrary.dll`** はソースに含まれない外部DLL。`DBConn` クラスを提供し、
   これが無いとビルド・実行とも失敗する。
-- DB接続は `AgentlabUtilityLibrary.DBConn.GetOpenDBConn()`（OleDb）経由。
+- DB接続は `AgentlabUtilityLibrary.DBConn.GetOpenDBConn()`（同意書側のテーブル）と
+  `GetEhrDBConn()`（電子カルテのマスタ。`Agree/Ehr.cs` だけが使う）の OleDb 接続経由。
   接続文字列・認証情報は外部DLL側で管理され、リポジトリ内に設定ファイルは無い。
 - Excel生成は `Microsoft.Office.Interop.Excel`（COM）を使用。Excelのインストールが必要で、
   COMオブジェクトは使用後に確実に解放すること（解放漏れでExcelプロセスが残る）。

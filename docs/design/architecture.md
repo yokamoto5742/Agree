@@ -43,7 +43,7 @@ flowchart LR
     end
 
     subgraph Lib["AgentlabUtilityLibrary.dll"]
-        DBConn["DBConn.GetOpenDBConn"]
+        DBConn["DBConn.GetOpenDBConn / GetEhrDBConn"]
         Env["Env<br/>LEGACY_HOME / AGENT_HOME / DB_LINK"]
         Barcode["Barcode128"]
     end
@@ -102,7 +102,7 @@ flowchart LR
 
 | 参照 | 入手元 | 使用箇所 | 備考 |
 | --- | --- | --- | --- |
-| `AgentlabUtilityLibrary.dll` | リポジトリ直下（HintPath） | `DBConn.GetOpenDBConn`、`Env.DB_LINK` / `LEGACY_HOME` / `AGENT_HOME`、`Barcode128` | ソースは別リポジトリ。無いとビルド・実行とも不可 |
+| `AgentlabUtilityLibrary.dll` | リポジトリ直下（HintPath） | `DBConn.GetOpenDBConn` / `GetEhrDBConn`、`Env.DB_LINK` / `LEGACY_HOME` / `AGENT_HOME`、`Barcode128` | ソースは別リポジトリ。無いとビルド・実行とも不可 |
 | `Microsoft.Office.Interop.Excel` | VS ビルド：登録済み Excel の COMReference／`dotnet build`：同梱 PIA | `ExcelControl` | 実行時は Excel のインストールが必要 |
 | `System.Data.OleDb` | .NET Framework | `Db`、`Form1`、`TmpAgree`、`TmpStaff` | プロバイダは `OraOLEDB.Oracle`（32bit） |
 | `Microsoft.VisualBasic.FileIO.TextFieldParser` | .NET Framework | `Form1.MergeCsvToTable` | CSV インポート |

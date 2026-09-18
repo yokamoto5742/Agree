@@ -29,7 +29,7 @@ public partial class Form1 : Form
 		this.Text = $"眼科同意書v{version.Major}.{version.Minor}.{version.Build}";
 		applyWindowPosition();
 		oraConn = DBConn.GetOpenDBConn();
-		ehr = new Ehr(DBConn.GetOpenDBConn(), Env.DB_LINK, Env.LEGACY_HOME + "\\Pat.csv");
+		ehr = new Ehr(DBConn.GetEhrDBConn(), Env.DB_LINK, Env.LEGACY_HOME + "\\Pat.csv");
 		try
 		{
 			foreach (KeyValuePair<string, string> d in ehr.LoadDepartments())

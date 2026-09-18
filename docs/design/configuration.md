@@ -32,24 +32,29 @@
 
 ## 3. AgentlabUtilityLibrary.ini（外部 DLL の設定）
 
-`Env` が読み、Agree は `DBConn.GetOpenDBConn()` と `Env` のプロパティを通して間接的に使う。
+`Env` が読み、Agree は `DBConn.GetOpenDBConn()` / `DBConn.GetEhrDBConn()` と `Env` のプロパティを通して間接的に使う。
 値の一部は暗号化されていて、`Enc.Decrypt` で復号してから使う。
 
 | ブロック | キー | 暗号化 | 用途 | Agree での利用 |
 | --- | --- | --- | --- | --- |
 | `[HOME Config Start]`〜`[HOME Config End]` | `LEGACY_HOME` | なし | 電子カルテ連携フォルダ | `Pat.csv` の場所（`Ehr.ReadPatCsv`） |
 | 〃 | `AGENT_HOME` | なし | アプリ資材フォルダ | `EyeAgree\EyeAgree.xlsm` の場所（`ExcelControl.MakeEyeAgree`） |
-| `[DB Config Start]`〜`[DB Config End]` | `OPEN_DB` | あり | 接続先（Data Source） | `DBConn.GetOpenDBConn` |
+| `[DB Config Start]`〜`[DB Config End]` | `OPEN_DB` | あり | 同意書側のテーブルの接続先（Data Source） | `DBConn.GetOpenDBConn`（`AGREE` / `AGREE_TEMPLATE` / `AGREE_STAFF`） |
 | 〃 | `OPEN_USER` | あり | 接続ユーザー | 〃 |
 | 〃 | `OPEN_PWD` | あり | パスワード | 〃 |
 | 〃 | `PROVIDER` | なし | OleDb プロバイダ名（例：`OraOLEDB.Oracle`）。空なら `MSDAORA.1` | 〃 |
+| 〃 | `EHR_DB` | あり | 電子カルテのマスタの接続先。無ければ `OPEN_DB` と同じ | `DBConn.GetEhrDBConn`（`Ehr` が使う） |
+| 〃 | `EHR_USER` | あり | 接続ユーザー。無ければ `OPEN_USER` と同じ | 〃 |
+| 〃 | `EHR_PWD` | あり | パスワード。無ければ `OPEN_PWD` と同じ | 〃 |
+| 〃 | `EHR_PROVIDER` | なし | OleDb プロバイダ名。無ければ `PROVIDER` と同じ | 〃 |
 | 〃 | `DB_LINK` | あり | マスタ参照用の DB リンク接尾辞（例：`@リンク名`）。空ならローカルのテーブル | `M_PATIENT` / `M_DEPT` / `M_USR` の参照 |
-| 〃 | `MAIN_DB` / `MAIN_USER` / `MAIN_PWD` | あり | メイン DB の接続情報 | **使わない**（`GetDBConn` 用） |
+| 〃 | `MAIN_DB` / `MAIN_USER` / `MAIN_PWD` | あり | メイン DB の接続情報 | **使わない**（DLL 3.0.0 以降は読まない） |
 
 - `AgentlabUtilityLibrary.ini` は認証情報を含むため、`.gitignore` で git の管理から外している（各環境で配置する）。
   以前は git で管理していたので、過去のコミットには残っている。
 - ini がどちらの場所にも無い場合は、`LEGACY_HOME = C:\macs`、`AGENT_HOME = C:\macs\utility`、`PROVIDER = MSDAORA.1` になり、接続情報は空になる。
 - アプリ用テーブル（`AGREE` など）は `DB_LINK` を付けず、`OPEN_USER` のスキーマで参照する。
+- `EHR_*` を書かなければ、同意書側と電子カルテ側は同じ接続先になる（従来と同じ動作）。起動時のオフライン判定は電子カルテ側（診療科一覧の読込）で行うため、接続先を分けた場合、同意書側に接続できないことは操作時のエラーで分かる。
 
 ## 4. App.config・ビルド設定・環境変数
 

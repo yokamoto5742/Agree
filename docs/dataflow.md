@@ -30,7 +30,7 @@
 
 ### 2. Oracle照会 (`Form1.showList`)
 
-CSVで得た患者IDをキーに、`AgentlabUtilityLibrary.DBConn.GetOpenDBConn()`（`Form1` コンストラクタ）で取得したOleDb接続を使う。接続の Open/Close は `Db` ヘルパー（`Db.Execute` / `Scalar` / `Read`）が行い、例外時も必ず閉じる。
+CSVで得た患者IDをキーに、`AgentlabUtilityLibrary.DBConn.GetOpenDBConn()`（同意書側のテーブル用）と `GetEhrDBConn()`（電子カルテのマスタ用、`Ehr` が使う）で取得したOleDb接続を使う（どちらも `Form1` コンストラクタで取得）。接続の Open/Close は `Db` ヘルパー（`Db.Execute` / `Scalar` / `Read`）が行い、例外時も必ず閉じる。
 
 - 患者IDが Pat.csv と同じなら氏名・カナ・性別は CSV の値を使い、`M_PATIENT` には問い合わせない。**手入力で別の患者IDを検索したときだけ** `M_PATIENT` から氏名・カナ・性別を取得する（取り違え防止のため、取得前に氏名欄を空にする）
 - `AGREE`（`M_DEPT`/`M_USR`結合）から既存同意書一覧を取得しグリッド表示する。グリッドの列はSELECTの列名・別名（`DEPT_NAME` / `DR_NAME` など）で参照する（`Form1.showAgree`）

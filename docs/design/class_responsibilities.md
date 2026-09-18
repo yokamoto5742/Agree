@@ -134,6 +134,7 @@ classDiagram
     class DBConn {
         <<AgentlabUtilityLibrary>>
         +GetOpenDBConn() OleDbConnection
+        +GetEhrDBConn() OleDbConnection
     }
     class Env {
         <<AgentlabUtilityLibrary>>
@@ -193,7 +194,7 @@ classDiagram
 ## 3. 設計上の特徴と注意点
 
 - **状態の置き場所**：画面のコントロールがそのまま状態になっている。選択中の同意書 ID は `Agree_id.Text`、医師完了フラグは `Form1.doctorConfirmed`、オフライン状態は `Program.OfflineMode`（グローバル）。
-- **DB 接続**：`Form1`・`TmpAgree`・`TmpStaff` がそれぞれ `DBConn.GetOpenDBConn()` で自分の `OleDbConnection` を持つ。電子カルテのマスタは `Form1` が作った `Ehr`（専用の接続を持つ）経由で読み、`TmpStaff` にも同じ `Ehr` を渡す。同意書側のテーブルとマスタを 1 本の SQL で JOIN しない。開閉は操作ごと（`Db` が担当）。CSV 入出力だけは `Form1.ImportExport.cs` が自分で開閉する。
+- **DB 接続**：`Form1`・`TmpAgree`・`TmpStaff` がそれぞれ `DBConn.GetOpenDBConn()` で自分の `OleDbConnection` を持つ。電子カルテのマスタは `Form1` が作った `Ehr`（`DBConn.GetEhrDBConn()` の接続を持つ）経由で読み、`TmpStaff` にも同じ `Ehr` を渡す。同意書側のテーブルとマスタを 1 本の SQL で JOIN しない。開閉は操作ごと（`Db` が担当）。CSV 入出力だけは `Form1.ImportExport.cs` が自分で開閉する。
 - **トランザクション**：CSV インポートのテーブル単位でだけ使う。`copyAsNew` の登録と、直後の `max(AGREE_ID)` 取得は別々の操作。
 - **SQL の組み立て**：パラメータは使わず、文字列連結で組み立てる。自由記述は `AgreeSql.SqlValue`、数値は `int.TryParse` 済みの値を使う。ただし `TmpAgree` では `temp_id.Text`（画面の値）を検証せずに連結している箇所がある。
 - **画面間の依存**：`TmpAgree` は `Form1` の public メソッド `applyTemplate` を直接呼ぶ。
