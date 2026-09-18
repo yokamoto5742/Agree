@@ -4,7 +4,6 @@ using System.Data;
 using System.Data.OleDb;
 using System.Linq;
 using System.Windows.Forms;
-using AgentlabUtilityLibrary;
 
 namespace Agree;
 
@@ -34,25 +33,29 @@ public partial class Form1
 				pt_name.Text = "";
 				pt_kana.Text = "";
 				pt_sex.Text = "";
-				Db.Read(oraConn, "select P_NAME, P_KANA, P_SEX from M_PATIENT" + Env.DB_LINK + " where P_ID = " + ptId, r =>
+				(string Name, string Kana, string Sex)? patient = ehr.FindPatient(ptId);
+				if (patient != null)
 				{
-					pt_name.Text = r["P_NAME"].ToString();
-					pt_kana.Text = r["P_KANA"].ToString();
-					pt_sex.Text = r["P_SEX"].ToString() == "2" ? "女" : "男";
-				});
+					pt_name.Text = patient.Value.Name;
+					pt_kana.Text = patient.Value.Kana;
+					pt_sex.Text = patient.Value.Sex;
+				}
 			}
 			// 一覧の列は列名・別名で参照する（showAgree も同じ名前を使う）。
-			// 入力者が職員マスタ(M_USR)に無い同意書（Pat.csv 由来の医師コード等）も一覧から欠落させないよう外部結合にする。
-			string sql = "select AGREE_ID, SAVE_DATE, AGREE.DEPT, Trim(M_DEPT.S_NAME) as DEPT_NAME, AGREE.DR, Trim(M_USR.NAME) as DR_NAME,"
+			// 診療科名・医師名は電子カルテのマスタから付ける。診療科がマスタに無い同意書は一覧に出さない。
+			// 入力者が職員マスタに無い同意書（Pat.csv 由来の医師コード等）は一覧から欠落させず、医師名を空にする。
+			string sql = "select AGREE_ID, SAVE_DATE, DEPT, DR,"
 				+ " STAFF, EYE, DIAG, OPE, EXPLANATION, ITEM1, ITEM2, ITEM3, ITEM4, DR_OK, SHEET_NAME, ANES"
-				+ " from AGREE inner join M_DEPT" + Env.DB_LINK + " on AGREE.DEPT = M_DEPT.CODE left join M_USR" + Env.DB_LINK + " on AGREE.DR = M_USR.CODE"
-				+ " where PATIENT_ID = " + ptId + " and DELETE_FLAG = 0 order by SAVE_DATE desc";
+				+ " from AGREE where PATIENT_ID = " + ptId + " and DELETE_FLAG = 0 order by SAVE_DATE desc";
 			DataSet dataSet = new DataSet();
 			using (OleDbDataAdapter adapter = new OleDbDataAdapter(sql, oraConn))
 			{
 				adapter.Fill(dataSet, "同意書");
 			}
-			AgreeList.DataSource = dataSet.Tables["同意書"];
+			DataTable agrees = dataSet.Tables["同意書"];
+			Ehr.JoinName(agrees, "DEPT", "DEPT_NAME", deptNames, dropUnmatched: true);
+			Ehr.JoinName(agrees, "DR", "DR_NAME", ehr.StaffNames(agrees.Rows.Cast<DataRow>().Select(r => r["DR"].ToString())), dropUnmatched: false);
+			AgreeList.DataSource = agrees;
 			AgreeList.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
 			foreach (DataGridViewColumn column in AgreeList.Columns)
 			{
@@ -110,7 +113,7 @@ public partial class Form1
 				string cell(string name) => row.Cells[name].Value.ToString().Trim();
 				Agree_id.Text = cell("AGREE_ID");
 				dr_id.Text = cell("DR");
-				// 一覧のSQLで M_USR から結合済みの氏名を使う（職員マスタに無いコードは空）。
+				// 一覧を作るときに職員マスタから付けた氏名を使う（職員マスタに無いコードは空）。
 				dr_name.Text = cell("DR_NAME");
 				string saveDate = cell("SAVE_DATE");
 				if (saveDate.Length == 8)
@@ -253,7 +256,7 @@ public partial class Form1
 			MessageBox.Show("診療科を入力してください");
 			return false;
 		}
-		if (!tryParseDeptCode(dept.Text.Split(' ')[0], out short deptCode))
+		if (!Ehr.TryParseDeptCode(dept.Text.Split(' ')[0], out short deptCode))
 		{
 			MessageBox.Show("診療科はリストから選んでください");
 			return false;

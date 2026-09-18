@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Data.OleDb;
 using System.Drawing;
-using System.IO;
-using System.Text;
 using System.Windows.Forms;
 using AgentlabUtilityLibrary;
 
@@ -15,26 +13,14 @@ public partial class Form1 : Form
 	// 医師完了フラグ（AGREE.DR_OK）。true のとき登録完了後に印刷を促す。
 	private bool doctorConfirmed = true;
 
-	// Pat.csv（電子カルテが書き出すファイル）のうち、本アプリで使う項目だけを保持する。
-	private sealed class PatCsvFields
-	{
-		public int? PtId;       // [2] 患者ID（数字でなければ null）
-		public string PtName;   // [3] 氏名
-		public string PtKana;   // [5] カナ
-		public string PtSex;    // [6] 性別（1=男, 2=女）
-		public string DrId;     // [9] 入力者ID
-		public string DrName;   // [10] 入力者氏名
-		public string DeptCode; // [13] 診療科コード
-		public string Field14;  // [14] 用途不明（空でなければ診療科を反映する）
-		public string Field27;  // [27] 用途不明（"1" のとき医師情報を反映する）
-	}
-
 	private PatCsvFields patCsv = new PatCsvFields();
 
-	// 診療科コード → 略称。M_DEPT から必要な2列だけを起動時に読む。
+	// 診療科コード → 略称。電子カルテの診療科マスタを起動時に読む。
 	private readonly Dictionary<string, string> deptNames = new Dictionary<string, string>();
 
 	private OleDbConnection oraConn;
+
+	private readonly Ehr ehr;
 
 	public Form1()
 	{
@@ -43,17 +29,17 @@ public partial class Form1 : Form
 		this.Text = $"眼科同意書v{version.Major}.{version.Minor}.{version.Build}";
 		applyWindowPosition();
 		oraConn = DBConn.GetOpenDBConn();
+		ehr = new Ehr(DBConn.GetOpenDBConn(), Env.DB_LINK, Env.LEGACY_HOME + "\\Pat.csv");
 		try
 		{
-			Db.Read(oraConn, "select CODE, Trim(S_NAME) from M_DEPT" + Env.DB_LINK + " order by CODE", r =>
+			foreach (KeyValuePair<string, string> d in ehr.LoadDepartments())
 			{
-				string code = r[0].ToString();
-				deptNames[code] = r[1].ToString();
-				if (!code.Equals("0"))
+				deptNames[d.Key] = d.Value;
+				if (!d.Key.Equals("0"))
 				{
-					dept.Items.Add(code + " " + deptNames[code]);
+					dept.Items.Add(d.Key + " " + deptNames[d.Key]);
 				}
-			});
+			}
 		}
 		catch (Exception ex)
 		{
@@ -117,33 +103,12 @@ public partial class Form1 : Form
 	/// </summary>
 	private bool loadPatCsvFields()
 	{
-		string path = Env.LEGACY_HOME + "\\Pat.csv";
-		if (!File.Exists(path))
+		PatCsvFields fields = ehr.ReadPatCsv();
+		if (fields == null)
 		{
 			return false;
 		}
-		using (StreamReader reader = new StreamReader(path, Encoding.Default))
-		{
-			string line = reader.ReadLine();
-			if (line == null)
-			{
-				return false;
-			}
-			string[] fields = line.Split(',');
-			string field(int i) => i < fields.Length ? fields[i] : null;
-			patCsv = new PatCsvFields
-			{
-				PtId = int.TryParse(field(2), out int ptId) ? ptId : (int?)null,
-				PtName = field(3),
-				PtKana = field(5),
-				PtSex = field(6),
-				DrId = field(9),
-				DrName = field(10),
-				DeptCode = field(13),
-				Field14 = field(14),
-				Field27 = field(27),
-			};
-		}
+		patCsv = fields;
 		return true;
 	}
 
@@ -168,7 +133,7 @@ public partial class Form1 : Form
 	{
 		pt_name.Text = patCsv.PtName;
 		pt_kana.Text = patCsv.PtKana;
-		pt_sex.Text = patCsv.PtSex == "2" ? "女" : patCsv.PtSex == "1" ? "男" : "";
+		pt_sex.Text = patCsv.PtSex;
 	}
 
 	// Pat.csv の医師情報（入力者・診療科）を画面に反映する。
@@ -184,19 +149,13 @@ public partial class Form1 : Form
 			dr_name.Text = patCsv.DrName;
 			if (!Program.OfflineMode)
 			{
-				if (tryParseDeptCode(patCsv.DeptCode, out short deptCode) && patCsv.Field14.Length > 0 && deptNames.ContainsKey(deptCode.ToString()))
+				if (Ehr.TryParseDeptCode(patCsv.DeptCode, out short deptCode) && patCsv.Field14.Length > 0 && deptNames.ContainsKey(deptCode.ToString()))
 				{
 					dept.Text = deptCode + " " + deptNames[deptCode.ToString()];
 				}
 				getStaffRoom();
 			}
 		}
-	}
-
-	// 診療科コード（1〜20）として解釈できる場合だけ true を返す。
-	private static bool tryParseDeptCode(string text, out short code)
-	{
-		return short.TryParse(text, out code) && code >= 1 && code <= 20;
 	}
 
 	private void pt_id_KeyDown(object sender, KeyEventArgs e)
@@ -229,7 +188,7 @@ public partial class Form1 : Form
 
 	private void dept_Leave(object sender, EventArgs e)
 	{
-		if (dept.Text.Length > 0 && (dept.Text.Split(' ').Length != 2 || !tryParseDeptCode(dept.Text.Split(' ')[0], out _)))
+		if (dept.Text.Length > 0 && (dept.Text.Split(' ').Length != 2 || !Ehr.TryParseDeptCode(dept.Text.Split(' ')[0], out _)))
 		{
 			MessageBox.Show("診療科はリストから選んでください");
 			dept.Text = "";
@@ -244,7 +203,7 @@ public partial class Form1 : Form
 		}
 		if (dr_id.Text.Length > 0)
 		{
-			string name = Db.StaffName(oraConn, dr_id.Text);
+			string name = ehr.StaffName(dr_id.Text);
 			if (name != null)
 			{
 				dr_name.Text = name;
@@ -320,7 +279,7 @@ public partial class Form1 : Form
 
 	private void tmpStaffButton_Click(object sender, EventArgs e)
 	{
-		TmpStaff tmpStaff = new TmpStaff();
+		TmpStaff tmpStaff = new TmpStaff(ehr);
 		tmpStaff.Show();
 	}
 

@@ -14,7 +14,7 @@
 | Form1 | 患者 ID を入力して Enter（一覧表示） | R | - | - | R ※1 | R | R | `showList` |
 | Form1 | 一覧の行を選択（内容表示） | - | - | - | - | - | - | `showAgree`（取得済みの一覧データを使う） |
 | Form1 | 新規作成 | C/U ※2 | - | R | - | - | - | `newAgreeButton_Click` → `applyDoctorFromPatCsv` → `getStaffRoom` |
-| Form1 | 入力者 ID を入力して確定 | - | - | R | - | - | R | `dr_id_Leave` → `Db.StaffName` / `getStaffRoom` |
+| Form1 | 入力者 ID を入力して確定 | - | - | R | - | - | R | `dr_id_Leave` → `Ehr.StaffName` / `getStaffRoom` |
 | Form1 | 登録 | C または U | - | - | - | R | R | `regAgree`（ID が無ければ C、あれば U）→ `showList` |
 | Form1 | 削除 | U(論) | - | - | - | R | R | `delAgree` → `showList` |
 | Form1 | コピーして作成（右クリック） | C, R | - | - | - | R | R | `copyAsNew`（`regAgree` → `max(AGREE_ID)` → `showList`） |
@@ -28,7 +28,7 @@
 | TmpAgree | 上へ・下へ（並び替え） | - | U, R | - | - | - | - | `moveNode`（兄弟全件の `DISP_ORDER` を更新） |
 | TmpAgree | 適用（Form1 へ差し込み） | - | R | - | - | - | - | `Form1.applyTemplate` |
 | TmpStaff | 画面を開く（一覧） | - | - | R | - | - | R | `initList` |
-| TmpStaff | 入力者 ID を入力して確定 | - | - | - | - | - | R | `staff_id_Leave` → `Db.StaffName` |
+| TmpStaff | 入力者 ID を入力して確定 | - | - | - | - | - | R | `staff_id_Leave` → `Ehr.StaffName` |
 | TmpStaff | 登録 | - | - | C または U, R | - | - | R | `saveButton_Click` → `initList` |
 | TmpStaff | 削除 | - | - | D, R | - | - | R | `deleteButton_Click` → `initList` |
 

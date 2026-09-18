@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
 using System.Data.OleDb;
+using System.Linq;
 using System.Windows.Forms;
 using AgentlabUtilityLibrary;
 
@@ -10,10 +11,13 @@ public partial class TmpStaff : Form
 {
 	private OleDbConnection oraConn;
 
-	public TmpStaff()
+	private readonly Ehr ehr;
+
+	internal TmpStaff(Ehr ehr)
 	{
 		InitializeComponent();
 		oraConn = DBConn.GetOpenDBConn();
+		this.ehr = ehr;
 		if (Program.OfflineMode)
 		{
 			saveButton.Enabled = false;
@@ -26,10 +30,13 @@ public partial class TmpStaff : Form
 	private void initList()
 	{
 		// DataAdapter.Fill は接続を自分で開閉するため、Open/Close は不要。
-		OleDbDataAdapter oleDbDataAdapter = new OleDbDataAdapter("Select ID, STAFF, Trim(NAME), CONT from AGREE_STAFF inner join M_USR" + Env.DB_LINK + " on AGREE_STAFF.STAFF = CODE", oraConn);
+		OleDbDataAdapter oleDbDataAdapter = new OleDbDataAdapter("Select ID, STAFF, CONT from AGREE_STAFF", oraConn);
 		DataSet dataSet = new DataSet();
 		oleDbDataAdapter.Fill(dataSet, "担当者");
-		staffGridView.DataSource = dataSet.Tables["担当者"];
+		// 氏名は職員マスタから STAFF の次の列に付ける。職員マスタに無い担当者は一覧に出さない。
+		DataTable staffs = dataSet.Tables["担当者"];
+		Ehr.JoinName(staffs, "STAFF", "NAME", ehr.StaffNames(staffs.Rows.Cast<DataRow>().Select(r => r["STAFF"].ToString())), dropUnmatched: true);
+		staffGridView.DataSource = staffs;
 		staffGridView.Columns[0].Visible = false;
 		staffGridView.Columns[1].HeaderText = "ID";
 		staffGridView.Columns[1].Width = 40;
@@ -128,7 +135,7 @@ public partial class TmpStaff : Form
 		{
 			return;
 		}
-		string name = Db.StaffName(oraConn, staff_id.Text);
+		string name = ehr.StaffName(staff_id.Text);
 		if (name != null)
 		{
 			staff_name.Text = name;

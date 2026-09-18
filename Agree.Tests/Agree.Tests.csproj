@@ -33,6 +33,8 @@
   <ItemGroup>
     <Compile Include="..\Agree\AgreeSql.cs" Link="Linked\AgreeSql.cs" />
     <Compile Include="..\Agree\AppSettings.cs" Link="Linked\AppSettings.cs" />
+    <Compile Include="..\Agree\Db.cs" Link="Linked\Db.cs" />
+    <Compile Include="..\Agree\Ehr.cs" Link="Linked\Ehr.cs" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Data.OleDb;
+using System.Linq;
 using Agree;
 using NUnit.Framework;
 
@@ -213,6 +215,81 @@ namespace Agree.Tests
                 Assert.That(cont2, Is.EqualTo("更新後の説明文"));
 
                 tx.Rollback();
+            }
+        }
+
+        // Ehr は SQL ごとに接続を開閉するためトランザクションに載せられない。
+        // テスト用のマスタ行は実在しないコード(99000x)でコミットし、finally で削除する。
+        private const int TestCode = 990001;
+
+        private static Ehr NewEhr() => new Ehr(new OleDbConnection(ConnectionString), "", null);
+
+        private static void ExecCommitted(string sql)
+        {
+            using (var con = Open())
+            using (var cmd = new OleDbCommand(sql, con))
+                cmd.ExecuteNonQuery();
+        }
+
+        [Test]
+        public void Ehr_FindPatient_ReadsPatientAndConvertsSex()
+        {
+            ExecCommitted("DELETE FROM M_PATIENT WHERE P_ID IN (" + TestCode + ", " + (TestCode + 1) + ")");
+            try
+            {
+                ExecCommitted("INSERT INTO M_PATIENT (P_ID, P_NAME, P_KANA, P_SEX) VALUES (" + TestCode + ", 'テスト 花子', 'テスト ハナコ', 2)");
+                ExecCommitted("INSERT INTO M_PATIENT (P_ID, P_NAME, P_KANA, P_SEX) VALUES (" + (TestCode + 1) + ", 'テスト 太郎', 'テスト タロウ', 1)");
+                var ehr = NewEhr();
+
+                Assert.That(ehr.FindPatient(TestCode), Is.EqualTo(("テスト 花子", "テスト ハナコ", "女")));
+                Assert.That(ehr.FindPatient(TestCode + 1)?.Sex, Is.EqualTo("男"));
+                Assert.That(ehr.FindPatient(TestCode + 2), Is.Null, "該当なしは null");
+            }
+            finally
+            {
+                ExecCommitted("DELETE FROM M_PATIENT WHERE P_ID IN (" + TestCode + ", " + (TestCode + 1) + ")");
+            }
+        }
+
+        [Test]
+        public void Ehr_StaffNameAndStaffNames_ReadTrimmedNames()
+        {
+            ExecCommitted("DELETE FROM M_USR WHERE CODE = " + TestCode);
+            try
+            {
+                ExecCommitted("INSERT INTO M_USR (CODE, NAME) VALUES (" + TestCode + ", ' テスト 医師 ')");
+                var ehr = NewEhr();
+
+                Assert.That(ehr.StaffName(" " + TestCode + " "), Is.EqualTo("テスト 医師"), "前後の空白を除いて検索・返却する");
+                Assert.That(ehr.StaffName((TestCode + 1).ToString()), Is.Null, "該当なしは null");
+                Assert.That(ehr.StaffName("abc"), Is.Null, "数字でなければ null");
+
+                var names = ehr.StaffNames(new[] { TestCode.ToString(), TestCode.ToString(), (TestCode + 1).ToString(), "", "abc" });
+                Assert.That(names, Is.EqualTo(new Dictionary<string, string> { [TestCode.ToString()] = "テスト 医師" }));
+                Assert.That(ehr.StaffNames(new string[0]), Is.Empty, "コードが無ければ問い合わせない");
+            }
+            finally
+            {
+                ExecCommitted("DELETE FROM M_USR WHERE CODE = " + TestCode);
+            }
+        }
+
+        [Test]
+        public void Ehr_LoadDepartments_ReadsTrimmedShortNamesInCodeOrder()
+        {
+            ExecCommitted("DELETE FROM M_DEPT WHERE CODE = " + TestCode);
+            try
+            {
+                ExecCommitted("INSERT INTO M_DEPT (CODE, NAME, S_NAME) VALUES (" + TestCode + ", 'テスト診療科', ' 試験科 ')");
+
+                var depts = NewEhr().LoadDepartments();
+
+                Assert.That(depts, Does.Contain(new KeyValuePair<string, string>(TestCode.ToString(), "試験科")));
+                Assert.That(depts.Select(d => decimal.Parse(d.Key)), Is.Ordered);
+            }
+            finally
+            {
+                ExecCommitted("DELETE FROM M_DEPT WHERE CODE = " + TestCode);
             }
         }
 

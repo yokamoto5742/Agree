@@ -101,7 +101,7 @@ CREATE TABLE M_DEPT (
     CONSTRAINT PK_M_DEPT PRIMARY KEY (CODE)
 );
 
--- 職員マスタ（アプリ: CODE, NAME 参照。Db.StaffName / showList / TmpStaff。他の列は旧実装の名残）
+-- 職員マスタ（アプリ: CODE, NAME 参照。Ehr.StaffName / showList / TmpStaff。他の列は旧実装の名残）
 CREATE TABLE M_USR (
     CODE     NUMBER         NOT NULL,
     NAME     VARCHAR2(100 CHAR),

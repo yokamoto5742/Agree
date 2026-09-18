@@ -37,7 +37,7 @@
 
 | ブロック | キー | 暗号化 | 用途 | Agree での利用 |
 | --- | --- | --- | --- | --- |
-| `[HOME Config Start]`〜`[HOME Config End]` | `LEGACY_HOME` | なし | 電子カルテ連携フォルダ | `Pat.csv` の場所（`Form1.loadPatCsvFields`） |
+| `[HOME Config Start]`〜`[HOME Config End]` | `LEGACY_HOME` | なし | 電子カルテ連携フォルダ | `Pat.csv` の場所（`Ehr.ReadPatCsv`） |
 | 〃 | `AGENT_HOME` | なし | アプリ資材フォルダ | `EyeAgree\EyeAgree.xlsm` の場所（`ExcelControl.MakeEyeAgree`） |
 | `[DB Config Start]`〜`[DB Config End]` | `OPEN_DB` | あり | 接続先（Data Source） | `DBConn.GetOpenDBConn` |
 | 〃 | `OPEN_USER` | あり | 接続ユーザー | 〃 |
@@ -66,7 +66,7 @@
 
 | 項目 | 値 | 参照箇所 |
 | --- | --- | --- |
-| Pat.csv | `{LEGACY_HOME}\Pat.csv` | `Form1.loadPatCsvFields` |
+| Pat.csv | `{LEGACY_HOME}\Pat.csv` | `Ehr.ReadPatCsv` |
 | 帳票テンプレート | `{AGENT_HOME}\EyeAgree\EyeAgree.xlsm` | `ExcelControl.MakeEyeAgree` |
 | 共通情報シート名 | `共通情報` | 〃 |
 | 帳票の出力先 | `%TEMP%\{患者ID}_{yyyyMMdd}{HHmmss}_EyeAgree.xlsm` | `ExcelControl.saveWorkbook` |

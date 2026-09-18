@@ -92,9 +92,10 @@ erDiagram
 
 **関係についての補足**
 
-- `AGREE` → `M_DEPT` は一覧取得で **INNER JOIN**。`M_DEPT` に無い診療科コードの同意書は、一覧に出ない。
-- `AGREE` → `M_USR` は **LEFT JOIN**。職員マスタに無い入力者（Pat.csv 由来のコードなど）でも一覧に出る（氏名は空）。
-- `AGREE_STAFF` → `M_USR` は `TmpStaff` の一覧で **INNER JOIN**。`M_USR` に無い `STAFF` の行は一覧に出ない。
+- 同意書側のテーブルと電子カルテのマスタは SQL では JOIN せず、`Ehr.JoinName` で名称列を C# 側で付ける（別の DB に置けるようにするため）。結果は以下の結合と同じ。
+- `AGREE` → `M_DEPT` は一覧取得で **INNER JOIN** 相当。`M_DEPT` に無い診療科コードの同意書は、一覧に出ない。診療科名は起動時に読んだ一覧から付ける。
+- `AGREE` → `M_USR` は **LEFT JOIN** 相当。職員マスタに無い入力者（Pat.csv 由来のコードなど）でも一覧に出る（氏名は空）。
+- `AGREE_STAFF` → `M_USR` は `TmpStaff` の一覧で **INNER JOIN** 相当。`M_USR` に無い `STAFF` の行は一覧に出ない。
 - `AGREE_TEMPLATE` と `AGREE` の間に参照関係は無い。テンプレートの値は `Form1.applyTemplate` で画面に**コピー（追記）**され、そのあと `AGREE` に保存される。
 - `AGREE_STAFF.STAFF` は 1 医師 1 行を想定している（`Form1.getStaffRoom` は `ExecuteScalar` で先頭行だけ使う）。一意制約があるかは不明。
 
@@ -158,7 +159,7 @@ erDiagram
 | | `P_SEX` | 性別 | `2` → 女、それ以外 → 男 | 〃 |
 | `M_DEPT` | `CODE` | 診療科コード | コンボの値・結合キー（`0` はコンボに出さない） | `Form1` コンストラクタ / `showList` |
 | | `S_NAME` | 診療科略称 | 表示・印刷（`Trim` して使う） | 〃 |
-| `M_USR` | `CODE` | 職員コード | 入力者の存在チェック・結合キー | `Db.StaffName` / `showList` / `TmpStaff.initList` |
+| `M_USR` | `CODE` | 職員コード | 入力者の存在チェック・結合キー | `Ehr.StaffName` / `showList` / `TmpStaff.initList` |
 | | `NAME` | 職員氏名 | 表示・印刷（`Trim` して使う） | 〃 |
 
 > [../test_db_schema.sql](../test_db_schema.sql) には `M_DR`・`M_SYOZOKU`・`M_SHIKAKU`・`M_SHINKU`・`M_SEKOU` もある。

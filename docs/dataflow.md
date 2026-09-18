@@ -35,7 +35,7 @@ CSVで得た患者IDをキーに、`AgentlabUtilityLibrary.DBConn.GetOpenDBConn(
 - 患者IDが Pat.csv と同じなら氏名・カナ・性別は CSV の値を使い、`M_PATIENT` には問い合わせない。**手入力で別の患者IDを検索したときだけ** `M_PATIENT` から氏名・カナ・性別を取得する（取り違え防止のため、取得前に氏名欄を空にする）
 - `AGREE`（`M_DEPT`/`M_USR`結合）から既存同意書一覧を取得しグリッド表示する。グリッドの列はSELECTの列名・別名（`DEPT_NAME` / `DR_NAME` など）で参照する（`Form1.showAgree`）
 
-Oracleは患者情報だけでなく、**診療科マスタ**（`M_DEPT` の CODE・S_NAME のみ、`Form1` コンストラクタ）、**入力者氏名**（`M_USR` から該当1人の NAME のみ、`Db.StaffName`）、**担当者文例**（`AGREE_STAFF`、`Form1.getStaffRoom`）、同意書レコードのCRUD（`Form1.regAgree` / `delAgree`）にも使われる。接続失敗時はオフラインモード（画面確認用、DB読込スキップ）になる。
+Oracleは患者情報だけでなく、**診療科マスタ**（`M_DEPT` の CODE・S_NAME のみ、`Form1` コンストラクタ）、**入力者氏名**（`M_USR` から該当1人の NAME のみ、`Ehr.StaffName`）、**担当者文例**（`AGREE_STAFF`、`Form1.getStaffRoom`）、同意書レコードのCRUD（`Form1.regAgree` / `delAgree`）にも使われる。接続失敗時はオフラインモード（画面確認用、DB読込スキップ）になる。
 
 ### 3. 共通情報シートへの書込データ準備 (`Form1.printAgree`)
 

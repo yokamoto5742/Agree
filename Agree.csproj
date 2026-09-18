@@ -87,6 +87,7 @@
     <Compile Include="Agree\AgreeSql.cs" />
     <Compile Include="Agree\AppSettings.cs" />
     <Compile Include="Agree\Db.cs" />
+    <Compile Include="Agree\Ehr.cs" />
     <Compile Include="Agree\Logger.cs" />
     <Compile Include="Agree\ExcelControl.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
