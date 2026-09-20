@@ -96,7 +96,6 @@
     <None Include="CLAUDE.md" />
     <None Include="docs\CHANGELOG.md" />
     <None Include="docs\dataflow.md" />
-    <None Include="docs\dead_code_removal_guide.md" />
     <None Include="docs\design\architecture.md" />
     <None Include="docs\design\class_responsibilities.md" />
     <None Include="docs\design\configuration.md" />
