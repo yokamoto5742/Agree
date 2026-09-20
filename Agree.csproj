@@ -36,9 +36,6 @@
     <ApplicationIcon>app.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="AgentlabUtilityLibrary">
-      <HintPath>AgentlabUtilityLibrary.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="Microsoft.CSharp" />
@@ -90,6 +87,11 @@
     <Compile Include="Agree\Ehr.cs" />
     <Compile Include="Agree\Logger.cs" />
     <Compile Include="Agree\ExcelControl.cs" />
+    <Compile Include="Agree\Infrastructure\Barcode128.cs" />
+    <Compile Include="Agree\Infrastructure\CharMap.cs" />
+    <Compile Include="Agree\Infrastructure\DBConn.cs" />
+    <Compile Include="Agree\Infrastructure\Enc.cs" />
+    <Compile Include="Agree\Infrastructure\Env.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <None Include="CLAUDE.md" />
     <None Include="docs\CHANGELOG.md" />

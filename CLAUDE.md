@@ -26,11 +26,13 @@
 
 ## 外部依存（重要）
 
-- **`AgentlabUtilityLibrary.dll`** はソースに含まれない外部DLL。`DBConn` クラスを提供し、
-  これが無いとビルド・実行とも失敗する。
+- **`Agree/Infrastructure/`** は旧 `AgentlabUtilityLibrary.dll` のソースを取り込んだもの
+  （`Env` / `DBConn` / `Enc` / `CharMap` / `Barcode128`。名前空間は `AgentlabUtilityLibrary` のまま）。
+  外部DLLの配置は不要になったが、実行時には設定ファイル `AgentlabUtilityLibrary.ini` が必要。
 - DB接続は `AgentlabUtilityLibrary.DBConn.GetOpenDBConn()`（同意書側のテーブル）と
   `GetEhrDBConn()`（電子カルテのマスタ。`Agree/Ehr.cs` だけが使う）の OleDb 接続経由。
-  接続文字列・認証情報は外部DLL側で管理され、リポジトリ内に設定ファイルは無い。
+  接続文字列・認証情報は `AgentlabUtilityLibrary.ini`（暗号化された値）から読み、
+  この ini は認証情報を含むため git 管理外（各環境で配置する）。
 - Excel生成は `Microsoft.Office.Interop.Excel`（COM）を使用。Excelのインストールが必要で、
   COMオブジェクトは使用後に確実に解放すること（解放漏れでExcelプロセスが残る）。
 

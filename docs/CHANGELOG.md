@@ -7,10 +7,15 @@
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-09-20
+
 ### 変更
 - 電子カルテ（マスタ M_PATIENT / M_USR / M_DEPT と Pat.csv）へのアクセスを Ehr クラスに集約し、同意書テーブルとマスタを SQL で JOIN しないよう変更（将来の電子カルテ乗り換えに備えた内部構造の変更。画面の表示・操作は変更なし）
 - 電子カルテのマスタを、同意書側とは別の接続（`DBConn.GetEhrDBConn()`）で読むよう変更。`AgentlabUtilityLibrary.ini` に `EHR_DB` / `EHR_USER` / `EHR_PWD` / `EHR_PROVIDER` を書くと別の接続先にでき、書かなければ従来と同じ接続先を使う
-- 同梱の `AgentlabUtilityLibrary.dll` を最新版（3.0.0 + `GetEhrDBConn` 追加）に更新。**この DLL は `AgentlabUtilityLibrary.ini` が無い場合の DB 接続情報の既定値を持たないため、配置先に ini が必要**
+- 外部 DLL `AgentlabUtilityLibrary.dll` を廃止し、そのソース（Env / DBConn / Enc / CharMap / Barcode128）を `Agree/Infrastructure/` に取り込み（名前空間は `AgentlabUtilityLibrary` のままで、アプリの動作は変更なし）。**配布物は EyeAgree.exe だけでよくなり、DLL の配置は不要**。ただし接続情報は従来どおり `AgentlabUtilityLibrary.ini` から読むため、**配置先に ini が必要**
+
+### 追加
+- 取り込んだ基盤コードの単体テスト（`Agree.Tests/UtilityTests.cs`）。Enc の復号・Barcode128 の描画結果・Env の `EHR_*` フォールバックを検証する
 
 ## [1.1.2] - 2026-09-17
 

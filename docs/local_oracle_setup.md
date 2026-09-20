@@ -55,46 +55,17 @@ copy AgentlabUtilityLibrary.local.ini C:\macs\utility\AgentlabUtilityLibrary.ini
 
 ---
 
-## 3. AgentlabUtilityLibrary.dll の再ビルドと差し替え
+## 3. 基盤コード（旧 AgentlabUtilityLibrary.dll）
 
-`DBConn` / `DB` / `Env` は外部DLL `AgentlabUtilityLibrary.dll`（リポジトリ直下を
-`Agree.csproj` が HintPath 参照）に含まれる。プロバイダ切替を反映するには再ビルドが必要。
-
-加えた変更（`util_project/`）:
-- `Env.cs`: `PROVIDER` プロパティを追加（既定 `MSDAORA.1`・平文・ini から読む）。
-- `DBConn.cs` / `DB.cs`: 接続文字列の `Provider=` を `Env.PROVIDER` 経由に変更（4箇所）。
-- `AgentlabUtilityLibrary.csproj`: 欠落参照 `InnoUketsukeLib` を除去し、`net48` 化、
-  非文字列 resx 用に `GenerateResourceUsePreserializedResources` ＋ `System.Resources.Extensions` を追加。
-- `LoginPrompt.cs`: `InnoUketsukeLib` 依存の2行（`AppInit` / `M_USR.g_Usr1`）を無効化
-  （Agree アプリはこのログイン経路を使わない）。
-
-再ビルド手順:
-
-```cmd
-cd util_project
-dotnet build AgentlabUtilityLibrary.csproj -c Debug
-copy bin\Debug\net48\AgentlabUtilityLibrary.dll        ..\AgentlabUtilityLibrary.dll
-copy bin\Debug\net48\System.Resources.Extensions.dll   ..\System.Resources.Extensions.dll
-```
-
-> 元の本番DLL（2018年製）は `AgentlabUtilityLibrary.dll.orig` に退避済み。
-> `System.Resources.Extensions.dll` は再ビルドDLLの実行時依存。Agree の出力先
-> （`bin\x86\Debug`）にも配置すること（`Agree.csproj` は自動コピーしない）。
-
-### ⚠️ 本番への混入防止
-
-- 再ビルドDLLは**逆コンパイル再構成物**（元は net40、本書では net48・login 無効化）。
-  本番ブランチへコミット／配布しないこと。本番へ戻す場合:
-  ```cmd
-  copy AgentlabUtilityLibrary.dll.orig AgentlabUtilityLibrary.dll
-  ```
-- プロバイダは ini 既定で `MSDAORA.1` のため、`PROVIDER` 行を削れば本番構成に戻る。
+`Env` / `DBConn` は `Agree/Infrastructure/` に本体同梱となったため、**DLL の再ビルドや
+差し替えは不要**。本体をビルドすれば反映される。プロバイダの切替は ini の `PROVIDER` 行だけで行う
+（`PROVIDER` 行を削れば既定の `MSDAORA.1`＝本番構成に戻る）。
 
 ---
 
 ## 4. 実アプリのデバッグ実行（F5）
 
-1. 上記 1〜3 を完了。
+1. 上記 1〜2 を完了。
 2. Visual Studio で `Agree.csproj` を開き、構成 `Debug` / プラットフォーム `x86` で F5。
 3. 起動時に診療科コンボが埋まり、オフライン警告が出なければローカルDBに接続成功。
    登録・削除・検索がローカルの `AGREE` 表に反映される。

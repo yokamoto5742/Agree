@@ -30,7 +30,7 @@
 
 `BARCODE_*` と `DOCUMENT_CODE` は印刷のたびに `ExcelControl` が参照する（ファイル自体の読込は 1 回だけ）。
 
-## 3. AgentlabUtilityLibrary.ini（外部 DLL の設定）
+## 3. AgentlabUtilityLibrary.ini（DB 接続・連携フォルダの設定）
 
 `Env` が読み、Agree は `DBConn.GetOpenDBConn()` / `DBConn.GetEhrDBConn()` と `Env` のプロパティを通して間接的に使う。
 値の一部は暗号化されていて、`Enc.Decrypt` で復号してから使う。
@@ -48,7 +48,7 @@
 | 〃 | `EHR_PWD` | あり | パスワード。無ければ `OPEN_PWD` と同じ | 〃 |
 | 〃 | `EHR_PROVIDER` | なし | OleDb プロバイダ名。無ければ `PROVIDER` と同じ | 〃 |
 | 〃 | `DB_LINK` | あり | マスタ参照用の DB リンク接尾辞（例：`@リンク名`）。空ならローカルのテーブル | `M_PATIENT` / `M_DEPT` / `M_USR` の参照 |
-| 〃 | `MAIN_DB` / `MAIN_USER` / `MAIN_PWD` | あり | メイン DB の接続情報 | **使わない**（DLL 3.0.0 以降は読まない） |
+| 〃 | `MAIN_DB` / `MAIN_USER` / `MAIN_PWD` | あり | メイン DB の接続情報 | **使わない**（現在の `Env` は読まない） |
 
 - `AgentlabUtilityLibrary.ini` は認証情報を含むため、`.gitignore` で git の管理から外している（各環境で配置する）。
   以前は git で管理していたので、過去のコミットには残っている。

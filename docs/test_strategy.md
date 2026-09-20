@@ -2,10 +2,10 @@
 
 ## 1. このアプリの性質と「テストしにくさ」
 
-本体は **WinForms + 画面内インライン SQL + COM(Excel) + 外部DLL(AgentlabUtilityLibrary)**
+本体は **WinForms + 画面内インライン SQL + COM(Excel)**
 で構成され、業務ロジックの大半はフォームのイベントハンドラ内に、TextBox 等の UI
 フィールドへ直接張り付いている。そのため「アプリ本体を丸ごと参照して単体テストする」
-のは現実的でない（COM Excel・外部DLL・OleDb プロバイダを test 側へ巻き込むことになる）。
+のは現実的でない（COM Excel・OleDb プロバイダを test 側へ巻き込むことになる）。
 
 そこで **テストピラミッドを3層に分け**、自動化できる層を確実に回し、できない層は
 手動チェックリストに落とす方針とする。
@@ -29,15 +29,20 @@
   `'` の二重化・null→NULL・日本語無損失・CSV のカンマ/引用符/改行エスケープ等を固定する。
 - **仕組み（重要）**: `Agree.Tests.csproj` は本体 `Agree.csproj` を参照せず、
   `AgreeSql.cs` **1ファイルだけを `<Compile Link>` で取り込む**。
-  これにより COM(Excel)・外部DLL を test に持ち込まずに「本番と同一の実装」を検証できる。
+  これにより COM(Excel) を test に持ち込まずに「本番と同一の実装」を検証できる。
   → 新たに純粋ロジックを切り出す時は同じく `AgreeSql.cs`（または同種の純粋クラス）へ置き、
-     リンク対象に追加する。WinForms/COM/DLL に触れる関数はここへ移さないこと。
+     リンク対象に追加する。WinForms/COM に触れる関数はここへ移さないこと。
+- `Agree/Infrastructure/`（旧 AgentlabUtilityLibrary）も同じくリンクし、
+  `Agree.Tests/UtilityTests.cs` で `Enc.Decrypt` / `Barcode128.Draw` の描画ハッシュ /
+  `Env` の `EHR_*` フォールバックを検証する。
+  `Env` は**プロセス内で1回だけ**INI を読むため、`Env` に触れるテストは1つに限定すること
+  （先に別のテストが触れると、出力フォルダの実環境の INI が読み込まれてしまう）。
 
 ## 3. L2 — 結合テスト（ローカル Oracle / OleDb）
 
 - 対象: `Agree.Tests/OracleIntegrationTests.cs`。アプリが依存する **SQL 契約**
   （AGREE / AGREE_TEMPLATE / AGREE_STAFF の往復、`regPlan` が書く全列、日本語・`'` の無損失格納）を検証する。
-- 本体や外部DLL には依存しない（生 OleDb で完結）。前提は `docs/test_db_schema.sql` /
+- 本体のコードには依存しない（生 OleDb で完結）。前提は `docs/test_db_schema.sql` /
   `docs/test_db_seed.sql` の投入と、32bit ODAC(OraOLEDB.Oracle) + ローカル Oracle Free。
   接続文字列は環境変数 `AGREE_TEST_ORACLE` で上書き可。
 - DB 未起動・スキーマ未投入なら各テストは `Assert.Ignore`（スキップ）。

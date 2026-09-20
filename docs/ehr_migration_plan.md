@@ -29,6 +29,7 @@ Agree.exe
 | ① | 電子カルテへのアクセスを `Ehr` クラスに集約し、マスタとの JOIN をやめた | Agree `a90e133` |
 | ② | DLL に `DBConn.GetEhrDBConn()` と INI の `EHR_DB` / `EHR_USER` / `EHR_PWD` / `EHR_PROVIDER` を追加 | AgentlabUtilityLibrary `e115316` |
 | ② | `Ehr` の接続を `GetEhrDBConn()` に切り替え、同梱 DLL を更新 | Agree `1b8046b` |
+| － | `AgentlabUtilityLibrary` を外部 DLL から本体同梱のソース（`Agree/Infrastructure/`）に変更。以降の接続まわりの変更は Agree 側だけで完結する | Agree（本コミット） |
 
 ## 3. 製品が決まってから行う作業
 
@@ -82,6 +83,6 @@ Agree.exe
 
 ## 5. 配布時の注意
 
-- 同梱の `AgentlabUtilityLibrary.dll`（3.0.0 以降）は、`AgentlabUtilityLibrary.ini` が無い場合の DB 接続情報の既定値を持たない。**配置先に ini が必要**。
-- 配布は **DLL を先**に行う。新しい DLL は古い Agree でも動くが、新しい Agree は古い DLL では起動しない（`GetEhrDBConn` が無いため）。
+- 接続情報は `AgentlabUtilityLibrary.ini` からのみ読む（ini が無い場合の既定値は持たない）。**配置先に ini が必要**。
+- `AgentlabUtilityLibrary.dll` は不要になった（`EyeAgree.exe` に取り込み済み）。配布物は exe だけでよい。
 - 同意書 DB と電子カルテの接続先を分けた場合、起動時のオフライン判定は電子カルテ側（診療科一覧の読込）だけで行う。同意書 DB に接続できないことは、操作したときのエラーで分かる。

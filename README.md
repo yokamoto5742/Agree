@@ -37,7 +37,7 @@
 
 ### 外部依存（重要）
 
-- **`AgentlabUtilityLibrary.dll`** — DB 接続（`DBConn`）や患者情報取得を提供する外部 DLL。これが無いとビルド・実行とも失敗します。接続文字列・認証情報はこの DLL 側で管理され、リポジトリ内に設定はありません。
+- **`AgentlabUtilityLibrary.ini`** — DB の接続先・認証情報（暗号化された値）を持つ設定ファイル。実行フォルダか `c:\macs\utility\` に必要です。認証情報を含むためリポジトリには含まれません。
 - **Excel テンプレート** — `EyeAgree.xlsm` が `AGENT_HOME` 配下に必要です。
 
 <div align="right"><a href="#目次">▲ 目次へ戻る</a></div>
@@ -52,7 +52,7 @@
    cd Agree
    ```
 2. Visual Studio で `Agree.slnx`（または `Agree.csproj`）を開きます。
-3. 外部依存 `AgentlabUtilityLibrary.dll` と Excel テンプレート `EyeAgree.xlsm`、患者情報受け渡し用の `pat.csv`` が、配置先（`AGENT_HOME` / `LEGACY_HOME`）に揃っていることを確認します。
+3. 設定ファイル `AgentlabUtilityLibrary.ini` と Excel テンプレート `EyeAgree.xlsm`、患者情報受け渡し用の `pat.csv`` が、配置先（`AGENT_HOME` / `LEGACY_HOME`）に揃っていることを確認します。
 4. **F5** で実行します（プラットフォームは x86）。
 
 CLI でビルドの検証のみ行う場合:
@@ -96,8 +96,8 @@ SHOW_SETTING_BUTTON=0
 
 | 症状 | 原因と対処 |
 | --- | --- |
-| 「データベースに接続できません。オフラインモードで起動します」と表示される | DB に接続できない状態です。画面確認は可能ですが登録系は使えません。ネットワーク／DB の稼働、`AgentlabUtilityLibrary.dll` の接続設定、32bit OleDb プロバイダ（`OraOLEDB.Oracle`）の登録を確認してください。 |
-| ビルド・起動が失敗する | `AgentlabUtilityLibrary.dll` が見つからない可能性があります。配置を確認してください（ソースには含まれません）。 |
+| 「データベースに接続できません。オフラインモードで起動します」と表示される | DB に接続できない状態です。画面確認は可能ですが登録系は使えません。ネットワーク／DB の稼働、`AgentlabUtilityLibrary.ini` の接続設定、32bit OleDb プロバイダ（`OraOLEDB.Oracle`）の登録を確認してください。 |
+| 起動が失敗する | `AgentlabUtilityLibrary.ini` が見つからない可能性があります。実行フォルダまたは `c:\macs\utility\` への配置を確認してください（認証情報を含むためリポジトリには含まれません）。 |
 | 印刷時にエラー／帳票が出ない | Excel がインストールされているか、テンプレート `EyeAgree.xlsm` が `AGENT_HOME` 配下にあるかを確認してください。 |
 | 印刷後に Excel プロセスが残る | COM オブジェクトの解放漏れが原因です（通常は `ReleaseExcel` で解放されます）。残った Excel プロセスを終了してください。 |
 | 患者情報が自動で入らない | `pat.csv`` が `LEGACY_HOME` 配下に存在し、内容が空でないかを確認してください。 |
@@ -110,6 +110,7 @@ SHOW_SETTING_BUTTON=0
 - 技術スタック: C# / .NET Framework 4.8 / Windows Forms（**x86 専用ビルド**）
 - エントリポイント: `Agree/Program.cs` → `Form1`
 - UI フォーム: `Form1` は複数ファイルに分割済み（`Form1.cs` / `Form1.Agree.cs` / `Form1.ImportExport.cs` / `Form1.Designer.cs`）。設計ドキュメントは [docs/design/](docs/design/architecture.md) を参照。
+- 基盤コード: `Agree/Infrastructure/`（旧 `AgentlabUtilityLibrary.dll` のソースを本体に取り込んだもの。`Env` / `DBConn` / `Enc` / `CharMap` / `Barcode128`。名前空間は `AgentlabUtilityLibrary` のまま）。
 - DB アクセス: `AgentlabUtilityLibrary.DBConn.GetOpenDBConn()`（OleDb）。主なテーブルは `AGREE` / `AGREE_TEMPLATE` / `AGREE_STAFF` / `M_PATIENT` / `M_DEPT` / `M_USR`。
 - Excel 生成: `Microsoft.Office.Interop.Excel`（COM）。使用後は `ExcelControl.ReleaseExcel` で必ず解放します。
 - バーコード設定: `EyeAgreeSettings.ini` の `BARCODE_SETTINGS` セクションから取得します。

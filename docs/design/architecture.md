@@ -42,7 +42,7 @@ flowchart LR
         end
     end
 
-    subgraph Lib["AgentlabUtilityLibrary.dll"]
+    subgraph Lib["Agree/Infrastructure（旧 AgentlabUtilityLibrary.dll）"]
         DBConn["DBConn.GetOpenDBConn / GetEhrDBConn"]
         Env["Env<br/>LEGACY_HOME / AGENT_HOME / DB_LINK"]
         Barcode["Barcode128"]
@@ -87,9 +87,9 @@ flowchart LR
 | 層 | 要素 | 依存先 |
 | --- | --- | --- |
 | エントリ | `Program` | `Form1`, `Logger` |
-| 画面 | `Form1`（`Form1.cs` / `Form1.Agree.cs` / `Form1.ImportExport.cs` / `Form1.Designer.cs`）、`TmpAgree`、`TmpStaff` | ヘルパー層、外部 DLL |
-| ヘルパー | `Db`、`AgreeSql`、`AppSettings`、`ExcelControl`、`Logger` | 外部 DLL、Excel COM、ファイル |
-| 外部 DLL | `AgentlabUtilityLibrary.dll`（`DBConn`, `Env`, `Barcode128`） | `AgentlabUtilityLibrary.ini`、OleDb |
+| 画面 | `Form1`（`Form1.cs` / `Form1.Agree.cs` / `Form1.ImportExport.cs` / `Form1.Designer.cs`）、`TmpAgree`、`TmpStaff` | ヘルパー層、基盤層 |
+| ヘルパー | `Db`、`AgreeSql`、`AppSettings`、`ExcelControl`、`Logger` | 基盤層、Excel COM、ファイル |
+| 基盤 | `Agree/Infrastructure/`（`DBConn`, `Env`, `Barcode128`） | `AgentlabUtilityLibrary.ini`、OleDb |
 | 外部システム | Oracle、Excel、電子カルテ（Pat.csv / マスタ） | — |
 
 - 業務ロジックと SQL は画面クラス（`Form1` / `TmpAgree` / `TmpStaff`）に直接書かれている。
@@ -102,7 +102,7 @@ flowchart LR
 
 | 参照 | 入手元 | 使用箇所 | 備考 |
 | --- | --- | --- | --- |
-| `AgentlabUtilityLibrary.dll` | リポジトリ直下（HintPath） | `DBConn.GetOpenDBConn` / `GetEhrDBConn`、`Env.DB_LINK` / `LEGACY_HOME` / `AGENT_HOME`、`Barcode128` | ソースは別リポジトリ。無いとビルド・実行とも不可 |
+| （参照ではなく本体同梱）`Agree/Infrastructure/` | 本リポジトリ | `DBConn.GetOpenDBConn` / `GetEhrDBConn`、`Env.DB_LINK` / `LEGACY_HOME` / `AGENT_HOME`、`Barcode128` | 旧 `AgentlabUtilityLibrary.dll`。名前空間は `AgentlabUtilityLibrary` のまま。実行時は `AgentlabUtilityLibrary.ini` が必要 |
 | `Microsoft.Office.Interop.Excel` | VS ビルド：登録済み Excel の COMReference／`dotnet build`：同梱 PIA | `ExcelControl` | 実行時は Excel のインストールが必要 |
 | `System.Data.OleDb` | .NET Framework | `Db`、`Form1`、`TmpAgree`、`TmpStaff` | プロバイダは `OraOLEDB.Oracle`（32bit） |
 | `Microsoft.VisualBasic.FileIO.TextFieldParser` | .NET Framework | `Form1.MergeCsvToTable` | CSV インポート |
@@ -114,7 +114,7 @@ flowchart LR
 flowchart TB
     subgraph PC["クライアント端末（Windows）"]
         subgraph Proc["Agree.exe プロセス（x86 / 32bit）"]
-            AppCode["Agree + AgentlabUtilityLibrary.dll"]
+            AppCode["Agree（EyeAgree.exe 単体）"]
             OleDb["OraOLEDB.Oracle（32bit ODAC）"]
         end
         ExcelProc["EXCEL.EXE（別プロセス / COM）"]

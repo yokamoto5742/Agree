@@ -27,14 +27,18 @@
 
   <!--
     本体の純粋ロジックをソースリンクして単体テストする。
-    COM(Excel) / 外部DLL(AgentlabUtilityLibrary) を巻き込まないよう、
-    Agree.csproj 全体は参照せず、依存の無いファイルだけを取り込む。
+    COM(Excel) を巻き込まないよう、Agree.csproj 全体は参照せず、依存の無いファイルだけを取り込む。
   -->
   <ItemGroup>
     <Compile Include="..\Agree\AgreeSql.cs" Link="Linked\AgreeSql.cs" />
     <Compile Include="..\Agree\AppSettings.cs" Link="Linked\AppSettings.cs" />
     <Compile Include="..\Agree\Db.cs" Link="Linked\Db.cs" />
     <Compile Include="..\Agree\Ehr.cs" Link="Linked\Ehr.cs" />
+    <Compile Include="..\Agree\Infrastructure\Barcode128.cs" Link="Linked\Barcode128.cs" />
+    <Compile Include="..\Agree\Infrastructure\CharMap.cs" Link="Linked\CharMap.cs" />
+    <Compile Include="..\Agree\Infrastructure\DBConn.cs" Link="Linked\DBConn.cs" />
+    <Compile Include="..\Agree\Infrastructure\Enc.cs" Link="Linked\Enc.cs" />
+    <Compile Include="..\Agree\Infrastructure\Env.cs" Link="Linked\Env.cs" />
   </ItemGroup>
 
   <ItemGroup>
