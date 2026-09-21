@@ -369,3 +369,6 @@ test.udl
 
 # DumpSchema で取得した本番DBの定義（院内システムの情報のため配布しない）
 docs/schema_*.txt
+
+# Obsidian の設定
+.obsidian/
