@@ -366,3 +366,6 @@ FodyWeavers.xsd
 AgentlabUtilityLibrary.ini
 # ローカルテスト用の接続文字列（認証情報を含む）
 test.udl
+
+# DumpSchema で取得した本番DBの定義（院内システムの情報のため配布しない）
+docs/schema_*.txt

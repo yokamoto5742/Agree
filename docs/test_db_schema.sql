@@ -6,70 +6,94 @@
 --       本アプリは M_xxx マスタを "テーブル名 + DB_LINK" で参照するため、
 --       DB_LINK が空ならローカル(TEST_USER)の同名テーブルを直接参照する。
 --
--- 注意: データ型・桁数はソースに定義が無いため「推測」。本番DDLが入手でき
---       たら差し替えること。日本語格納のため VARCHAR2 は CHAR 長で指定。
---       自由記述欄(DIAG/OPE/EXPLANATION/ITEM1-4)は長文の可能性があり 2000CHAR
---       で確保。不足する場合は CLOB へ変更する。
+-- 型・桁数の出どころ:
+--   AGREE / AGREE_TEMPLATE / AGREE_STAFF … 本番DBの実測値（docs/schema_open.txt、git管理外。
+--     DumpSchema で ALL_TAB_COLUMNS を取得したもの。列順も本番に合わせてある）。
+--   M_xxx マスタ … 未実測（電子カルテ側は取得できていない。
+--     docs/dump_schema_production.md の4章参照）。従来どおり「推測」。
+--
+-- 実測して分かったこと・注意:
+--   * VARCHAR2 はすべて BYTE セマンティクス（CHAR_LENGTH と DATA_LENGTH が一致）。
+--     本スクリプトも BYTE で宣言し、本番の物理的な上限を再現する。全角で何文字
+--     入るかはDBキャラクタセット依存（JA16SJIS なら 2byte/字、AL32UTF8 なら 3byte/字）。
+--     本番の NLS_CHARACTERSET は未確認。
+--   * 画面側の TextBox.MaxLength は「文字数」なので、全角入力では本番列を超えうる
+--     （例: Form1 の diag は MaxLength=200 だが DIAG は 100 BYTE）。ORA-12899 を
+--     再現できるよう、桁数は本番どおりに保つこと。
+--   * 本アプリが参照しない列（AGREE.RESERVE1-4 / AGREE.SAVE_STAFF /
+--     AGREE_TEMPLATE.RESERVER1-3）も本番に存在するため、そのまま再現している。
+--     ※ AGREE 側は RESERVE、AGREE_TEMPLATE 側は RESERVER と綴りが違う（本番のまま）。
+--   * DumpSchema は列定義しか取らないため、主キー・索引・DEFAULT・チェック制約は
+--     未実測。以下の PRIMARY KEY と DEFAULT はテスト用の付加であり本番の再現ではない。
 -- =====================================================================
 
 -- ---------------------------------------------------------------------
--- 1. アプリ専用テーブル（本アプリが INSERT/UPDATE する。INSERT 文から全列確定）
+-- 1. アプリ専用テーブル（本アプリが INSERT/UPDATE する）
+--    列・型・NULL 制約・列順は本番実測（docs/schema_open.txt）。
 -- ---------------------------------------------------------------------
 
 -- 同意書本体（Form1.regAgree / delAgree / showList）
 CREATE TABLE AGREE (
-    AGREE_ID     NUMBER          NOT NULL,        -- AGREE_SEQ.nextval
-    PATIENT_ID   NUMBER,                          -- M_PATIENT.P_ID に対応
-    SAVE_DATE    NUMBER(8),                       -- 作成日 yyyymmdd
-    DEPT         NUMBER,                          -- 診療科 → M_DEPT.CODE
-    DR           NUMBER,                          -- 医師   → M_USR.CODE
-    STAFF        VARCHAR2(100 CHAR),              -- 担当者(文字列で格納)
-    EYE          VARCHAR2(50 CHAR),               -- 左右眼
-    DIAG         VARCHAR2(2000 CHAR),             -- 病名
-    ANES         VARCHAR2(2000 CHAR),             -- 麻酔
-    OPE          VARCHAR2(2000 CHAR),             -- 術式
-    EXPLANATION  VARCHAR2(2000 CHAR),             -- 説明
-    ITEM1        VARCHAR2(2000 CHAR),
-    ITEM2        VARCHAR2(2000 CHAR),
-    ITEM3        VARCHAR2(2000 CHAR),
-    ITEM4        VARCHAR2(2000 CHAR),
-    SHEET_NAME   VARCHAR2(200 CHAR),              -- 帳票シート名
-    DR_OK        NUMBER(1)       DEFAULT 0,       -- 医師完了 1/0
-    DELETE_FLAG  NUMBER(1)       DEFAULT 0,       -- 論理削除 1/0
-    SAVE_TIME    NUMBER(6),                       -- 保存時刻 HHmmss
-    CONSTRAINT PK_AGREE PRIMARY KEY (AGREE_ID)
+    AGREE_ID     NUMBER               NOT NULL,   -- AGREE_SEQ.nextval
+    PATIENT_ID   NUMBER(9,0)          NOT NULL,   -- M_PATIENT.P_ID に対応
+    DEPT         NUMBER(3,0)          NOT NULL,   -- 診療科 → M_DEPT.CODE
+    DR           NUMBER(5,0)          NOT NULL,   -- 医師   → M_USR.CODE
+    STAFF        VARCHAR2(60 BYTE),               -- 担当者(文字列で格納)
+    EYE          VARCHAR2(20 BYTE),               -- 左右眼
+    DIAG         VARCHAR2(100 BYTE),              -- 病名
+    OPE          VARCHAR2(100 BYTE),              -- 術式
+    EXPLANATION  VARCHAR2(1200 BYTE),             -- 説明
+    ITEM1        VARCHAR2(200 BYTE),              -- 症状
+    ITEM2        VARCHAR2(200 BYTE),              -- 治療計画
+    ITEM3        VARCHAR2(200 BYTE),              -- 検査内容
+    ITEM4        VARCHAR2(500 BYTE),              -- 手術内容
+    RESERVE1     VARCHAR2(200 BYTE),              -- 予備列。アプリは未参照
+    RESERVE2     VARCHAR2(200 BYTE),              -- 〃
+    RESERVE3     VARCHAR2(200 BYTE),              -- 〃
+    RESERVE4     VARCHAR2(200 BYTE),              -- 〃
+    SHEET_NAME   VARCHAR2(50 BYTE),               -- 帳票シート名
+    DR_OK        NUMBER(1,0)     DEFAULT 0,       -- 医師完了 1/0（DEFAULT は未実測）
+    DELETE_FLAG  NUMBER(1,0)     DEFAULT 0,       -- 論理削除 1/0（DEFAULT は未実測）
+    SAVE_STAFF   NUMBER(5,0),                     -- 保存者。アプリは未参照
+    SAVE_DATE    NUMBER(8,0)          NOT NULL,   -- 作成日 yyyymmdd
+    SAVE_TIME    NUMBER(6,0)          NOT NULL,   -- 保存時刻 HHmmss
+    ANES         VARCHAR2(100 BYTE),              -- 麻酔
+    CONSTRAINT PK_AGREE PRIMARY KEY (AGREE_ID)    -- 本番の制約は未実測
 );
 
 -- 同意書テンプレート（TmpAgree。親子ツリー構造: TEMP_PARENT で親を参照）
 CREATE TABLE AGREE_TEMPLATE (
-    TEMP_ID      NUMBER          NOT NULL,        -- AGREE_TEMPLATE_SEQ.nextval
-    TEMP_LEVEL   NUMBER,                          -- 階層レベル(0=ルート,1=葉)
-    TEMP_PARENT  NUMBER,                          -- 親 TEMP_ID
-    TEMP_NAME    VARCHAR2(200 CHAR),
-    EYE          VARCHAR2(50 CHAR),
-    DIAG         VARCHAR2(2000 CHAR),
-    ANES         VARCHAR2(2000 CHAR),
-    OPE          VARCHAR2(2000 CHAR),
-    EXPLANATION  VARCHAR2(2000 CHAR),
-    ITEM1        VARCHAR2(2000 CHAR),
-    ITEM2        VARCHAR2(2000 CHAR),
-    ITEM3        VARCHAR2(2000 CHAR),
-    ITEM4        VARCHAR2(2000 CHAR),
-    SHEET_NAME   VARCHAR2(200 CHAR),
-    DELETE_FLAG  NUMBER(1)       DEFAULT 0,
-    DISP_ORDER   NUMBER,                          -- 表示順
-    CONSTRAINT PK_AGREE_TEMPLATE PRIMARY KEY (TEMP_ID)
+    TEMP_ID      NUMBER               NOT NULL,   -- AGREE_TEMPLATE_SEQ.nextval
+    TEMP_LEVEL   NUMBER(1,0)          NOT NULL,   -- 階層レベル(0=分類,1=テンプレート)
+    TEMP_PARENT  NUMBER               NOT NULL,   -- 親 TEMP_ID（分類は 0）
+    TEMP_NAME    VARCHAR2(40 BYTE)    NOT NULL,
+    EYE          VARCHAR2(20 BYTE),
+    DIAG         VARCHAR2(100 BYTE),
+    OPE          VARCHAR2(100 BYTE),
+    EXPLANATION  VARCHAR2(1200 BYTE),
+    ITEM1        VARCHAR2(200 BYTE),
+    ITEM2        VARCHAR2(200 BYTE),
+    ITEM3        VARCHAR2(200 BYTE),
+    ITEM4        VARCHAR2(500 BYTE),
+    RESERVER1    VARCHAR2(200 BYTE),              -- 予備列。アプリは未参照（綴りは本番のまま）
+    RESERVER2    VARCHAR2(200 BYTE),              -- 〃
+    RESERVER3    VARCHAR2(200 BYTE),              -- 〃
+    DISP_ORDER   NUMBER(2,0),                     -- 表示順（0〜99 まで）
+    SHEET_NAME   VARCHAR2(50 BYTE),
+    DELETE_FLAG  NUMBER(1,0)     DEFAULT 0,       -- （DEFAULT は未実測）
+    ANES         VARCHAR2(100 BYTE),
+    CONSTRAINT PK_AGREE_TEMPLATE PRIMARY KEY (TEMP_ID)  -- 本番の制約は未実測
 );
 
 -- 担当医ごとの定型説明文（TmpStaff。STAFF は数値の医師コード → M_USR.CODE）
 CREATE TABLE AGREE_STAFF (
-    ID           NUMBER          NOT NULL,        -- AGREE_STAFF_SEQ.nextval
-    STAFF        NUMBER,                          -- 医師コード → M_USR.CODE
-    CONT         VARCHAR2(2000 CHAR),             -- 説明文
-    CONSTRAINT PK_AGREE_STAFF PRIMARY KEY (ID)
+    ID           NUMBER               NOT NULL,   -- AGREE_STAFF_SEQ.nextval
+    STAFF        NUMBER(5,0)          NOT NULL,   -- 医師コード → M_USR.CODE
+    CONT         VARCHAR2(60 BYTE),               -- 説明文
+    CONSTRAINT PK_AGREE_STAFF PRIMARY KEY (ID)    -- 本番の制約は未実測
 );
 
--- シーケンス（INSERT 文で xxx_SEQ.nextval を使用）
+-- シーケンス（INSERT 文で xxx_SEQ.nextval を使用。本番の現在値は未実測）
 CREATE SEQUENCE AGREE_SEQ          START WITH 1 INCREMENT BY 1 NOCACHE;
 CREATE SEQUENCE AGREE_TEMPLATE_SEQ START WITH 1 INCREMENT BY 1 NOCACHE;
 CREATE SEQUENCE AGREE_STAFF_SEQ    START WITH 1 INCREMENT BY 1 NOCACHE;
@@ -77,6 +101,7 @@ CREATE SEQUENCE AGREE_STAFF_SEQ    START WITH 1 INCREMENT BY 1 NOCACHE;
 
 -- ---------------------------------------------------------------------
 -- 2. 電子カルテ側マスタ（本来は DB_LINK 経由。DB_LINK を空にしローカルで代替）
+--    ※ 本番の定義は未取得のため、以下はすべて「推測」。
 --    アプリが参照するのは M_PATIENT / M_DEPT / M_USR の 3 表のみ。
 --    起動時に M_DEPT を SELECT し、失敗するとオフラインモードに落ちる。
 --    M_DR / M_SYOZOKU / M_SHIKAKU / M_SHINKU / M_SEKOU は旧実装（Dict.InitDict）の
