@@ -4,15 +4,16 @@
 > - `AGREE` / `AGREE_TEMPLATE` / `AGREE_STAFF` の型・桁数・NULL 制約は**本番DBの実測値**
 >   （`docs/schema_open.txt`。`DumpSchema` で `ALL_TAB_COLUMNS` を取得。院内情報のため git 管理外）。
 >   ただし取得できるのは列定義だけで、**主キー・索引・DEFAULT・チェック制約は未実測**。
-> - 電子カルテ側マスタ（`M_PATIENT` / `M_DEPT` / `M_USR`）は**未実測**。DBリンク越しの取得に
->   失敗している（[../dump_schema_production.md](../dump_schema_production.md) 4章）。型・桁数は不明のまま。
+> - 電子カルテ側マスタ（`M_PATIENT` / `M_DEPT` / `M_USR`）も**本番DBの実測値**
+>   （`docs/schema_ehr.txt`。DBリンク `@inno.world` 越しに `ALL_TAB_COLUMNS` を取得。オーナーは `MEDB`）。
 > - 参照関係は、SQL の WHERE・JOIN 条件とシーケンスの使い方からの推定。DB 上の外部キー制約が
 >   あるかはわからない。
-> - テスト用 DDL は [../test_db_schema.sql](../test_db_schema.sql)（上記3表は実測どおり、`M_xxx` は推測）。
+> - テスト用 DDL は [../test_db_schema.sql](../test_db_schema.sql)（上記3表は実測どおり、`M_xxx` は
+>   使う列と NOT NULL 列だけを実測どおりに再現）。
 >
-> **桁数の読み方**：`VARCHAR2` はすべて **BYTE セマンティクス**。全角で何文字入るかは
-> DBキャラクタセット次第（JA16SJIS なら byte 数 ÷ 2、AL32UTF8 なら ÷ 3）。本番の
-> `NLS_CHARACTERSET` は未確認。
+> **桁数の読み方**：同意書側の `VARCHAR2` はすべて **BYTE セマンティクス**。本番の
+> キャラクタセットは `JA16SJISTILDE` なので、全角は byte 数 ÷ 2 文字まで入る。
+> 電子カルテ側（キャラクタセット `AL32UTF8`）の文字列列はすべて `NVARCHAR2` で、桁数は**文字数**。
 
 ## 1. テーブルの分類
 
@@ -169,25 +170,31 @@ erDiagram
 
 ### 3.4 外部マスタ（参照する列だけ）
 
-本番の定義は**未取得**（型・桁数・NULL 制約は不明）。取得手順は [../dump_schema_production.md](../dump_schema_production.md) 4章。
+型・NULL 制約は本番の実測値（オーナー `MEDB`）。各表にはほかにも多数の列がある（`M_PATIENT` は約 120 列）が、
+アプリは読まない。どの表にも NOT NULL の `REG_USR`（`NUMBER(5,0)`）/ `REG_DATE`（`NUMBER(8,0)`）/
+`REG_TIME`（`NUMBER(6,0)`）がある。
 
-| テーブル | 列 | 論理名 | 用途 | 参照箇所 |
-| --- | --- | --- | --- | --- |
-| `M_PATIENT` | `P_ID` | 患者 ID | 検索キー | `Form1.showList` |
-| | `P_NAME` / `P_KANA` | 氏名 / カナ | 画面表示・印刷 | 〃 |
-| | `P_SEX` | 性別 | `2` → 女、それ以外 → 男 | 〃 |
-| `M_DEPT` | `CODE` | 診療科コード | コンボの値・結合キー（`0` はコンボに出さない） | `Form1` コンストラクタ / `showList` |
-| | `S_NAME` | 診療科略称 | 表示・印刷（`Trim` して使う） | 〃 |
-| `M_USR` | `CODE` | 職員コード | 入力者の存在チェック・結合キー | `Ehr.StaffName` / `showList` / `TmpStaff.initList` |
-| | `NAME` | 職員氏名 | 表示・印刷（`Trim` して使う） | 〃 |
+| テーブル | 列 | 論理名 | 型（本番DB） | NULL | 用途 | 参照箇所 |
+| --- | --- | --- | --- | --- | --- | --- |
+| `M_PATIENT` | `P_ID` | 患者 ID | `NUMBER(9,0)` | NOT NULL | 検索キー | `Form1.showList` |
+| | `P_NAME` / `P_KANA` | 氏名 / カナ | `NVARCHAR2(40)` | | 画面表示・印刷 | 〃 |
+| | `P_SEX` | 性別 | `NUMBER(1,0)` | | `2` → 女、それ以外 → 男 | 〃 |
+| `M_DEPT` | `CODE` | 診療科コード | `NUMBER(5,0)` | NOT NULL | コンボの値・結合キー（`0` はコンボに出さない） | `Form1` コンストラクタ / `showList` |
+| | `S_NAME` | 診療科略称 | `NVARCHAR2(50)` | | 表示・印刷（`Trim` して使う） | 〃 |
+| `M_USR` | `CODE` | 職員コード | `NUMBER(5,0)` | NOT NULL | 入力者の存在チェック・結合キー | `Ehr.StaffName` / `showList` / `TmpStaff.initList` |
+| | `NAME` | 職員氏名 | `NVARCHAR2(40)` | | 表示・印刷（`Trim` して使う） | 〃 |
 
-> [../test_db_schema.sql](../test_db_schema.sql) には `M_DR`・`M_SYOZOKU`・`M_SHIKAKU`・`M_SHINKU`・`M_SEKOU` もある。
-> 現在の Agree のコードはこれらを参照していない（以前の `Dict.InitDict` 用の名残と思われる）。
+`AGREE.PATIENT_ID`（`NUMBER(9,0)`）と `AGREE.DR` / `AGREE_STAFF.STAFF`（`NUMBER(5,0)`）は
+マスタのコードと同じ桁数。`AGREE.DEPT` は `NUMBER(3,0)` で `M_DEPT.CODE`（5 桁）より狭いが、
+アプリは 1〜20 しか受け付けないので問題にならない。
+
+> [../test_db_schema.sql](../test_db_schema.sql) には `M_DR` もある。現在の Agree のコードは参照していない
+> （以前の `Dict.InitDict` 用の名残と思われる）が、テストデータ投入・修復スクリプトが使うため残している。
 
 ### 3.5 画面の入力上限と列の桁数
 
 `TextBox.MaxLength` は**文字数**、DB の桁数は**バイト数**なので、同じ数値でも全角入力では
-列に収まらない。JA16SJIS（全角 2 バイト）を仮定した場合の対応は次のとおり。
+列に収まらない。本番のキャラクタセット JA16SJISTILDE（全角 2 バイト）での対応は次のとおり。
 
 | 列 | 桁数(byte) | 全角で入る数 | `MaxLength`（Form1 / TmpAgree / TmpStaff） | 判定 |
 | --- | --- | --- | --- | --- |

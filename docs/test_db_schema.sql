@@ -9,14 +9,20 @@
 -- 型・桁数の出どころ:
 --   AGREE / AGREE_TEMPLATE / AGREE_STAFF … 本番DBの実測値（docs/schema_open.txt、git管理外。
 --     DumpSchema で ALL_TAB_COLUMNS を取得したもの。列順も本番に合わせてある）。
---   M_xxx マスタ … 未実測（電子カルテ側は取得できていない。
---     docs/dump_schema_production.md の4章参照）。従来どおり「推測」。
+--   M_xxx マスタ … 本番DBの実測値（docs/schema_ehr.txt、git管理外。DBリンク @inno.world
+--     越しに ALL_TAB_COLUMNS を取得。本番のオーナーは MEDB）。ただし全列ではなく、
+--     アプリ・本スクリプト群が使う列と NOT NULL 列だけを本番の列順で再現している。
 --
 -- 実測して分かったこと・注意:
---   * VARCHAR2 はすべて BYTE セマンティクス（CHAR_LENGTH と DATA_LENGTH が一致）。
---     本スクリプトも BYTE で宣言し、本番の物理的な上限を再現する。全角で何文字
---     入るかはDBキャラクタセット依存（JA16SJIS なら 2byte/字、AL32UTF8 なら 3byte/字）。
---     本番の NLS_CHARACTERSET は未確認。
+--   * 同意書側(OPEN)のキャラクタセットは JA16SJISTILDE（全角 2byte/字）。
+--     VARCHAR2 はすべて BYTE セマンティクス（CHAR_LENGTH と DATA_LENGTH が一致）。
+--     本スクリプトも BYTE で宣言し、本番の物理的な上限を再現する。
+--     ※ ローカルのテストDBが AL32UTF8 だと全角は 3byte/字になり、本番(2byte/字)より
+--       少ない文字数で ORA-12899 になる。
+--   * 電子カルテ側(EHR)のキャラクタセットは AL32UTF8。マスタの文字列列はすべて
+--     NVARCHAR2（桁数は文字数）。
+--   * マスタには NOT NULL の REG_USR / REG_DATE / REG_TIME がある（登録者・登録日時）。
+--     マスタへ INSERT するときは必ず値を指定すること。
 --   * 画面側の TextBox.MaxLength は「文字数」なので、全角入力では本番列を超えうる
 --     （例: Form1 の diag は MaxLength=200 だが DIAG は 100 BYTE）。ORA-12899 を
 --     再現できるよう、桁数は本番どおりに保つこと。
@@ -101,83 +107,57 @@ CREATE SEQUENCE AGREE_STAFF_SEQ    START WITH 1 INCREMENT BY 1 NOCACHE;
 
 -- ---------------------------------------------------------------------
 -- 2. 電子カルテ側マスタ（本来は DB_LINK 経由。DB_LINK を空にしローカルで代替）
---    ※ 本番の定義は未取得のため、以下はすべて「推測」。
+--    型・NULL 制約・列順は本番実測（docs/schema_ehr.txt、本番のオーナーは MEDB）。
+--    再現しているのは、アプリ・本スクリプト群が使う列と NOT NULL 列だけ。
 --    アプリが参照するのは M_PATIENT / M_DEPT / M_USR の 3 表のみ。
 --    起動時に M_DEPT を SELECT し、失敗するとオフラインモードに落ちる。
---    M_DR / M_SYOZOKU / M_SHIKAKU / M_SHINKU / M_SEKOU は旧実装（Dict.InitDict）の
---    名残で現在のアプリは参照しないが、test_db_seed.sql / fix_corrupt_master_data.sql
---    が M_DR を使うため残している。
+--    M_DR は現在のアプリは参照しないが、test_db_seed.sql / fix_corrupt_master_data.sql
+--    が使うため残している。
+--    PRIMARY KEY は未実測（テスト用の付加）。
 -- ---------------------------------------------------------------------
 
--- 患者マスタ（Form1.showList: P_NAME,P_KANA,P_SEX を P_ID で取得）
+-- 患者マスタ（Ehr.FindPatient: P_NAME,P_KANA,P_SEX を P_ID で取得）
 CREATE TABLE M_PATIENT (
-    P_ID    NUMBER          NOT NULL,
-    P_NAME  VARCHAR2(100 CHAR),
-    P_KANA  VARCHAR2(100 CHAR),
-    P_SEX   NUMBER(1),                            -- "2"=女, それ以外=男
+    P_ID      NUMBER(9,0)          NOT NULL,
+    P_KANA    NVARCHAR2(40),
+    P_NAME    NVARCHAR2(40),
+    P_SEX     NUMBER(1,0),                        -- "2"=女, それ以外=男
+    REG_USR   NUMBER(5,0)          NOT NULL,      -- 登録者。アプリは未参照
+    REG_DATE  NUMBER(8,0)          NOT NULL,      -- 登録日 yyyymmdd。アプリは未参照
+    REG_TIME  NUMBER(6,0)          NOT NULL,      -- 登録時刻 HHmmss。アプリは未参照
     CONSTRAINT PK_M_PATIENT PRIMARY KEY (P_ID)
 );
 
--- 診療科マスタ（アプリ: CODE, S_NAME 参照。Form1 コンストラクタ / showList）
+-- 診療科マスタ（Ehr.LoadDepartments: CODE, S_NAME 参照）
 CREATE TABLE M_DEPT (
-    CODE    NUMBER          NOT NULL,
-    NAME    VARCHAR2(100 CHAR),
-    S_NAME  VARCHAR2(50 CHAR),                    -- 略称
+    CODE      NUMBER(5,0)          NOT NULL,
+    NAME      NVARCHAR2(50),
+    S_NAME    NVARCHAR2(50),                      -- 略称
+    REG_USR   NUMBER(5,0)          NOT NULL,
+    REG_DATE  NUMBER(8,0)          NOT NULL,
+    REG_TIME  NUMBER(6,0)          NOT NULL,
     CONSTRAINT PK_M_DEPT PRIMARY KEY (CODE)
 );
 
--- 職員マスタ（アプリ: CODE, NAME 参照。Ehr.StaffName / showList / TmpStaff。他の列は旧実装の名残）
+-- 職員マスタ（Ehr.StaffName / StaffNames: CODE, NAME 参照。KANA は fix_corrupt_master_data.sql が使用）
 CREATE TABLE M_USR (
-    CODE     NUMBER         NOT NULL,
-    NAME     VARCHAR2(100 CHAR),
-    KANA     VARCHAR2(100 CHAR),
-    SYOZOKU  NUMBER,                              -- 所属コード → M_SYOZOKU.CODE
-    SHIKAKU  NUMBER,                              -- 資格コード → M_SHIKAKU.CODE
-    DEPT     NUMBER,                              -- 診療科     → M_DEPT.CODE
-    DR       NUMBER,                              -- 医師コード → M_DR.CODE
+    CODE      NUMBER(5,0)          NOT NULL,
+    KANA      NVARCHAR2(40),
+    NAME      NVARCHAR2(40),
+    REG_USR   NUMBER(5,0)          NOT NULL,
+    REG_DATE  NUMBER(8,0)          NOT NULL,
+    REG_TIME  NUMBER(6,0)          NOT NULL,
     CONSTRAINT PK_M_USR PRIMARY KEY (CODE)
 );
 
 -- 医師マスタ（現在のアプリは未参照。test_db_seed.sql / fix_corrupt_master_data.sql が使用）
 CREATE TABLE M_DR (
-    CODE      NUMBER         NOT NULL,
-    NAME      VARCHAR2(100 CHAR),
-    CATEGORY  NUMBER,
-    VAL_4     VARCHAR2(100 CHAR),
+    CODE      NUMBER(3,0)          NOT NULL,      -- 3 桁（M_USR.CODE は 5 桁）
+    NAME      NVARCHAR2(50),
+    REG_USR   NUMBER(5,0)          NOT NULL,
+    REG_DATE  NUMBER(8,0)          NOT NULL,
+    REG_TIME  NUMBER(6,0)          NOT NULL,
     CONSTRAINT PK_M_DR PRIMARY KEY (CODE)
-);
-
--- 所属マスタ（現在のアプリは未参照）
-CREATE TABLE M_SYOZOKU (
-    CODE      NUMBER         NOT NULL,
-    NAME      VARCHAR2(100 CHAR),
-    S_NAME    VARCHAR2(50 CHAR),
-    CATEGORY  NUMBER,
-    CONSTRAINT PK_M_SYOZOKU PRIMARY KEY (CODE)
-);
-
--- 資格マスタ（現在のアプリは未参照）
-CREATE TABLE M_SHIKAKU (
-    CODE      NUMBER         NOT NULL,
-    NAME      VARCHAR2(100 CHAR),
-    S_NAME    VARCHAR2(50 CHAR),
-    CATEGORY  NUMBER,
-    CONSTRAINT PK_M_SHIKAKU PRIMARY KEY (CODE)
-);
-
--- 診療区分マスタ（現在のアプリは未参照）
-CREATE TABLE M_SHINKU (
-    CODE    NUMBER          NOT NULL,
-    NAME    VARCHAR2(100 CHAR),
-    CONSTRAINT PK_M_SHINKU PRIMARY KEY (CODE)
-);
-
--- 施行マスタ（現在のアプリは未参照）
-CREATE TABLE M_SEKOU (
-    CODE    NUMBER          NOT NULL,
-    NAME    VARCHAR2(100 CHAR),
-    S_NAME  VARCHAR2(50 CHAR),
-    CONSTRAINT PK_M_SEKOU PRIMARY KEY (CODE)
 );
 
 
@@ -185,11 +165,16 @@ CREATE TABLE M_SEKOU (
 -- 3. 起動と最小動作に必要な初期データ（例）
 --    マスタが空でも起動はするが、
 --    診療科コンボや一覧結合(INNER JOIN)のため最低限のマスタを投入しておく。
+--    REG_USR / REG_DATE / REG_TIME はテスト用の固定値。
 -- ---------------------------------------------------------------------
-INSERT INTO M_DEPT (CODE, NAME, S_NAME) VALUES (1, '眼科', '眼科');
-INSERT INTO M_USR  (CODE, NAME, KANA, SYOZOKU, SHIKAKU, DEPT, DR)
-       VALUES (101, 'テスト医師', 'テストイシ', 1, 1, 1, 101);
-INSERT INTO M_DR   (CODE, NAME, CATEGORY, VAL_4) VALUES (101, 'テスト医師', 0, NULL);
-INSERT INTO M_PATIENT (P_ID, P_NAME, P_KANA, P_SEX) VALUES (1, 'テスト患者', 'テストカンジャ', 1);
+INSERT INTO M_DEPT (CODE, NAME, S_NAME, REG_USR, REG_DATE, REG_TIME)
+       VALUES (1, '眼科', '眼科', 0, 20260101, 0);
+INSERT INTO M_USR  (CODE, KANA, NAME, REG_USR, REG_DATE, REG_TIME)
+       VALUES (101, 'テストイシ', 'テスト医師', 0, 20260101, 0);
+INSERT INTO M_DR   (CODE, NAME, REG_USR, REG_DATE, REG_TIME)
+       VALUES (101, 'テスト医師', 0, 20260101, 0);
+INSERT INTO M_PATIENT (P_ID, P_KANA, P_NAME, P_SEX, REG_USR, REG_DATE, REG_TIME)
+       VALUES (1, 'テストカンジャ', 'テスト患者', 1, 0, 20260101, 0);
 
 COMMIT;
+

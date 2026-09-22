@@ -181,7 +181,7 @@ namespace Agree.Tests
                 Exec(con, tx,
                     "INSERT INTO AGREE_TEMPLATE " +
                     "(TEMP_ID, TEMP_LEVEL, TEMP_PARENT, TEMP_NAME, DELETE_FLAG, DISP_ORDER) " +
-                    "VALUES (" + id + ", 0, NULL, 'テンプレ親', 0, 1)");
+                    "VALUES (" + id + ", 0, 0, 'テンプレ親', 0, 1)");
 
                 var name = Scalar(con, tx, "SELECT TEMP_NAME FROM AGREE_TEMPLATE WHERE TEMP_ID = " + id);
                 Assert.That(name, Is.EqualTo("テンプレ親"));
@@ -219,8 +219,10 @@ namespace Agree.Tests
         }
 
         // Ehr は SQL ごとに接続を開閉するためトランザクションに載せられない。
-        // テスト用のマスタ行は実在しないコード(99000x)でコミットし、finally で削除する。
-        private const int TestCode = 990001;
+        // テスト用のマスタ行は実在しないコード(9900x)でコミットし、finally で削除する。
+        // 本番の M_USR.CODE / M_DEPT.CODE は NUMBER(5,0) なので5桁に収める。
+        // マスタには NOT NULL の REG_USR / REG_DATE / REG_TIME があるため INSERT で必ず指定する。
+        private const int TestCode = 99001;
 
         private static Ehr NewEhr() => new Ehr(new OleDbConnection(ConnectionString), "", null);
 
@@ -237,8 +239,8 @@ namespace Agree.Tests
             ExecCommitted("DELETE FROM M_PATIENT WHERE P_ID IN (" + TestCode + ", " + (TestCode + 1) + ")");
             try
             {
-                ExecCommitted("INSERT INTO M_PATIENT (P_ID, P_NAME, P_KANA, P_SEX) VALUES (" + TestCode + ", 'テスト 花子', 'テスト ハナコ', 2)");
-                ExecCommitted("INSERT INTO M_PATIENT (P_ID, P_NAME, P_KANA, P_SEX) VALUES (" + (TestCode + 1) + ", 'テスト 太郎', 'テスト タロウ', 1)");
+                ExecCommitted("INSERT INTO M_PATIENT (P_ID, P_NAME, P_KANA, P_SEX, REG_USR, REG_DATE, REG_TIME) VALUES (" + TestCode + ", 'テスト 花子', 'テスト ハナコ', 2, 0, 20260101, 0)");
+                ExecCommitted("INSERT INTO M_PATIENT (P_ID, P_NAME, P_KANA, P_SEX, REG_USR, REG_DATE, REG_TIME) VALUES (" + (TestCode + 1) + ", 'テスト 太郎', 'テスト タロウ', 1, 0, 20260101, 0)");
                 var ehr = NewEhr();
 
                 Assert.That(ehr.FindPatient(TestCode), Is.EqualTo(("テスト 花子", "テスト ハナコ", "女")));
@@ -257,7 +259,7 @@ namespace Agree.Tests
             ExecCommitted("DELETE FROM M_USR WHERE CODE = " + TestCode);
             try
             {
-                ExecCommitted("INSERT INTO M_USR (CODE, NAME) VALUES (" + TestCode + ", ' テスト 医師 ')");
+                ExecCommitted("INSERT INTO M_USR (CODE, NAME, REG_USR, REG_DATE, REG_TIME) VALUES (" + TestCode + ", ' テスト 医師 ', 0, 20260101, 0)");
                 var ehr = NewEhr();
 
                 Assert.That(ehr.StaffName(" " + TestCode + " "), Is.EqualTo("テスト 医師"), "前後の空白を除いて検索・返却する");
@@ -280,7 +282,7 @@ namespace Agree.Tests
             ExecCommitted("DELETE FROM M_DEPT WHERE CODE = " + TestCode);
             try
             {
-                ExecCommitted("INSERT INTO M_DEPT (CODE, NAME, S_NAME) VALUES (" + TestCode + ", 'テスト診療科', ' 試験科 ')");
+                ExecCommitted("INSERT INTO M_DEPT (CODE, NAME, S_NAME, REG_USR, REG_DATE, REG_TIME) VALUES (" + TestCode + ", 'テスト診療科', ' 試験科 ', 0, 20260101, 0)");
 
                 var depts = NewEhr().LoadDepartments();
 

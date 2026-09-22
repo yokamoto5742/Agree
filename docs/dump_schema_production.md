@@ -91,7 +91,10 @@ DumpSchema.exe EHR  "M_DEPT,M_PATIENT,M_USR" "%"   rem 表名を直接指定（�
   出力ヘッダの「DBリンク」が `(なし)` なのに `M_xxx` が出てこない場合は、
   本番のiniで `DB_LINK` が設定されているかを確認する。
 
-### 4.1 実際に0件になった例（未解決）
+### 4.1 実際に0件になった例（解決済み）
+
+> **結果**：下記 1（第3引数に `%`）で取得できた。電子カルテのマスタはオーナー `MEDB` にあり、
+> キャラクタセットは `AL32UTF8`（出力は `docs/schema_ehr.txt`）。以下は経緯として残す。
 
 ```
 --- EHR : Provider=MSDAORA.1 / DataSource=INNO_OPEN / DBリンク=@inno.world / オーナー LIKE OPEN ---
@@ -183,6 +186,6 @@ ALL_TAB_COLUMNS が 0 件のため、select * from 表 where 1 = 0 から取り�
   （コミットされない）。
 - 本番の定義が判明したら `docs/test_db_schema.sql` の「推測」コメントを実測値に更新し、
   `docs/design/data_model.md` と差分がないか確認する。
-  → 同意書側（`AGREE` / `AGREE_TEMPLATE` / `AGREE_STAFF`）は `docs/schema_open.txt` を元に反映済み。
-  電子カルテ側（`M_xxx`）は未取得のため「推測」のまま（4.1）。
+  → 同意書側（`AGREE` / `AGREE_TEMPLATE` / `AGREE_STAFF`）は `docs/schema_open.txt`、
+  電子カルテ側（`M_xxx`）は `docs/schema_ehr.txt` を元に反映済み。
 - 持ち込んだ `DumpSchema.exe` は作業後に本番PCから削除する。

@@ -15,21 +15,22 @@
 -- マスタ追加（既存: M_DEPT 眼科=1 / M_USR=101 / M_PATIENT=1）
 -- ---------------------------------------------------------------------
 -- 患者2・3を追加
-INSERT INTO M_PATIENT (P_ID, P_NAME, P_KANA, P_SEX)
-SELECT 2, '同意 花子', 'ドウイ ハナコ', 2 FROM DUAL
+-- （マスタの REG_USR / REG_DATE / REG_TIME は NOT NULL のためテスト用の固定値を入れる）
+INSERT INTO M_PATIENT (P_ID, P_NAME, P_KANA, P_SEX, REG_USR, REG_DATE, REG_TIME)
+SELECT 2, '同意 花子', 'ドウイ ハナコ', 2, 0, 20260101, 0 FROM DUAL
 WHERE NOT EXISTS (SELECT 1 FROM M_PATIENT WHERE P_ID = 2);
 
-INSERT INTO M_PATIENT (P_ID, P_NAME, P_KANA, P_SEX)
-SELECT 3, '承諾 太郎', 'ショウダク タロウ', 1 FROM DUAL
+INSERT INTO M_PATIENT (P_ID, P_NAME, P_KANA, P_SEX, REG_USR, REG_DATE, REG_TIME)
+SELECT 3, '承諾 太郎', 'ショウダク タロウ', 1, 0, 20260101, 0 FROM DUAL
 WHERE NOT EXISTS (SELECT 1 FROM M_PATIENT WHERE P_ID = 3);
 
--- 医師102を追加（M_USR と M_DR の両方。Dict.StaffDict は M_USR から構築される）
-INSERT INTO M_USR (CODE, NAME, KANA, SYOZOKU, SHIKAKU, DEPT, DR)
-SELECT 102, '眼科 二郎', 'ガンカ ジロウ', 1, 1, 1, 102 FROM DUAL
+-- 医師102を追加（M_USR と M_DR の両方。アプリが参照するのは M_USR）
+INSERT INTO M_USR (CODE, NAME, KANA, REG_USR, REG_DATE, REG_TIME)
+SELECT 102, '眼科 二郎', 'ガンカ ジロウ', 0, 20260101, 0 FROM DUAL
 WHERE NOT EXISTS (SELECT 1 FROM M_USR WHERE CODE = 102);
 
-INSERT INTO M_DR (CODE, NAME, CATEGORY, VAL_4)
-SELECT 102, '眼科 二郎', 0, NULL FROM DUAL
+INSERT INTO M_DR (CODE, NAME, REG_USR, REG_DATE, REG_TIME)
+SELECT 102, '眼科 二郎', 0, 20260101, 0 FROM DUAL
 WHERE NOT EXISTS (SELECT 1 FROM M_DR WHERE CODE = 102);
 
 -- ---------------------------------------------------------------------
